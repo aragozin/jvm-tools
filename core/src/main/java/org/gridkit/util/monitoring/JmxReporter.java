@@ -2,7 +2,6 @@
 package org.gridkit.util.monitoring;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,11 +28,16 @@ import com.sun.tools.attach.VirtualMachine;
  * Dumps JMX data from pid as JSON.
  */
 public class JmxReporter {
-    public static void main(String[] args) throws Exception {
-        String pid = args[0];
-        Util.addToolsToClasspath();
-        VirtualMachine jvm = Util.attachToPid(pid);
-        MBeanServerConnection jmx = Util.attachJmx(jvm);
+
+	static {
+		AttachUtil.ensureToolsClasspath();
+	}
+
+	public static void main(String[] args) throws Exception {
+
+		String pid = args[0];
+        VirtualMachine jvm = AttachUtil.attachToPid(pid);
+        MBeanServerConnection jmx = AttachUtil.attachJmx(jvm);
         JsonFactory jsonFactory = new JsonFactory();
         JsonGenerator jg = jsonFactory.createJsonGenerator(System.out);
         jg.useDefaultPrettyPrinter();

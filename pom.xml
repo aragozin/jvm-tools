@@ -9,6 +9,7 @@
      <module>core</module>
      <module>gcrep</module>
      <module>jtop</module>
+     <module>jtool</module>
   </modules>
   <build>
     <pluginManagement>

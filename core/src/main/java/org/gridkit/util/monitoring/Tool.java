@@ -6,8 +6,9 @@ package org.gridkit.util.monitoring;
  * Main class to invoke other tools.
  */
 public class Tool {
-    static {
-        Util.addToolsToClasspath();
+    
+	static {
+        AttachUtil.ensureToolsClasspath();
     }
     
     public static void main(String[] args) throws Exception {
