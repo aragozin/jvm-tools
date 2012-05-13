@@ -20,6 +20,11 @@
        <systemPath>${java.home}/lib/tools.jar</systemPath>
      </dependency>
      -->
+     <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-core-asl</artifactId>
+        <version>1.9.6</version>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -29,6 +34,15 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins </groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.9</version>
+        <configuration>
+          <buildOutputDirectory>eclipse-classes</buildOutputDirectory>
+          <projectNameTemplate>jvmtools-${project.artifactId}</projectNameTemplate>
         </configuration>
       </plugin>
     </plugins>

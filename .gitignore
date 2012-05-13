@@ -1,1 +1,5 @@
 target/
+.classpath
+.settings
+.project
+eclipse-classes
