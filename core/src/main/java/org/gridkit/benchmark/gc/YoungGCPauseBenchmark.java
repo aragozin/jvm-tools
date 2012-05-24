@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.gridkit.util.monitoring.CpuUsageReporter;
-import org.gridkit.util.monitoring.GCSelfMonitor;
+import org.gridkit.jvmtool.CpuUsageReporter;
+import org.gridkit.jvmtool.GCSelfMonitor;
 
 /**
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)

@@ -1,4 +1,4 @@
-package org.gridkit.util.monitoring;
+package org.gridkit.jvmtool;
 
 public class GlobalFlags {
 
