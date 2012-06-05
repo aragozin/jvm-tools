@@ -32,6 +32,17 @@
         <artifactId>jackson-core-asl</artifactId>
         <version>1.9.6</version>
       </dependency>
+     <dependency>
+     	<groupId>org.testng</groupId>
+     	<artifactId>testng</artifactId>
+     	<version>6.5.2</version>
+     	<scope>test</scope>
+     </dependency>
+     <dependency>
+     	<groupId>org.apache.velocity</groupId>
+     	<artifactId>velocity</artifactId>
+     	<version>1.7</version>
+     </dependency>
   </dependencies>
   <build>
     <plugins>

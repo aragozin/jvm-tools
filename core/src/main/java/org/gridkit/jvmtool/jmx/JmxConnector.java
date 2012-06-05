@@ -1,4 +1,4 @@
-package org.gridkit.jvmtool;
+package org.gridkit.jvmtool.jmx;
 
 import java.io.File;
 import java.io.IOException;
