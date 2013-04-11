@@ -43,6 +43,10 @@ public class ThreadReporter {
 		
 		System.out.println("Attaching: " + pid);			
 		VirtualMachine jvm = VirtualMachine.attach(pid);
+		Properties prop = jvm.getAgentProperties();
+		for(Object key: prop.keySet()) {
+			System.out.println("  " + key + ": " + prop.getProperty((String) key));
+		}
 		String addr = attachManagementAgent(jvm);
 		System.out.println("JVM JMX uri: " + addr);			
 		JMXServiceURL jmxurl = new JMXServiceURL(addr);
