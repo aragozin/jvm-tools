@@ -1,49 +1,69 @@
 package org.gridkit.jvmtool.cmd;
 
-import java.io.PrintStream;
 import java.util.List;
 
-import org.gridkit.jvmtool.AttachUtil;
+import org.gridkit.jvmtool.JvmProcessFilter;
+import org.gridkit.jvmtool.JvmProcessPrinter;
+import org.gridkit.jvmtool.SJK;
+import org.gridkit.jvmtool.SJK.CmdRef;
+import org.gridkit.lab.jvm.attach.AttachManager;
+import org.gridkit.lab.jvm.attach.JavaProcessId;
 
-import com.sun.tools.attach.VirtualMachine;
-import com.sun.tools.attach.VirtualMachineDescriptor;
+import com.beust.jcommander.ParametersDelegate;
 
-public class ProcListCmd implements SimpleCommand {
+public class ProcListCmd implements CmdRef {
 
-	static {
-        AttachUtil.ensureToolsClasspath();
-    }	
+	@Override
+	public String getCommandName() {
+		return "jps";
+	}
+
+	@Override
+	public Runnable newCommand(SJK host) {
+		return new JPS(host);
+	}
 	
-	@Override
-	public String getCommand() {
-		return "ps";		
-	}
+	public static class JPS implements Runnable {
 
-	@Override
-	public String getDescription() {
-		return "List JVMs on local system";
-	}
+		@SuppressWarnings("unused")
+		@ParametersDelegate
+		private final SJK host;
 
-	@Override
-	public void printUsage(PrintStream out) {
-		out.println("ps");
-	}
+		@ParametersDelegate
+		private JvmProcessFilter filter = new JvmProcessFilter();
+		
+		@ParametersDelegate
+		private JvmProcessPrinter printer = new JvmProcessPrinter();
+		
+		public JPS(SJK host) {
+			this.host = host;
+		}
 
-	@Override
-	public void printHelp(PrintStream out) {
-	}
-
-	@Override
-	public void exec(List<String> args) {
-        for (VirtualMachineDescriptor vm : VirtualMachine.list()) {
-            System.out.print(vm.id());
-            System.out.print("\t");
-            System.out.print(vm.displayName());
-            System.out.print("\n");
-        }
-    }	
-	
-	public static void main(String[] args) {
-		new ProcListCmd().exec(null);
+		@Override
+		public void run() {
+			
+			List<JavaProcessId> procList; 
+			
+			filter.prepare();
+			
+			if (filter.isDefined() || printer.isDefined()) {
+				procList = AttachManager.listJavaProcesses(filter);
+			}
+			else {
+				procList = AttachManager.listJavaProcesses();
+			}
+			
+			for(JavaProcessId jpid: procList) {
+				if (printer.isDefined()) {
+					System.out.println(printer.describe(jpid));
+				}
+				else {
+					StringBuilder sb = new StringBuilder();
+					sb.append(jpid.getPID()).append('\t');
+					sb.append(jpid.getDescription());
+					System.out.println(sb);
+				}
+			}
+		}
 	}
 }

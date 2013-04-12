@@ -1,21 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.gridkit.jvmtool</groupId>
-  <artifactId>jvm-tools-parent</artifactId>
+  <artifactId>jvmtool-umbrella-pom</artifactId>
   <version>0.1-SNAPSHOT</version>
+  <name>${project.groupId}::${project.artifactId}</name>
   <description>JVM tools, parent project</description>
   <packaging>pom</packaging>
+  
   <modules>
      <module>core</module>
-     <module>gcrep</module>
-     <module>jtop</module>
-     <module>jtool</module>
+     <module>sjk</module>
   </modules>
+  
   <scm>
     <connection>scm:git:https://github.com/aragozin/jvm-tools.git</connection>
     <url>scm:git:https://github.com/aragozin/jvm-tools.git</url>
     <developerConnection>scm:git:https://github.com/aragozin/jvm-tools.git</developerConnection>
   </scm>
+  
   <build>
     <pluginManagement>
       <plugins>
@@ -26,17 +29,6 @@
           <configuration>
             <source>1.6</source>
             <target>1.6</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins </groupId>
-          <artifactId>maven-eclipse-plugin</artifactId>
-          <version>2.9</version>
-          <configuration>
-            <projectNameTemplate>jvmtools-${project.artifactId}</projectNameTemplate>
-            <buildOutputDirectory>eclipse-classes</buildOutputDirectory>
-            <downloadSources>true</downloadSources>
-            <downloadJavadocs>true</downloadJavadocs>
           </configuration>
         </plugin>
         <plugin>

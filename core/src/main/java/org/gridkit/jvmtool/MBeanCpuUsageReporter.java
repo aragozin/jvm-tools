@@ -1,11 +1,15 @@
 package org.gridkit.jvmtool;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -25,11 +29,41 @@ public class MBeanCpuUsageReporter {
 	private Map<Long, CompositeData> threadDump = new HashMap<Long, CompositeData>();
 	private Map<Long, ThreadNote> notes = new HashMap<Long, MBeanCpuUsageReporter.ThreadNote>();
 	
+	private List<Comparator<ThreadLine>> comparators = new ArrayList<Comparator<ThreadLine>>();
+	
+	private int topLimit = Integer.MAX_VALUE;
+	
+	private Pattern filter;
+	
 	public MBeanCpuUsageReporter(MBeanServerConnection mserver) {
 		this.mserver = mserver;
 		
 		lastTimestamp = System.nanoTime();
 		lastProcessCpuTime = getProcessCpuTime();
+	}
+	
+	public void sortByThreadName() {
+		comparators.add(0, new ThreadNameComparator());
+	}
+
+	public void sortByUserCpu() {
+		comparators.add(0, new UserTimeComparator());
+	}
+
+	public void sortBySysCpu() {
+		comparators.add(0, new SysTimeComparator());
+	}
+
+	public void sortByTotalCpu() {
+		comparators.add(0, new CpuTimeComparator());
+	}
+	
+	public void setTopLimit(int n) {
+		topLimit = n;
+	}
+
+	public void setThreadFilter(Pattern regEx) {
+		filter = regEx;
 	}
 	
 	public String report() {
@@ -43,13 +77,19 @@ public class MBeanCpuUsageReporter {
 		long currentCpuTime = getProcessCpuTime();
 		
 		Map<Long,ThreadNote> newNotes = new HashMap<Long, ThreadNote>();
-		Set<String> report = new TreeSet<String>();
 		
 		BigInteger totalCpu = BigInteger.valueOf(0);
 		BigInteger totalUser = BigInteger.valueOf(0);
 		
+		List<ThreadLine> table = new ArrayList<ThreadLine>();
 		
 		for(long tid: getAllThreadIds()) {
+			
+			String threadName = getThreadName(tid);
+			if (filter != null && !filter.matcher(threadName).matches()) {
+				continue;
+			}
+			
 			ThreadNote lastNote = notes.get(tid);
 			ThreadNote newNote = new ThreadNote();
 			newNote.lastCpuTime = getThreadCpuTime(tid);
@@ -65,21 +105,27 @@ public class MBeanCpuUsageReporter {
 				double cpuT = ((double)(newNote.lastCpuTime - lastNote.lastCpuTime)) / timeSplit;
 				double userT = ((double)(newNote.lastUserTime - lastNote.lastUserTime)) / timeSplit;
 
-				StringBuffer buf = new StringBuffer();
-				buf.append(String.format("[%06d] user=%.2f%% sys=%.2f%% - %s", tid, 100 * userT, 100 * (cpuT - userT), getThreadName(tid)));
-				report.add(buf.toString());
+				table.add(new ThreadLine(tid, 100 * userT, 100 * (cpuT - userT), getThreadName(tid)));
 			}
 		}
 		
-		if (report.size() >0) {				
+		if (table.size() >0) {				
 
+			for(Comparator<ThreadLine> cmp: comparators) {
+				Collections.sort(table, cmp);
+			}
+
+			if (table.size() > topLimit) {
+				table = table.subList(0, topLimit);
+			}
+			
 			double processT = ((double)(currentCpuTime - lastProcessCpuTime)) / timeSplit;
 			double cpuT = ((double)(totalCpu.subtract(lastCummulativeCpuTime).longValue())) / timeSplit;
 			double userT = ((double)(totalUser.subtract(lastCummulativeUserTime).longValue())) / timeSplit;
 
 			sb.append(Formats.toDatestamp(System.currentTimeMillis()));
 			sb.append(String.format(" CPU usage \n  process cpu=%.2f%%\n  application: cpu=%.2f%% (user=%.2f%% sys=%.2f%%)\n  other: cpu=%.2f%% \n", 100 * processT, 100 * cpuT, 100 * userT, 100 * (cpuT - userT), 100 * (processT - cpuT)));
-			for(String line: report) {
+			for(ThreadLine line: table) {
 				sb.append(line).append('\n');
 			}
 			sb.append("\n");			
@@ -107,17 +153,17 @@ public class MBeanCpuUsageReporter {
 		}
 	}
 
-	private Object getThreadName(long tid) {
+	private String getThreadName(long tid) {
 		try {
 			CompositeData info = threadDump.get(tid);
-			return info.get("threadName");
+			return (String) info.get("threadName");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	private Collection<Long> getAllThreadIds() {
-		return threadDump.keySet();
+		return new TreeSet<Long>(threadDump.keySet());
 	}
 
 	private long getThreadCpuTime(long tid) {
@@ -155,5 +201,56 @@ public class MBeanCpuUsageReporter {
 		private long lastCpuTime;
 		private long lastUserTime;
 		
+	}
+	
+	private static class ThreadLine {
+		
+		long id;
+		double userT;
+		double sysT;
+		String name;
+		
+		public ThreadLine(long id, double userT, double sysT, String name) {
+			this.id = id;
+			this.userT = userT;
+			this.sysT = sysT;
+			this.name = name;
+		}
+
+		public String toString() {
+			return String.format("[%06d] user=%5.2f%% sys=%5.2f%% - %s", id, userT, (sysT), name);
+		}		
+	}
+	
+	private static class UserTimeComparator implements Comparator<ThreadLine> {
+
+		@Override
+		public int compare(ThreadLine o1, ThreadLine o2) {
+			return Double.compare(o2.userT, o1.userT);
+		}
+	}
+
+	private static class SysTimeComparator implements Comparator<ThreadLine> {
+		
+		@Override
+		public int compare(ThreadLine o1, ThreadLine o2) {
+			return Double.compare(o2.userT, o1.userT);
+		}
+	}
+
+	private static class CpuTimeComparator implements Comparator<ThreadLine> {
+		
+		@Override
+		public int compare(ThreadLine o1, ThreadLine o2) {
+			return Double.compare(o2.userT + o2.sysT, o1.userT + o1.userT);
+		}
+	}
+
+	private static class ThreadNameComparator implements Comparator<ThreadLine> {
+		
+		@Override
+		public int compare(ThreadLine o1, ThreadLine o2) {
+			return o1.name.compareTo(o2.name);
+		}
 	}
 }

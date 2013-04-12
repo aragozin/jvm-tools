@@ -1,9 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.gridkit.jvmtool</groupId>
-  <artifactId>gcrep</artifactId>
+  <artifactId>sjk</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <name>gcrep jar assembly</name>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>SJK jar assembly</description>
+
   <dependencies>
     <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
@@ -11,6 +14,7 @@
       <version>0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
+  
   <build>
     <plugins>
       <plugin>
@@ -34,12 +38,16 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>org.gridkit.jrep:*</include>
+                  <include>org.gridkit.jvmtool:*</include>
+                  <include>org.gridkit.lab:*</include>
+                  <include>org.codehaus.jackson:*</include>
+                  <include>com.beust:*</include>
+                  <include>org.slf4j:*</include>
                 </includes>
               </artifactSet>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.gridkit.util.monitoring.GCReporter</mainClass>
+                  <mainClass>org.gridkit.jvmtool.SJK</mainClass>
                 </transformer>
               </transformers>
             </configuration>
