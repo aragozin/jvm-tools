@@ -27,8 +27,10 @@
   <packaging>pom</packaging>
   
   <modules>
-     <module>core</module>
+     <module>sjk-core</module>
+     <module>mxdump</module>
      <module>sjk</module>
+     <module>sjk-plus</module>
   </modules>
   
   <scm>

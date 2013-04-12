@@ -29,7 +29,7 @@ import com.beust.jcommander.Parameter;
  */
 public class JvmProcessPrinter {
 	
-	@Parameter(names = {"-dp", "--describe-process"}, variableArity = true, description = "Print custom information related to a process. Following tags can be used: PID, MAIN, FDQN_MAIN, ARGS, D<sys-prop>, d<sys-prop>, X<jvm-flag>")
+	@Parameter(names = {"-pd", "--process-details"}, variableArity = true, description = "Print custom information related to a process. Following tags can be used: PID, MAIN, FDQN_MAIN, ARGS, D<sys-prop>, d<sys-prop>, X<jvm-flag>")
 	private List<String> displayFields;
 	
 	public boolean isDefined() {
@@ -102,6 +102,9 @@ public class JvmProcessPrinter {
 
 	private String getShortMain(JavaProcessId jpid) {
 		String main = getMain(jpid);
+		if (main.endsWith(".jar")) {
+			return main;
+		}
 		int n = main.lastIndexOf('.');
 		if (n >= 0) {
 			main = main.substring(n + 1);

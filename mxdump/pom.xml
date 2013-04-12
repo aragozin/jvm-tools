@@ -21,16 +21,16 @@
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>org.gridkit.jvmtool</groupId>
-    <artifactId>core</artifactId>
+    <artifactId>mxdump</artifactId>
     <version>0.1-SNAPSHOT</version>
     <name>${project.groupId}::${project.artifactId}</name>
-    <description>Core classes for Swiss Java Knife tool</description>
+    <description>MBean to JSON dump command for Swiss Java Knife (SJK) tool</description>
    
     <dependencies>
         <dependency>
-            <groupId>org.gridkit.lab</groupId>
-            <artifactId>jvm-attach-api</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>sjk-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -38,19 +38,9 @@
             <version>1.9.6</version>
         </dependency>
         <dependency>
-        	<groupId>com.beust</groupId>
-        	<artifactId>jcommander</artifactId>
-        	<version>1.30</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.6.6</version>
-        </dependency>
-        <dependency>
-        	<groupId>junit</groupId>
-        	<artifactId>junit</artifactId>
-        	<version>4.10</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

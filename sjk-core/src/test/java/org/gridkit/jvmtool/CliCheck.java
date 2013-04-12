@@ -83,11 +83,6 @@ public class CliCheck {
 	}
 
 	@Test
-	public void mxdump_self() {
-		exec("mxdump", "-p", PID);
-	}
-
-	@Test
 	public void hh_self() {
 		exec("hh", "-p", PID);
 	}

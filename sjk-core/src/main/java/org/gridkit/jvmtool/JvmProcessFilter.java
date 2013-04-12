@@ -32,10 +32,10 @@ import com.beust.jcommander.Parameter;
  */
 public class JvmProcessFilter implements JavaProcessMatcher {
 	
-	@Parameter(names = {"-df", "--description-filter"}, description = "Wild card expression to match process description")
+	@Parameter(names = {"-fd", "--filter-description"}, description = "Wild card expression to match process description")
 	private String descFilter;
 
-	@Parameter(names = {"-pf", "--property-filter"}, variableArity = true, description = "Wild card expressions to match JVM system properties")
+	@Parameter(names = {"-fp", "--filter-property"}, variableArity = true, description = "Wild card expressions to match JVM system properties")
 	private List<String> propFilters;
 	
 	private Pattern descPattern;

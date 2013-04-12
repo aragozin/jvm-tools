@@ -20,15 +20,20 @@
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.gridkit.jvmtool</groupId>
-  <artifactId>sjk</artifactId>
+  <artifactId>sjk-plus</artifactId>
   <version>0.1-SNAPSHOT</version>
   <name>${project.groupId}::${project.artifactId}</name>
-  <description>SJK jar assembly</description>
+  <description>SJK+ jar assembly</description>
 
   <dependencies>
     <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>sjk-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.jvmtool</groupId>
+      <artifactId>mxdump</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
@@ -58,7 +63,9 @@
                 <includes>
                   <include>org.gridkit.jvmtool:*</include>
                   <include>org.gridkit.lab:*</include>
+                  <include>org.codehaus.jackson:*</include>
                   <include>com.beust:*</include>
+                  <include>org.slf4j:*</include>
                 </includes>
               </artifactSet>
               <transformers>
