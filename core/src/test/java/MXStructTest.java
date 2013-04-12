@@ -96,4 +96,9 @@ public class MXStructTest {
 			bean.isValid();
 		}
 	}	
+	
+	@Test
+	public void test_threading_mbean() {
+		
+	}
 }

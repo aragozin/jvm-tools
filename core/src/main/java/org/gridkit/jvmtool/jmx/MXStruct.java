@@ -22,8 +22,6 @@ import javax.management.openmbean.CompositeData;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.context.Context;
 
 public abstract class MXStruct implements Cloneable {
 

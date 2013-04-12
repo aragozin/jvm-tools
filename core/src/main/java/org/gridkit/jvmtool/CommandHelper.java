@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.management.MBeanServerConnection;
 
+import org.gridkit.jvmtool.cmd.MBeanCommand;
 import org.gridkit.jvmtool.jmx.JmxConnector;
 
 public class CommandHelper {

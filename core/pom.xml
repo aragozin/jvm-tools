@@ -1,18 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.gridkit.jrep</groupId>
+  <groupId>org.gridkit.jvmtool</groupId>
   <artifactId>core</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <name>JRep core classes</name>
+  <name>JVM tools, core classes</name>
   <dependencies>
-     <!-- does work for some reason
-     <dependency>
-       <groupId>org.gridkit.jrep</groupId>
-       <artifactId>attach-api</artifactId>
-       <version>0.1-SNAPSHOT</version>
-       <scope>provided</scope>
-     </dependency>
-     -->
      <dependency>
        <groupId>sun.java</groupId>
        <artifactId>tools</artifactId>
@@ -22,11 +14,20 @@
      </dependency>
      <dependency>
        <groupId>sun.java</groupId>
+       <artifactId>sa-jdi</artifactId>
+       <version>1.6</version>
+       <scope>system</scope>
+       <systemPath>${java.home}/../lib/sa-jdi.jar</systemPath>
+     </dependency>
+     <!-- 
+     <dependency>
+       <groupId>sun.java</groupId>
        <artifactId>jconsole</artifactId>
        <version>1.6</version>
        <scope>system</scope>
        <systemPath>${java.home}/../lib/jconsole.jar</systemPath>
      </dependency>
+      -->
      <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-core-asl</artifactId>

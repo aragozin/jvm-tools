@@ -10,9 +10,7 @@ import java.util.Map;
 import javax.management.MBeanServerConnection;
 
 import org.gridkit.jvmtool.InvalidCommandLineException;
-import org.gridkit.jvmtool.MBeanCommand;
 import org.gridkit.jvmtool.jmx.beans.GarbageCollectorMXStruct;
-import org.gridkit.jvmtool.jmx.beans.MemoryMXStruct;
 import org.gridkit.jvmtool.jmx.beans.MemoryPoolMXStruct;
 
 public class HeapInfoCmd implements MBeanCommand {
@@ -24,11 +22,12 @@ public class HeapInfoCmd implements MBeanCommand {
 
 	@Override
 	public String getDescription() {
-		return "Display memory and GC configurations";
+		return "Display memory and GC configuration summary";
 	}
 
 	@Override
 	public void printUsage(PrintStream out) {
+		out.println("meminfo [<pid>|<host:port>]");
 	}
 
 	@Override
@@ -39,7 +38,7 @@ public class HeapInfoCmd implements MBeanCommand {
 	public void exec(MBeanServerConnection connection, List<String> args) {
 		try {
 			
-			MemoryMXStruct membean = MemoryMXStruct.get(connection);
+//			MemoryMXStruct membean = MemoryMXStruct.get(connection);
 			Map<String, GarbageCollectorMXStruct> gcbeans = GarbageCollectorMXStruct.get(connection);
 			Map<String, MemoryPoolMXStruct> mpbeans = MemoryPoolMXStruct.get(connection);
 			

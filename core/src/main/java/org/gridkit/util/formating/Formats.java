@@ -27,9 +27,25 @@ public class Formats {
 		return toFileDatestamp(System.currentTimeMillis());
 	}
 	
+	public static final String toMemorySize(long n) {
+		if (n < (10l << 10)) {
+			return String.valueOf(n);
+		}
+		else if (n < (10l << 20)) {
+			return String.valueOf(n >> 10) + "k";
+		}
+		else if (n < (10l << 30)) {
+			return String.valueOf(n >> 20) + "m";
+		}
+		else {
+			return String.valueOf(n >> 30) + "g";
+		}
+	}
+	
 	public static void main(String[] args) {
 		System.out.println("DATE_STAMP: " + String.format(DATE_STAMP, System.currentTimeMillis()));
 		System.out.println("FILE_DATE_STAMP: " + String.format(FILE_DATE_STAMP, System.currentTimeMillis()));
 		System.out.println("ZERO_LEAD_DECIMAL_6: " + String.format(ZERO_LEAD_DECIMAL_6, 1234));
+		System.out.println(String.format("[%-6s]", "x"));
 	}
 }

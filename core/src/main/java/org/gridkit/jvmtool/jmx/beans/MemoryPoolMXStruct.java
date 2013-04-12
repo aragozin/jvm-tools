@@ -47,6 +47,6 @@ public class MemoryPoolMXStruct extends MXStruct {
 	
 	@AttrName("Valid")
 	public boolean isValid() {
-		return getMXAttr();
+		return (Boolean)getMXAttr();
 	}	
 }

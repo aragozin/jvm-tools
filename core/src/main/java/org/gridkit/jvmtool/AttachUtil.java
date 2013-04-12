@@ -42,13 +42,18 @@ public class AttachUtil {
     private static void addToolsToClasspath() {
         try {
             String javaHome = System.getProperty("java.home");
+            if (!new File(javaHome + "/../lib/tools.jar").exists()) {
+            	System.err.println("tools.jar is not found at " + javaHome + "/../lib/");
+            }
             String toolsJarURL = "file:" + javaHome + "/../lib/tools.jar";
+            String sajdiJarURL = "file:" + javaHome + "/../lib/sa-jdi.jar";            
             new URL(toolsJarURL).getContent();
             // Make addURL public
             Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
             method.setAccessible(true);
             URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
             method.invoke(sysloader, (Object) new URL(toolsJarURL));
+            method.invoke(sysloader, (Object) new URL(sajdiJarURL));
             VirtualMachine.class.toString();
         } catch (Exception e) {
             System.err.println("Failed to add tools.jar to classpath: " + e.toString());

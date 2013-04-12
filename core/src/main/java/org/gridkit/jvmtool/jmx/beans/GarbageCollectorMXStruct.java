@@ -27,17 +27,17 @@ public class GarbageCollectorMXStruct extends MXStruct {
 	
 	@AttrName("Valid")
 	public boolean isValid() {
-		return getMXAttr();
+		return (Boolean)getMXAttr();
 	}
 	
 	@AttrName("CollectionCount")
 	public long getCollectionCount() {
-		return getMXAttr();
+		return (Long)getMXAttr();
 	}
 
 	@AttrName("CollectionTime")
 	public long getCollectionTime() {
-		return getMXAttr();
+		return (Long)getMXAttr();
 	}
 	
 	@AttrName("MemoryPoolNames")
@@ -54,22 +54,22 @@ public class GarbageCollectorMXStruct extends MXStruct {
 		
 		@AttrName("GcThreadCount")
 		public int getGcThreadCount() {
-			return getMXAttr();
+			return (Integer)getMXAttr();
 		}
 		
 		@AttrName("duration")
 		public long getDuration() {
-			return getMXAttr();
+			return (Long)getMXAttr();
 		}
 		
 		@AttrName("startTime")
 		public long getStartTime() {
-			return  getMXAttr();
+			return  (Long)getMXAttr();
 		}
 		
 		@AttrName("endTime")
 		public long getEndTime() {
-			return  getMXAttr();
+			return  (Long)getMXAttr();
 		}
 		
 		@AttrName("memoryUsageBeforeGc") @AsMap(val="value", type=MemUsage.class)

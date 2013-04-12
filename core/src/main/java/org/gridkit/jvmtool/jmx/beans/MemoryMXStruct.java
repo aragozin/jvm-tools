@@ -7,6 +7,7 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
 import org.gridkit.jvmtool.jmx.MXStruct;
+import org.gridkit.util.formating.Formats;
 
 public class MemoryMXStruct extends MXStruct{
 
@@ -29,12 +30,12 @@ public class MemoryMXStruct extends MXStruct{
 	
 	@AttrName("ObjectPendingFinalizationCount")
 	public int getObjectPendingFinalizationCount() {
-		return getMXAttr();
+		return (Integer)getMXAttr();
 	}
 
 	@AttrName("Verbose")
 	public boolean isVerbose() {
-		return getMXAttr();
+		return (Boolean)getMXAttr();
 	}
 	
 	@PrintTemplate(
@@ -43,22 +44,36 @@ public class MemoryMXStruct extends MXStruct{
 
 		@AttrName("init")
 		public long getInit() {
-			return getMXAttr();
+			return (Long)getMXAttr();
 		}
 
 		@AttrName("used")
 		public long getUsed() {
-			return getMXAttr();
+			return (Long)getMXAttr();
 		}
 
 		@AttrName("committed")
 		public long getCommitted() {
-			return getMXAttr();
+			return (Long)getMXAttr();
 		}
 
 		@AttrName("max")
 		public long getMax() {
-			return getMXAttr();
+			return (Long)getMXAttr();
+		}
+		
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append(Formats.toMemorySize(getInit()));
+			sb.append("/").append(Formats.toMemorySize(getUsed()));
+			sb.append("/").append(Formats.toMemorySize(getCommitted()));
+			if (getMax() > 0) {
+				sb.append("/").append(Formats.toMemorySize(getMax()));
+			}
+			else {
+				sb.append("/NA");
+			}
+			return sb.toString();
 		}
 	}
 }
