@@ -17,6 +17,11 @@
             <artifactId>jackson-core-asl</artifactId>
             <version>1.9.6</version>
         </dependency>
+        <dependency>
+        	<groupId>com.beust</groupId>
+        	<artifactId>jcommander</artifactId>
+        	<version>1.30</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
