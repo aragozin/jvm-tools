@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.gridkit.lab</groupId>
             <artifactId>jvm-attach-api</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.beust</groupId>
