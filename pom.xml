@@ -29,6 +29,7 @@
   <modules>
      <module>sjk-core</module>
      <module>mxdump</module>
+     <module>gcflow</module>
      <module>sjk</module>
      <module>sjk-plus</module>
   </modules>
