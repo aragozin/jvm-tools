@@ -110,7 +110,7 @@ class GcKnowledgeBase {
 		return map;
 	}
 	
-	private static PoolType classify(String gcName, String pool) {
+	public static PoolType classify(String gcName, String pool) {
 		for(GcTypeMatcher m: GC_CATALOG) {
 			if (m.gcName.equals(gcName) && m.poolName.equals(pool)) {
 				return m.type;

@@ -32,6 +32,7 @@
      <module>gcflow</module>
      <module>sjk</module>
      <module>sjk-plus</module>
+     <module>ygc-bench</module>
   </modules>
   
   <scm>
