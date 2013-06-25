@@ -15,7 +15,13 @@
  */
 package org.gridkit.jvmtool;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+
 import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 import org.gridkit.lab.jvm.attach.AttachManager;
 
@@ -31,7 +37,7 @@ public class JmxConnectionInfo {
 	@Parameter(names = {"-p", "--pid"}, description = "JVM process PID")
 	private Long pid;
 	
-	@Parameter(names = {"-s", "--socket"}, description = "Socket address for JMX port")
+	@Parameter(names = {"-s", "--socket"}, description = "Socket address for JMX port (host:port)")
 	private String sockAddr; 
 
 	public MBeanServerConnection getMServer() {
@@ -46,8 +52,51 @@ public class JmxConnectionInfo {
 		if (pid != null) {
 			return AttachManager.getDetails(pid).getMBeans();
 		}
+		else if (sockAddr != null) {
+			String host = host(sockAddr);
+			int port = port(sockAddr);
+			
+			return connectJmx(host, port);
+		}
 		else {
 			throw new UnsupportedOperationException();
 		}		
+	}
+
+	private MBeanServerConnection connectJmx(String host, int port) {
+		try {
+			final String uri = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
+			JMXServiceURL jmxurl = new JMXServiceURL(uri);
+			JMXConnector conn = JMXConnectorFactory.connect(jmxurl);
+			// TODO credentials
+			MBeanServerConnection mserver = conn.getMBeanServerConnection();
+			return mserver;
+		} catch (MalformedURLException e) {
+			SJK.fail(e.toString());
+		} catch (IOException e) {
+			SJK.fail(e.toString());
+		}
+		return null;
+	}
+
+	private String host(String sockAddr) {
+		int c = sockAddr.indexOf(':');
+		if (c <= 0) {
+			SJK.fail("Invalid socket address: " + sockAddr);
+		}
+		return sockAddr.substring(0, c);
+	}
+
+	private int port(String sockAddr) {
+		int c = sockAddr.indexOf(':');
+		if (c <= 0) {
+			SJK.fail("Invalid socket address: " + sockAddr);
+		}
+		try {
+			return Integer.valueOf(sockAddr.substring(c + 1));
+		} catch (NumberFormatException e) {
+			SJK.fail("Invalid socket address: " + sockAddr);
+			return 0;
+		}
 	}
 }

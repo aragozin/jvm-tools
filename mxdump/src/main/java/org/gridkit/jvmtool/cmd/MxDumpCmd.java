@@ -39,6 +39,7 @@ import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
@@ -62,6 +63,9 @@ public class MxDumpCmd implements CmdRef {
 		@ParametersDelegate
 		private SJK host;
 		
+		@Parameter(names = {"-q", "--query"}, description = "Query to filter MBeans")
+		private String query;
+		
 		@ParametersDelegate
 		private JmxConnectionInfo conn = new JmxConnectionInfo();
 
@@ -74,12 +78,16 @@ public class MxDumpCmd implements CmdRef {
 		public void run() {
 			
 	        try {
+	        	ObjectName q = null;
+	        	if (query != null) {
+	        		q = new ObjectName(query);
+	        	}
 				MBeanServerConnection jmx = conn.getMServer();
 				JsonFactory jsonFactory = new JsonFactory();
 				JsonGenerator jg = jsonFactory.createJsonGenerator(System.out);
 				jg.useDefaultPrettyPrinter();
 				jg.writeStartObject();
-				listBeans(jg, jmx);
+				listBeans(q, jg, jmx);
 				jg.writeEndObject();
 				jg.close();
 				System.out.println();
@@ -89,9 +97,9 @@ public class MxDumpCmd implements CmdRef {
 			}			
 		}
 		
-	    private static void listBeans(JsonGenerator jg, MBeanServerConnection mBeanServer) throws Exception {
+	    private static void listBeans(ObjectName query, JsonGenerator jg, MBeanServerConnection mBeanServer) throws Exception {
 	        Set<ObjectName> names = null;
-	        names = mBeanServer.queryNames(null, null);
+	        names = mBeanServer.queryNames(query, null);
 
 	        jg.writeArrayFieldStart("beans");
 	        Iterator<ObjectName> it = names.iterator();
