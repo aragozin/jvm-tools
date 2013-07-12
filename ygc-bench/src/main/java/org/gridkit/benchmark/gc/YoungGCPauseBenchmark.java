@@ -470,6 +470,17 @@ public class YoungGCPauseBenchmark {
 		public double totalSquareTime;
 		public long youngGcCount;
 		
+		public double getAverage() {
+			double avg = ((double)totalTime) / youngGcCount;
+			return avg;
+		}
+
+		public double getStdDev() {
+			double avg = ((double)totalTime) / youngGcCount;
+			double stdDev = Math.sqrt((totalSquareTime / youngGcCount) - (avg * avg));
+			return stdDev;
+		}
+		
 		public String toString() {
 			double avg = ((double)totalTime) / youngGcCount;
 			double stdDev = Math.sqrt((totalSquareTime / youngGcCount) - (avg * avg));
