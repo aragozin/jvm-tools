@@ -173,10 +173,10 @@ public class YoungGCPauseBenchmark {
 		
 		if (concurentMode) {
 			System.out.println("Concurent mode is enabled");
-			System.out.println("Available old space: " + (freeTenured >> 10) + "KiB");
+			System.out.println("Available old space: " + (freeTenured >> 20) + "MiB");
 		}
 		else {
-			System.out.println("Available old space: " + (freeTenured >> 10) + "KiB (-" + headRoom + " MiB)");
+			System.out.println("Available old space: " + (freeTenured >> 20) + "MiB (-" + headRoom + " MiB)");
 		}
 		if (count < 0) {
 			System.out.println("Heap size is too small, increase heap size or reduce headroom");
@@ -255,8 +255,6 @@ public class YoungGCPauseBenchmark {
  		long oldC = oldGcMBean.getCollectionCount();
  		long youngC = youngGcMBean.getCollectionCount();
  		
- 		GCSelfMonitor gcmonitor = new GCSelfMonitor();
- 		
  		while(true) {
 			processMap(dryMode);
 			tracker.probe();
@@ -277,7 +275,6 @@ public class YoungGCPauseBenchmark {
 		}
 		
  		System.out.println("Benchmark complete");
-		gcmonitor.displayStats();
 		return tracker.result();
 	}
 

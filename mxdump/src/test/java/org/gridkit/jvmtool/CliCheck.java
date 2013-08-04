@@ -38,7 +38,12 @@ public class CliCheck {
 	public void mxdump_self() {
 		exec("mxdump", "-p", PID);
 	}
-	
+
+	@Test
+	public void mxdump_by_query() {
+		exec("mxdump", "-p", PID, "-q", "java.lang:type=GarbageCollector,name=*");
+	}
+
 	private void exec(String... cmd) {
 		SJK sjk = new SJK();
 		sjk.suppressSystemExit();

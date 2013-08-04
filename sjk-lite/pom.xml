@@ -20,7 +20,7 @@
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.gridkit.jvmtool</groupId>
-  <artifactId>sjk</artifactId>
+  <artifactId>sjk-lite</artifactId>
   <version>0.1-SNAPSHOT</version>
   <name>${project.groupId}::${project.artifactId}</name>
   <description>SJK jar assembly</description>
@@ -31,11 +31,6 @@
       <artifactId>sjk-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>ygc-bench</artifactId>
-      <version>${project.version}</version>
-    </dependency>    
   </dependencies>
   
   <build>
