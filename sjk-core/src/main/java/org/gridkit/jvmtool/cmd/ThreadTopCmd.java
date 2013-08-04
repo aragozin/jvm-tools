@@ -15,6 +15,7 @@
  */
 package org.gridkit.jvmtool.cmd;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -90,6 +91,7 @@ public class ThreadTopCmd implements CmdRef {
 				}
 				
 				if (sortOrder != null) {
+					Collections.reverse(sortOrder);
 					for(String tag: sortOrder) {
 						if ("SYS".equals(tag)) {
 							tmon.sortBySysCpu();
@@ -99,6 +101,9 @@ public class ThreadTopCmd implements CmdRef {
 						}
 						else if ("CPU".equals(tag)){
 							tmon.sortByTotalCpu();
+						}
+						else if ("ALLOC".equals(tag)){
+							tmon.sortByAllocRate();
 						}
 						else if ("NAME".equals(tag)){
 							tmon.sortByThreadName();
