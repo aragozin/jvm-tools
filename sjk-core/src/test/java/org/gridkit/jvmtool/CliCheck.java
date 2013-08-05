@@ -69,7 +69,13 @@ public class CliCheck {
 	@Test
 	public void ttop_top_N_cpu() {
 		
-		exec("ttop", "-p", "8420", "-o", "CPU", "-n", "10");
+		exec("ttop", "-p", "3380", "-o", "CPU", "-n", "10");
+	}
+
+	@Test
+	public void ttop_top_N_alloc() {
+		
+		exec("ttop", "-p", "3380", "-o", "ALLOC", "-n", "10");
 	}
 
 	@Test

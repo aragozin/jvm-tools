@@ -24,9 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
@@ -39,12 +41,22 @@ import org.gridkit.util.formating.Formats;
  */
 public class MBeanCpuUsageReporter {
 
+	private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
+	private static ObjectName name(String name) {
+		try {
+			return new ObjectName(name);
+		} catch (MalformedObjectNameException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private MBeanServerConnection mserver;
 
 	private long lastTimestamp;
 	private long lastProcessCpuTime;
 	private BigInteger lastCummulativeCpuTime;
 	private BigInteger lastCummulativeUserTime;
+	private BigInteger lastCummulativeAllocatedAmount;
 	
 	private Map<Long, CompositeData> threadDump = new HashMap<Long, CompositeData>();
 	private Map<Long, ThreadNote> notes = new HashMap<Long, MBeanCpuUsageReporter.ThreadNote>();
@@ -55,13 +67,27 @@ public class MBeanCpuUsageReporter {
 	
 	private Pattern filter;
 	
+	private boolean threadAllocatedMemoryEnabled;
+	
 	public MBeanCpuUsageReporter(MBeanServerConnection mserver) {
 		this.mserver = mserver;
+		
+		threadAllocatedMemoryEnabled = getThreadingMBeanCapability("ThreadAllocatedMemoryEnabled");
 		
 		lastTimestamp = System.nanoTime();
 		lastProcessCpuTime = getProcessCpuTime();
 	}
 	
+	private boolean getThreadingMBeanCapability(String attrName) {
+		try {
+			Object val = mserver.getAttribute(THREADING_MBEAN, attrName);
+			return Boolean.TRUE.equals(val);
+		}
+		catch(Exception e) {
+			return false;
+		}
+	}
+
 	public void sortByThreadName() {
 		comparators.add(0, new ThreadNameComparator());
 	}
@@ -76,6 +102,10 @@ public class MBeanCpuUsageReporter {
 
 	public void sortByTotalCpu() {
 		comparators.add(0, new CpuTimeComparator());
+	}
+
+	public void sortByAllocRate() {
+		comparators.add(0, new AllocRateComparator());
 	}
 	
 	public void setTopLimit(int n) {
@@ -100,6 +130,7 @@ public class MBeanCpuUsageReporter {
 		
 		BigInteger totalCpu = BigInteger.valueOf(0);
 		BigInteger totalUser = BigInteger.valueOf(0);
+		BigInteger totalAlloc = BigInteger.valueOf(0);
 		
 		List<ThreadLine> table = new ArrayList<ThreadLine>();
 		
@@ -114,18 +145,21 @@ public class MBeanCpuUsageReporter {
 			ThreadNote newNote = new ThreadNote();
 			newNote.lastCpuTime = getThreadCpuTime(tid);
 			newNote.lastUserTime = getThreadUserTime(tid);
+			newNote.lastAllocatedBytes = getThreadAllocatedBytes(tid);
 			
 			newNotes.put(tid, newNote);
 			
 			totalCpu = totalCpu.add(BigInteger.valueOf(newNote.lastCpuTime));
 			totalUser = totalUser.add(BigInteger.valueOf(newNote.lastUserTime));
+			totalAlloc = totalAlloc.add(BigInteger.valueOf(newNote.lastAllocatedBytes));
 			
 			if (lastNote != null) {
 
 				double cpuT = ((double)(newNote.lastCpuTime - lastNote.lastCpuTime)) / timeSplit;
 				double userT = ((double)(newNote.lastUserTime - lastNote.lastUserTime)) / timeSplit;
+				double allocRate = ((double)(newNote.lastAllocatedBytes - lastNote.lastAllocatedBytes)) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
 
-				table.add(new ThreadLine(tid, 100 * userT, 100 * (cpuT - userT), getThreadName(tid)));
+				table.add(new ThreadLine(tid, 100 * userT, 100 * (cpuT - userT), allocRate, getThreadName(tid)));
 			}
 		}
 		
@@ -142,11 +176,15 @@ public class MBeanCpuUsageReporter {
 			double processT = ((double)(currentCpuTime - lastProcessCpuTime)) / timeSplit;
 			double cpuT = ((double)(totalCpu.subtract(lastCummulativeCpuTime).longValue())) / timeSplit;
 			double userT = ((double)(totalUser.subtract(lastCummulativeUserTime).longValue())) / timeSplit;
+			double allocRate = ((double)(totalAlloc.subtract(lastCummulativeAllocatedAmount).longValue())) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
 
 			sb.append(Formats.toDatestamp(System.currentTimeMillis()));
-			sb.append(String.format(" CPU usage \n  process cpu=%.2f%%\n  application: cpu=%.2f%% (user=%.2f%% sys=%.2f%%)\n  other: cpu=%.2f%% \n", 100 * processT, 100 * cpuT, 100 * userT, 100 * (cpuT - userT), 100 * (processT - cpuT)));
+			sb.append(String.format(" Process summary \n  process cpu=%.2f%%\n  application cpu=%.2f%% (user=%.2f%% sys=%.2f%%)\n  other: cpu=%.2f%% \n", 100 * processT, 100 * cpuT, 100 * userT, 100 * (cpuT - userT), 100 * (processT - cpuT)));
+			if (threadAllocatedMemoryEnabled) {
+				sb.append(String.format("  heap allocation rate %sb/s\n", Formats.toMemorySize((long) allocRate)));
+			}
 			for(ThreadLine line: table) {
-				sb.append(line).append('\n');
+				sb.append(format(line)).append('\n');
 			}
 			sb.append("\n");			
 		}
@@ -155,14 +193,24 @@ public class MBeanCpuUsageReporter {
 		notes = newNotes;
 		lastCummulativeCpuTime = totalCpu;
 		lastCummulativeUserTime = totalUser;
+		lastCummulativeAllocatedAmount = totalAlloc;
 		lastProcessCpuTime = currentCpuTime;
 		
 		return sb.toString();
 	}
 
+	private Object format(ThreadLine line) {
+		if (threadAllocatedMemoryEnabled) {
+			return String.format("[%06d] user=%5.2f%% sys=%5.2f%% alloc=%6sb/s - %s", line.id, line.userT, (line.sysT), Formats.toMemorySize((long)line.allocRate), line.name);
+		}
+		else {
+			return String.format("[%06d] user=%5.2f%% sys=%5.2f%% - %s", line.id, line.userT, (line.sysT), line.name);
+		}
+	}
+
 	private void dumpThreads() {
 		try {
-			ObjectName bean = new ObjectName("java.lang:type=Threading");
+			ObjectName bean = THREADING_MBEAN;
 			CompositeData[] ti = (CompositeData[]) mserver.invoke(bean, "dumpAllThreads", new Object[]{Boolean.TRUE, Boolean.TRUE}, new String[]{"boolean", "boolean"});
 			threadDump.clear();
 			for(CompositeData t:ti) {
@@ -188,7 +236,7 @@ public class MBeanCpuUsageReporter {
 
 	private long getThreadCpuTime(long tid) {
 		try {
-			ObjectName bean = new ObjectName("java.lang:type=Threading");
+			ObjectName bean = THREADING_MBEAN;
 			long time = (Long) mserver.invoke(bean, "getThreadCpuTime", new Object[]{tid}, new String[]{"long"});
 			return time;
 		} catch (Exception e) {
@@ -198,7 +246,7 @@ public class MBeanCpuUsageReporter {
 
 	private long getThreadUserTime(long tid) {
 		try {
-			ObjectName bean = new ObjectName("java.lang:type=Threading");
+			ObjectName bean = THREADING_MBEAN;
 			long time = (Long) mserver.invoke(bean, "getThreadUserTime", new Object[]{tid}, new String[]{"long"});
 			return time;
 		} catch (Exception e) {
@@ -206,6 +254,20 @@ public class MBeanCpuUsageReporter {
 		}
 	}
 	
+	private long getThreadAllocatedBytes(long tid) {
+		if (threadAllocatedMemoryEnabled) {
+			try {
+				ObjectName bean = THREADING_MBEAN;
+				long bytes = (Long) mserver.invoke(bean, "getThreadAllocatedBytes", new Object[]{tid}, new String[]{"long"});
+				return bytes;
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			return -1;
+		}
+	}
 
 	private long getProcessCpuTime() {
 		try {
@@ -220,6 +282,7 @@ public class MBeanCpuUsageReporter {
 		
 		private long lastCpuTime;
 		private long lastUserTime;
+		private long lastAllocatedBytes;
 		
 	}
 	
@@ -228,12 +291,14 @@ public class MBeanCpuUsageReporter {
 		long id;
 		double userT;
 		double sysT;
+		double allocRate;
 		String name;
 		
-		public ThreadLine(long id, double userT, double sysT, String name) {
+		public ThreadLine(long id, double userT, double sysT, double allocRate, String name) {
 			this.id = id;
 			this.userT = userT;
 			this.sysT = sysT;
+			this.allocRate = allocRate;
 			this.name = name;
 		}
 
@@ -271,6 +336,14 @@ public class MBeanCpuUsageReporter {
 		@Override
 		public int compare(ThreadLine o1, ThreadLine o2) {
 			return o1.name.compareTo(o2.name);
+		}
+	}
+
+	private static class AllocRateComparator implements Comparator<ThreadLine> {
+		
+		@Override
+		public int compare(ThreadLine o1, ThreadLine o2) {
+			return Double.compare(o2.allocRate, o1.allocRate);
 		}
 	}
 }
