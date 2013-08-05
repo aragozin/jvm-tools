@@ -63,7 +63,7 @@ public class ThreadTopCmd implements CmdRef {
 		@Parameter(names = {"-n", "--top-number"}, description = "Number of threads to show")
 		private int topNumber = Integer.MAX_VALUE;
 		
-		@Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, NAME")
+		@Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, ALLOC, NAME")
 		private List<String> sortOrder;
 		
 		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter thread by name")
