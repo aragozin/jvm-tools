@@ -42,22 +42,22 @@ public class CliCheck {
 	@Test
 	public void jps_filter_by_prop() {
 		System.setProperty("my.prop", "123");
-		exec("jps", "-pf", "my.*=123");
+		exec("jps", "-fp", "my.*=123");
 	}
 
 	@Test
 	public void jps_filter_by_desc() {
-		exec("jps", "-df", "*junit*");
+		exec("jps", "-fd", "*junit*");
 	}
 
 	@Test
 	public void jps_print() {
-		exec("jps", "-dp", "PID", "MAIN", "Duser.dir");
+		exec("jps", "-pd", "PID", "MAIN", "Duser.dir");
 	}
 
 	@Test
 	public void jps_print_flags() {
-		exec("jps", "-dp", "PID", "MAIN", "XMaxHeapSize", "XBackgroundCompilation");
+		exec("jps", "-pd", "PID", "MAIN", "XMaxHeapSize", "XBackgroundCompilation");
 	}
 
 	@Test
@@ -97,6 +97,31 @@ public class CliCheck {
 	public void hh_dead_N_self() {
 		exec("hh", "-p", PID, "--dead", "-n", "20");
 	}
+
+	@Test
+	public void mx_info() {
+		exec("mx", "-p", PID, "--info", "--bean", "*:type=HotSpotDiagnostic");
+	}
+
+	@Test
+	public void mx_get_diagnostic_ops() {
+		exec("mx", "-p", PID, "--get", "--bean", "*:type=HotSpotDiagnostic", "-f", "DiagnosticOptions");
+	}
+
+	@Test
+	public void mx_set_threading_alloc() {
+		exec("mx", "-p", PID, "--set", "--bean", "*:type=Threading", "-f", "ThreadAllocatedMemoryEnabled", "-v", "true");
+	}
+
+	@Test
+	public void mx_get_thread_dump() {
+		exec("mx", "-p", PID, "--call", "--bean", "*:type=Threading", "-op", "dumpAllThreads", "-a", "true", "true");
+	}
+	
+	@Test
+	public void mx_info_ambigous() {
+		fail("mx", "-p", PID, "--info", "--bean", "*:type=GarbageCollector,*");
+	}
 	
 	private void exec(String... cmd) {
 		SJK sjk = new SJK();
@@ -108,6 +133,18 @@ public class CliCheck {
 		}
 		System.out.println(sb);
 		Assert.assertTrue(sjk.start(cmd));		
+	}
+
+	private void fail(String... cmd) {
+		SJK sjk = new SJK();
+		sjk.suppressSystemExit();
+		StringBuilder sb = new StringBuilder();
+		sb.append("SJK");
+		for(String c: cmd) {
+			sb.append(' ').append(escape(c));
+		}
+		System.out.println(sb);
+		Assert.assertFalse(sjk.start(cmd));		
 	}
 
 	private Object escape(String c) {

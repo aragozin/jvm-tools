@@ -62,21 +62,39 @@ public class MBeanHelperTest {
 	@Test
 	public void test_bean_get_set() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
-		helper.set(threadMXBean(), "ThreadAllocatedMemoryEnabled", "true");
-		System.out.println("ThreadAllocatedMemoryEnabled: " + helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled"));
-		helper.set(threadMXBean(), "ThreadAllocatedMemoryEnabled", "FALSE");
-		System.out.println("ThreadAllocatedMemoryEnabled: " + helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled"));
+		helper.set(threadMXBean(), "ThreadCpuTimeEnabled", "true");
+		System.out.println("ThreadCpuTimeEnabled: " + helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled"));
+		helper.set(threadMXBean(), "ThreadCpuTimeEnabled", "FALSE");
+		System.out.println("ThreadCpuTimeEnabled: " + helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled"));
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void test_bean_invalid_set() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
-		helper.set(managementMXBean(), "ThreadAllocatedMemoryEnabled", "true");
+		helper.set(managementMXBean(), "ThreadCpuTimeEnabled", "true");
 	}
 
 	@Test
 	public void test_get_sys_props() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
 		System.out.println(helper.get(runtimeMXBean(), "SystemProperties"));
+	}
+
+	@Test
+	public void test_get_mem_heap() throws Exception {
+		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
+		System.out.println(helper.get(memoryMXBean(), "HeapMemoryUsage"));
+	}
+
+	@Test
+	public void test_get_thread_dump() throws Exception {
+		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
+		System.out.println(helper.invoke(threadMXBean(), "dumpAllThreads", "true", "true"));
+	}
+
+	@Test
+	public void test_find_deadlocked_threads() throws Exception {
+		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
+		System.out.println(helper.invoke(threadMXBean(), "findMonitorDeadlockedThreads"));
 	}
 }

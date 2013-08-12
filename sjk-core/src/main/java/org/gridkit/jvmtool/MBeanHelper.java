@@ -1,16 +1,26 @@
 package org.gridkit.jvmtool;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.management.Attribute;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
 import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 
 public class MBeanHelper {
 	
@@ -49,22 +59,206 @@ public class MBeanHelper {
 		mserver.setAttribute(bean, new Attribute(attr, ov));
 	}
 	
-	private String format(Object v, String type) {
-//		if (v instanceof TabularData) {
-//			
-//		}
-//		else if (v instanceof CompositeData) {
-//			
-//		}
-//		else {
-			return String.valueOf(v);
-//		}
-	}
-
-	private String formatLine(Object v, String type) {
-		return String.valueOf(v);
+	public String invoke(ObjectName bean, String operation, String... params) throws InstanceNotFoundException, IntrospectionException, ReflectionException, IOException, MBeanException {
+		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
+		MBeanOperationInfo op = null;
+		for(MBeanOperationInfo oi: mbinfo.getOperations()) {
+			if (oi.getName().equalsIgnoreCase(operation) && oi.getSignature().length == params.length) {
+				if (op != null) {
+					throw new IllegalArgumentException("Ambigous " + operation + "/" + params.length + " operatition signature for " + bean);
+				}
+				op = oi;
+			}
+		}
+		if (op == null) {
+			throw new IllegalArgumentException("Operation " + operation + "/" + params.length + " not found for " + bean);
+		}
+		Object[] args = new Object[params.length];
+		String[] sig = new String[params.length];
+		for(int i = 0; i != params.length; ++i) {
+			args[i] = convert(params[i], op.getSignature()[i].getType());
+			sig[i] = op.getSignature()[i].getType();
+		}
+		return format(mserver.invoke(bean, op.getName(), args, sig), op.getReturnType());
 	}
 	
+	private String format(Object v, String type) {
+		if (type.equals("void")) {
+			return null;
+		}
+		else if (v instanceof CompositeData[]) {
+			CompositeData[] td = (CompositeData[]) v;
+			if (td.length == 0) {
+				return "";
+			}
+			List<String> header = new ArrayList<String>();
+			for(String f: td[0].getCompositeType().keySet()) {
+				if (!header.contains(f)) {
+					header.add(f);
+				}
+			}
+			List<String[]> content = new ArrayList<String[]>();
+			content.add(header.toArray(new String[0]));
+			for(Object row: td) {
+				content.add(formatRow((CompositeData)row, header));
+			}
+			return formatTable(content, 40, true);			
+		}
+		else if (v instanceof TabularData) {
+			TabularData td = (TabularData) v;
+			td.getTabularType().getIndexNames();
+			List<String> header = new ArrayList<String>(td.getTabularType().getIndexNames());
+			for(String f: td.getTabularType().getRowType().keySet()) {
+				if (!header.contains(f)) {
+					header.add(f);
+				}
+			}
+			List<String[]> content = new ArrayList<String[]>();
+			content.add(header.toArray(new String[0]));
+			for(Object row: td.values()) {
+				content.add(formatRow((CompositeData)row, header));
+			}
+			return formatTable(content, 40, true);
+		}
+		else if (v instanceof CompositeData) {
+			CompositeData cd = (CompositeData)v;
+			List<String[]> content = new ArrayList<String[]>();
+			for(String field: cd.getCompositeType().keySet()) {
+				String val = formatLine(cd.get(field), cd.getCompositeType().getType(field).getClassName());
+				content.add(new String[]{field + ": ", val});
+			}
+			return formatTable(content, 1000, false);
+		}
+		else {
+			return formatLine(v, type);
+		}
+	}
+
+	private String formatTable(List<String[]> content, int maxCell, boolean table) {
+		int[] width = new int[content.get(0).length];
+		for(String[] row: content) {
+			for(int i = 0; i != row.length; ++i) {
+				width[i] = Math.min(Math.max(width[i], row[i].length()), maxCell);
+			}
+		}
+
+		StringBuilder sb = new StringBuilder();
+		boolean header = table;
+		for(String[] row: content) {
+			for(int i = 0; i != width.length; ++i) {
+				String cell = row[i];
+				if (cell.length() > width[i]) {
+					cell = cell.substring(0, width[i] - 3) + "...";
+				}
+				sb.append(cell);
+				for(int s = 0; s != width[i] - cell.length(); ++s) {
+					sb.append(' ');
+				}
+				if (table) {
+					sb.append('|');
+				}
+			}
+			if (table) {
+				sb.setLength(sb.length() - 1);
+			}
+			sb.append('\n');
+			if (header) {
+				header = false;
+				for(int n: width) {
+					for(int i = 0; i != n; ++i) {
+						sb.append('-');
+					}
+					sb.append('+');
+				}
+				sb.setLength(sb.length() - 1);
+				sb.append('\n');
+			}
+		}
+		
+		return sb.toString();
+	}
+	
+	private String formatLine(Object v, String type) {
+		if (v instanceof TabularData) {
+			TabularData td = (TabularData)v;
+			StringBuilder sb = new StringBuilder();
+			for(Object c: td.values()) {
+				sb.append(formatLine(c, td.getTabularType().getRowType().getClassName()));
+				sb.append(",");
+			}
+			if (sb.length() > 0) {
+				sb.setLength(sb.length() - 1);
+			}
+			return sb.toString();
+		}
+		if (v instanceof CompositeData[]) {
+			CompositeData[] td = (CompositeData[])v;
+			StringBuilder sb = new StringBuilder();
+			for(Object c: td) {
+				sb.append(formatLine(c, ((CompositeData)c).getCompositeType().getClassName()));
+				sb.append(",");
+			}
+			if (sb.length() > 0) {
+				sb.setLength(sb.length() - 1);
+			}
+			return sb.toString();
+		}
+		else if (v instanceof CompositeData) {
+			CompositeData cdata = (CompositeData) v;
+			StringBuilder sb = new StringBuilder();
+			sb.append("{");
+			for(String attr: cdata.getCompositeType().keySet()) {
+				sb.append(attr).append("=");
+				sb.append(formatLine(cdata.get(attr), cdata.getCompositeType().getType(attr).getClassName()));
+				sb.append(',');
+			}
+			if (sb.length() > 1) {
+				sb.setLength(sb.length() - 1);
+			}
+			sb.append("}");
+			return sb.toString();
+		}
+		else if (v instanceof Object[]) {
+			return Arrays.toString((Object[])v);
+		}
+		else if (v instanceof boolean[]) {
+			return Arrays.toString((boolean[])v);
+		}
+		else if (v instanceof byte[]) {
+			return Arrays.toString((byte[])v);
+		}
+		else if (v instanceof char[]) {
+			return Arrays.toString((char[])v);
+		}
+		else if (v instanceof short[]) {
+			return Arrays.toString((short[])v);
+		}
+		else if (v instanceof int[]) {
+			return Arrays.toString((int[])v);
+		}
+		else if (v instanceof long[]) {
+			return Arrays.toString((long[])v);
+		}
+		else if (v instanceof float[]) {
+			return Arrays.toString((float[])v);
+		}
+		else if (v instanceof double[]) {
+			return Arrays.toString((double[])v);
+		}
+		else {
+			return String.valueOf(v);
+		}
+	}
+
+	private String[] formatRow(CompositeData row, List<String> header) {
+		String[] text = new String[header.size()];
+		for(int i = 0; i != text.length; ++i) {
+			String attr = header.get(i);
+			text[i] = formatLine(row.get(attr), row.getCompositeType().getType(attr).getClassName());
+		}
+		return text;
+	}
+
 	private Object convert(String value, String type) {
 		if (type.equals("java.lang.String")) {
 			return value;
