@@ -17,6 +17,8 @@ package org.gridkit.jvmtool;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
@@ -39,6 +41,12 @@ public class JmxConnectionInfo {
 	
 	@Parameter(names = {"-s", "--socket"}, description = "Socket address for JMX port (host:port)")
 	private String sockAddr; 
+	
+	@Parameter(names = {"--user"}, description="User for JMX authentication (only for socket connection)")
+	private String user = null;
+
+	@Parameter(names = {"--password"}, description="Password for JMX authentication (only for socket connection)")
+	private String password = null;
 
 	public MBeanServerConnection getMServer() {
 		if (pid == null && sockAddr == null) {
@@ -55,19 +63,25 @@ public class JmxConnectionInfo {
 		else if (sockAddr != null) {
 			String host = host(sockAddr);
 			int port = port(sockAddr);
-			
-			return connectJmx(host, port);
+			Map<String, Object> env = null;
+			if (user != null || password != null) {
+				if (user == null || password == null) {
+					SJK.failAndPrintUsage("Both user and password required for authentication");
+				}
+				env = Collections.singletonMap(JMXConnector.CREDENTIALS, (Object)new String[]{user, password});
+			}
+			return connectJmx(host, port, env);
 		}
 		else {
 			throw new UnsupportedOperationException();
 		}		
 	}
 
-	private MBeanServerConnection connectJmx(String host, int port) {
+	private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
 		try {
 			final String uri = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
-			JMXServiceURL jmxurl = new JMXServiceURL(uri);
-			JMXConnector conn = JMXConnectorFactory.connect(jmxurl);
+			JMXServiceURL jmxurl = new JMXServiceURL(uri);						
+			JMXConnector conn = props == null ? JMXConnectorFactory.connect(jmxurl) : JMXConnectorFactory.connect(jmxurl, props);
 			// TODO credentials
 			MBeanServerConnection mserver = conn.getMBeanServerConnection();
 			return mserver;
