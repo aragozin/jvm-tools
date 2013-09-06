@@ -1,8 +1,13 @@
 Swiss Java Knife
 =========
 
-
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
+
+
+Prebuild binaries (2013-09-06) are below
+- [sjk-plus.jar - all commands](https://github.com/aragozin/jvm-tools/blob/downloads/sjk-plus-0.1-2013-09-06.jar?raw=true)
+- [sjk.jar - without mxdump](https://github.com/aragozin/jvm-tools/blob/downloads/sjk-0.1-2013-09-06.jar?raw=true)
+
 
 Starting sjk
 ----
@@ -20,6 +25,7 @@ Pools thread CPU usage of target JVM and periodically report to console.
 
  - Could sort thread by CPU usage and/or thread's name.
  - Could limit number of thread displayed
+ - Display thread memory allocation rate and cumulative process allocation rate (if supported by JVM)
 
 jps
 ----
@@ -42,6 +48,19 @@ gcrep
 -----
 
 Report information about GC in real time. Data is retrieved via JMX.
+
+mx
+-----
+
+This command allow you to do basic operations with MBean from command line.
+
+It can
+- read MBean attributes
+- update MBean writeable attributes
+- invoke MBean operations (arguments are supported)
+- displays composite and tabular data in human readable format
+- connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
+- connect to JMX using host:port (password authentication is supported)
 
 mxdump
 -----
