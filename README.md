@@ -12,9 +12,9 @@ Prebuild binaries (2013-09-06) are below, though I would encourge you to build j
 Starting sjk
 ----
 
-java -jar sjk.jar <arguments>
-
-java -jar sjk.jar --help
+    java -jar sjk.jar <cmd> <arguments>
+    java -jar sjk.jar --help
+    java -jar sjk.jar --help <cmd>
 
 Below a few command
 
