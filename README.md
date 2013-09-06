@@ -63,6 +63,8 @@ It can
 - connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
 - connect to JMX using host:port (password authentication is supported)
 
+[More details](https://github.com/aragozin/jvm-tools/blob/master/sjk-core/COMMANDS.md#mx-command)
+
 mxdump
 -----
 
