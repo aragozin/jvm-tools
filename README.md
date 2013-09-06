@@ -59,6 +59,7 @@ It can
 - update MBean writeable attributes
 - invoke MBean operations (arguments are supported)
 - displays composite and tabular data in human readable format
+- use wild cards to shorten MBean names (e.g. `*:*,name=CodeCacheManager` instead of `java.lang:type=MemoryManager,name=CodeCacheManager`)
 - connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
 - connect to JMX using host:port (password authentication is supported)
 
