@@ -85,7 +85,7 @@ class GcAdapter {
 	public void report() {
 		try {
 			GcInfo lastGc = gc.getLastGcInfo();
-			if (lastGc.getId() == gcCount) {
+			if (lastGc == null || lastGc.getId() == gcCount) {
 				return;
 			}
 			else {				
