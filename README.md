@@ -44,7 +44,7 @@ Similar to jmap -histo.
 - Plus can show histogram of dead objects (histograms of all and live requested, then difference is caluclated).
 - Plus can show N top buckets in histogram.
 
-gcrep
+gc
 -----
 
 Report information about GC in real time. Data is retrieved via JMX.
