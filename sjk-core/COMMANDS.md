@@ -68,15 +68,60 @@ Example
 
 `jps` command
 ----
-TBD
+List local JVM processes in greater details.
+
+    > java -jar sjk.jar --help jps
+    Usage: jps [options]
+      Options:
+        -fd, --filter-description
+           Wild card expression to match process description
+        -fp, --filter-property
+           Wild card expressions to match JVM system properties
+            --help
+    
+           Default: false
+        -pd, --process-details
+           Print custom information related to a process. Following tags can be
+           used: PID, MAIN, FDQN_MAIN, ARGS, D<sys-prop>, d<sys-prop>, X<jvm-flag>
+
 
 `hh` command
 ----
-TBD
+Extended version of `jmap -histo` command.
 
-`gcgrep` command
+    > java -jar sjk.jar --help hh
+    Usage: hh [options]
+      Options:
+            --dead
+           Dead objects histogram
+           Default: false
+            --help
+    
+           Default: false
+            --live
+           Live objects histogram
+           Default: false
+        -p, --pid
+           Process ID
+           Default: 0
+        -n, --top-number
+           Show only N top buckets
+           Default: 2147483647
+
+`gc` command
 ----
-TBD
+Reports GC events from target JVM.
+
+    > java -jar sjk.jar --help gc
+    Usage: gc [options]
+      Options:
+            --help
+    
+           Default: false
+        -p, --pid
+           JVM process PID
+        -s, --socket
+           Socket address for JMX port (host:port)
 
 `mx` command
 ----
