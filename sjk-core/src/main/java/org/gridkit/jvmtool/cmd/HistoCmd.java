@@ -36,10 +36,10 @@ public class HistoCmd implements CmdRef {
 
 	@Override
 	public Runnable newCommand(SJK host) {
-		return new GcRep(host);
+		return new Histo(host);
 	}
 	
-	public static class GcRep implements Runnable {
+	public static class Histo implements Runnable {
 
 		@SuppressWarnings("unused")
 		@ParametersDelegate
@@ -57,7 +57,7 @@ public class HistoCmd implements CmdRef {
 		@Parameter(names = {"-n", "--top-number"}, description = "Show only N top buckets")
 		private int n = Integer.MAX_VALUE;
 
-		public GcRep(SJK host) {
+		public Histo(SJK host) {
 			this.host = host;
 		}
 
