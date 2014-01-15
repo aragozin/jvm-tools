@@ -198,7 +198,6 @@ public class SJK {
 	        // build jar file name, then loop through zipped entries
 	        jarFileName = URLDecoder.decode(packageURL.getFile(), "UTF-8");
 	        jarFileName = jarFileName.substring(5,jarFileName.indexOf("!"));
-	        System.out.println(">"+jarFileName);
 	        jf = new JarFile(jarFileName);
 	        jarEntries = jf.entries();
 	        while(jarEntries.hasMoreElements()){

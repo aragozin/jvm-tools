@@ -27,6 +27,8 @@ Pools thread CPU usage of target JVM and periodically report to console.
  - Could limit number of thread displayed
  - Display thread memory allocation rate and cumulative process allocation rate (if supported by JVM)
 
+[More details](sjk-core/COMMANDS.md#ttop-command)
+
 jps
 ----
 
@@ -35,6 +37,8 @@ Similar to jps.
 - Plus could filter process java processes by their system properties.
 - Plus could display specific system properties of process in output.
 - Plus could display values of specific -XX for HotSpot JVM processes. 
+ 
+[More details](sjk-core/COMMANDS.md#jps-command)
 
 hh
 ----
@@ -44,10 +48,14 @@ Similar to jmap -histo.
 - Plus can show histogram of dead objects (histograms of all and live requested, then difference is caluclated).
 - Plus can show N top buckets in histogram.
 
+[More details](sjk-core/COMMANDS.md#hh-command)
+
 gc
 -----
 
 Report information about GC in real time. Data is retrieved via JMX.
+
+[More details](sjk-core/COMMANDS.md#gc-command)
 
 mx
 -----
@@ -63,7 +71,7 @@ It can
 - connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
 - connect to JMX using host:port (password authentication is supported)
 
-[More details](https://github.com/aragozin/jvm-tools/blob/master/sjk-core/COMMANDS.md#mx-command)
+[More details](sjk-core/COMMANDS.md#mx-command)
 
 mxdump
 -----
