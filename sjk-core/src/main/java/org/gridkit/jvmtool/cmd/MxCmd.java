@@ -13,6 +13,7 @@ import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 public class MxCmd implements CmdRef {
@@ -27,6 +28,7 @@ public class MxCmd implements CmdRef {
 		return new MX(host);
 	}
 
+	@Parameters(commandDescription = "MBean query and invokation")
 	public static class MX implements Runnable {
 		
 		@SuppressWarnings("unused")

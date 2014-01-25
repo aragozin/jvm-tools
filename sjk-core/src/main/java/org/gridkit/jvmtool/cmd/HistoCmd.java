@@ -20,6 +20,7 @@ import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.lab.jvm.attach.HeapHisto;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
@@ -39,6 +40,7 @@ public class HistoCmd implements CmdRef {
 		return new Histo(host);
 	}
 	
+	@Parameters(commandDescription = "[Heap Histo] Prints class histogram, similar to jmap -histo")
 	public static class Histo implements Runnable {
 
 		@SuppressWarnings("unused")

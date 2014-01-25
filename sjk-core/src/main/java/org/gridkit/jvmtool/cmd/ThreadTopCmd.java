@@ -29,6 +29,7 @@ import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.TimeIntervalConverter;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
@@ -48,6 +49,7 @@ public class ThreadTopCmd implements CmdRef {
 		return new TTop(host);
 	}
 
+	@Parameters(commandDescription = "[Thread Top] Displays threads from JVM process")
 	public static class TTop implements Runnable {
 
 		@SuppressWarnings("unused")

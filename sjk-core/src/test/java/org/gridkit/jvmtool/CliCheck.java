@@ -35,6 +35,11 @@ public class CliCheck {
 	}
 	
 	@Test
+	public void help() {
+		exec("--help");
+	}
+
+	@Test
 	public void jps() {
 		exec("jps");
 	}
