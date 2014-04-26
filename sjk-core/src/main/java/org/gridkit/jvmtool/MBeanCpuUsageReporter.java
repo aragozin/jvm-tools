@@ -327,7 +327,7 @@ public class MBeanCpuUsageReporter {
 		
 		@Override
 		public int compare(ThreadLine o1, ThreadLine o2) {
-			return Double.compare(o2.userT + o2.sysT, o1.userT + o1.userT);
+			return Double.compare(o2.userT + o2.sysT, o1.userT + o1.sysT);
 		}
 	}
 
