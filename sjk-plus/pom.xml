@@ -19,9 +19,15 @@
 -->
   
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.gridkit.jvmtool</groupId>
+
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <artifactId>sjk-plus</artifactId>
-  <version>0.1-SNAPSHOT</version>
   <name>${project.groupId}::${project.artifactId}</name>
   <description>SJK+ jar assembly</description>
 

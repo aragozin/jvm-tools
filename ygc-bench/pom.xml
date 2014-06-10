@@ -19,10 +19,15 @@
 -->
 
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>org.gridkit.jvmtool</groupId>
+      <artifactId>jvmtool-umbrella-pom</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <relativePath>../pom.xml</relativePath>
+    </parent>
     
-    <groupId>org.gridkit.jvmtool</groupId>
     <artifactId>ygc-bench</artifactId>
-    <version>0.1-SNAPSHOT</version>
     <name>${project.groupId}::${project.artifactId}</name>
     <description>Young GC pause benchmark</description>
    
