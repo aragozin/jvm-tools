@@ -22,7 +22,7 @@
     
     <groupId>org.gridkit.jvmtool</groupId>
     <artifactId>ygc-bench</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <name>${project.groupId}::${project.artifactId}</name>
     <description>Young GC pause benchmark</description>
    
