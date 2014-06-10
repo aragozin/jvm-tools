@@ -22,7 +22,7 @@
     
     <groupId>org.gridkit.jvmtool</groupId>
     <artifactId>sjk-core</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <name>${project.groupId}::${project.artifactId}</name>
     <description>Core classes for Swiss Java Knife tool</description>
    
