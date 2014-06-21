@@ -130,6 +130,9 @@ MX command allows CLI access to MBean attributes and operations.
     > java -jar sjk.jar --help mx
     Usage: mx [options]
       Options:
+        -all, --allMatched
+           Process all matched MBeans
+           Default: false
         -a, --arguments
            Arguments for MBean operation invocation
            Default: []

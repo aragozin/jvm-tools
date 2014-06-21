@@ -151,7 +151,7 @@ public class SJK {
 				String cmdName = cmd.getCommandName();
 				Runnable cmdTask = cmd.newCommand(this);
 				if (commands.containsKey(cmdName)) {
-					fail("Ambigous implementation for '" + cmdName + "'");
+					fail("Ambiguous implementation for '" + cmdName + "'");
 				}
 				commands.put(cmdName, cmdTask);
 				parser.addCommand(cmdName, cmdTask);
