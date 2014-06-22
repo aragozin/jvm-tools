@@ -65,7 +65,7 @@ public class MBeanHelper {
 		for(MBeanOperationInfo oi: mbinfo.getOperations()) {
 			if (oi.getName().equalsIgnoreCase(operation) && oi.getSignature().length == params.length) {
 				if (op != null) {
-					throw new IllegalArgumentException("Ambigous " + operation + "/" + params.length + " operatition signature for " + bean);
+					throw new IllegalArgumentException("Ambiguous " + operation + "/" + params.length + " operatition signature for " + bean);
 				}
 				op = oi;
 			}

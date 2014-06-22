@@ -67,19 +67,19 @@ public class CliCheck {
 
 	@Test
 	public void ttop_self() {
-		
+
 		exec("ttop", "-p", PID);
 	}
 
 	@Test
 	public void ttop_top_N_cpu() {
-		
+
 		exec("ttop", "-p", "3380", "-o", "CPU", "-n", "10");
 	}
 
 	@Test
 	public void ttop_top_N_alloc() {
-		
+
 		exec("ttop", "-p", "3380", "-o", "ALLOC", "-n", "10");
 	}
 
@@ -108,23 +108,43 @@ public class CliCheck {
 		exec("mx", "-p", PID, "--info", "--bean", "*:type=HotSpotDiagnostic");
 	}
 
+    @Test
+    public void mx_info_all() {
+        exec("mx", "-p", PID, "--info", "-all", "--bean", "*:type=MemoryPool,*");
+    }
+
 	@Test
 	public void mx_get_diagnostic_ops() {
 		exec("mx", "-p", PID, "--get", "--bean", "*:type=HotSpotDiagnostic", "-f", "DiagnosticOptions");
 	}
+
+    @Test
+    public void mx_get_usage_threshold() {
+        exec("mx", "-p", PID, "--get", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "CollectionUsageThreshold");
+    }
 
 	@Test
 	public void mx_set_threading_alloc() {
 		exec("mx", "-p", PID, "--set", "--bean", "*:type=Threading", "-f", "ThreadAllocatedMemoryEnabled", "-v", "true");
 	}
 
+    @Test
+    public void mx_set_usage_threshold() {
+        exec("mx", "-p", PID, "--set", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "CollectionUsageThreshold", "-v", "1");
+    }
+
 	@Test
 	public void mx_get_thread_dump() {
 		exec("mx", "-p", PID, "--call", "--bean", "*:type=Threading", "-op", "dumpAllThreads", "-a", "true", "true");
 	}
+
+    @Test
+    public void mx_get_resetPeakUsage_all() {
+        exec("mx", "-p", PID, "--call", "-all", "--bean", "*:type=MemoryPool,*", "-op", "resetPeakUsage");
+    }
 	
 	@Test
-	public void mx_info_ambigous() {
+	public void mx_info_ambiguous() {
 		fail("mx", "-p", PID, "--info", "--bean", "*:type=GarbageCollector,*");
 	}
 	
