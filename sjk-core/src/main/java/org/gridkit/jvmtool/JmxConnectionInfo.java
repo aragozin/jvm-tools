@@ -48,6 +48,10 @@ public class JmxConnectionInfo {
 	@Parameter(names = {"--password"}, description="Password for JMX authentication (only for socket connection)")
 	private String password = null;
 
+	public Long getPID() {
+	    return pid;
+	}
+	
 	public MBeanServerConnection getMServer() {
 		if (pid == null && sockAddr == null) {
 			SJK.failAndPrintUsage("JVM porcess is not specified");

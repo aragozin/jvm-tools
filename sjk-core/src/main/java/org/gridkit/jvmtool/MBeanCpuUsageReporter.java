@@ -54,6 +54,8 @@ public class MBeanCpuUsageReporter {
 
 	private long lastTimestamp;
 	private long lastProcessCpuTime;
+	private long lastYougGcCpuTime;
+	private long lastOldGcCpuTime;
 	private BigInteger lastCummulativeCpuTime;
 	private BigInteger lastCummulativeUserTime;
 	private BigInteger lastCummulativeAllocatedAmount;
@@ -69,6 +71,8 @@ public class MBeanCpuUsageReporter {
 	
 	private boolean threadAllocatedMemoryEnabled;
 	
+	private GcCpuUsageMonitor gcMon;
+	
 	public MBeanCpuUsageReporter(MBeanServerConnection mserver) {
 		this.mserver = mserver;
 		
@@ -76,6 +80,10 @@ public class MBeanCpuUsageReporter {
 		
 		lastTimestamp = System.nanoTime();
 		lastProcessCpuTime = getProcessCpuTime();
+	}
+	
+	public void setGcCpuUsageMonitor(GcCpuUsageMonitor gcMon) {
+	    this.gcMon = gcMon;
 	}
 	
 	private boolean getThreadingMBeanCapability(String attrName) {
@@ -125,6 +133,8 @@ public class MBeanCpuUsageReporter {
 		long currentTime = System.nanoTime();
 		long timeSplit = currentTime - lastTimestamp;
 		long currentCpuTime = getProcessCpuTime();
+		long currentYoungGcCpuTime = gcMon == null ? 0 : gcMon.getYoungGcCpu();
+		long currentOldGcCpuTime = gcMon == null ? 0 : gcMon.getOldGcCpu();
 		
 		Map<Long,ThreadNote> newNotes = new HashMap<Long, ThreadNote>();
 		
@@ -178,8 +188,14 @@ public class MBeanCpuUsageReporter {
 			double userT = ((double)(totalUser.subtract(lastCummulativeUserTime).longValue())) / timeSplit;
 			double allocRate = ((double)(totalAlloc.subtract(lastCummulativeAllocatedAmount).longValue())) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
 
+			double youngGcT = ((double)currentYoungGcCpuTime - lastYougGcCpuTime) / timeSplit;
+			double oldGcT = ((double)currentOldGcCpuTime - lastOldGcCpuTime) / timeSplit;
+			
 			sb.append(Formats.toDatestamp(System.currentTimeMillis()));
 			sb.append(String.format(" Process summary \n  process cpu=%.2f%%\n  application cpu=%.2f%% (user=%.2f%% sys=%.2f%%)\n  other: cpu=%.2f%% \n", 100 * processT, 100 * cpuT, 100 * userT, 100 * (cpuT - userT), 100 * (processT - cpuT)));
+			if (currentYoungGcCpuTime > 0) {
+			    sb.append(String.format("  GC cpu=%.2f%% (young=%.2f%%, old=%.2f%%)\n", 100 * (youngGcT + oldGcT), 100 * youngGcT, 100 * oldGcT));
+			}
 			if (threadAllocatedMemoryEnabled) {
 				sb.append(String.format("  heap allocation rate %sb/s\n", Formats.toMemorySize((long) allocRate)));
 			}
@@ -195,6 +211,8 @@ public class MBeanCpuUsageReporter {
 		lastCummulativeUserTime = totalUser;
 		lastCummulativeAllocatedAmount = totalAlloc;
 		lastProcessCpuTime = currentCpuTime;
+		lastYougGcCpuTime = currentYoungGcCpuTime;
+		lastOldGcCpuTime = currentOldGcCpuTime;
 		
 		return sb.toString();
 	}

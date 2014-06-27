@@ -24,6 +24,7 @@ import javax.management.MBeanServerConnection;
 import org.gridkit.jvmtool.GlobHelper;
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.MBeanCpuUsageReporter;
+import org.gridkit.jvmtool.PerfCounterGcCpuUsageMonitor;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.TimeIntervalConverter;
@@ -85,6 +86,16 @@ public class ThreadTopCmd implements CmdRef {
 				MBeanServerConnection mserver = connInfo.getMServer();
 				
 				final MBeanCpuUsageReporter tmon = new MBeanCpuUsageReporter(mserver);
+				if (connInfo.getPID() != null) {
+				    try {
+    				    long pid = connInfo.getPID();
+    				    PerfCounterGcCpuUsageMonitor pm = new PerfCounterGcCpuUsageMonitor(pid);
+    				    tmon.setGcCpuUsageMonitor(pm);
+				    }
+				    catch(Exception e) {
+				        // ignore
+				    }
+				}
 				
 				tmon.setTopLimit(topNumber);
 				
