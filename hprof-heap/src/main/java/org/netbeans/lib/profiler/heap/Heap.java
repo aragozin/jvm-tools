@@ -62,7 +62,7 @@ public interface Heap {
      * Speed: slow for the first time, subsequent invocations are fast.
      * @return list of all {@link JavaClass} in the heap.
      */
-    List /*<JavaClass>*/ getAllClasses();
+    List<JavaClass> getAllClasses();
 
     /**
      * computes List of N biggest {@link JavaClass} instances in this heap.
@@ -71,7 +71,7 @@ public interface Heap {
      * Speed: slow for the first time, subsequent invocations are normal.
      * @return list of N biggest {@link JavaClass} instances.
      */
-    List /*<JavaClass>*/ getBiggestObjectsByRetainedSize(int number);
+    List<JavaClass> getBiggestObjectsByRetainedSize(int number);
 
     /**
      * returns {@link GCRoot} for {@link Instance}.
@@ -88,7 +88,7 @@ public interface Heap {
      * Speed: normal for first invocation, fast for subsequent
      * @return list of {@link GCRoot} instances representing all GC roots.
      */
-    Collection /*<GCRoot>*/ getGCRoots();
+    Collection<GCRoot> getGCRoots();
 
     /**
      * computes {@link Instance} for instanceId.
@@ -129,7 +129,7 @@ public interface Heap {
      * @return return collection of {@link JavaClass} instances, which names satisfy the regexp expression. This
      * collection is empty if no class matches the regular expression
      */
-    Collection getJavaClassesByRegExp(String regexp);
+    Collection<JavaClass> getJavaClassesByRegExp(String regexp);
 
     /**
      * returns optional summary information of the heap.

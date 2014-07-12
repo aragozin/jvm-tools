@@ -66,8 +66,8 @@ class NumberList {
     private final RandomAccessFile data;
     private final int numberSize;
     private final int blockSize;
-    private final Map/*offset,block*/ blockCache;
-    private final Set dirtyBlocks;
+    private final Map<Long/*offset*/, byte[]/*block*/> blockCache;
+    private final Set<Long> dirtyBlocks;
     private long blocks;
     private MappedByteBuffer buf;
     private long mappedSize;
@@ -80,8 +80,8 @@ class NumberList {
         dataFile = File.createTempFile("NBProfiler", ".ref"); // NOI18N
         data = new RandomAccessFile(dataFile, "rw"); // NOI18N
         numberSize = elSize;
-        blockCache = new BlockLRUCache();
-        dirtyBlocks = new HashSet(100000);
+        blockCache = new BlockLRUCache<Long, byte[]>();
+        dirtyBlocks = new HashSet<Long>(100000);
         blockSize = (NUMBERS_IN_BLOCK + 1) * numberSize;
         dataFile.deleteOnExit();
         addBlock(); // first block is unused, since it starts at offset 0
@@ -179,9 +179,9 @@ class NumberList {
         return readNumber(block,0);
     }
 
-    List getNumbers(long startOffset) throws IOException {
+    List<Long> getNumbers(long startOffset) throws IOException {
         int slot;
-        List numbers = new ArrayList();
+        List<Long> numbers = new ArrayList<Long>();
 
         for(;;) {
             byte[] block = getBlock(startOffset);
@@ -342,7 +342,8 @@ class NumberList {
         dirtyBlocks.clear();
     }
 
-    private class BlockLRUCache extends LinkedHashMap {
+    @SuppressWarnings("serial")
+    private class BlockLRUCache<K, V> extends LinkedHashMap<K, V> {
 
         private static final int MAX_CAPACITY = 10000;
 
@@ -350,7 +351,7 @@ class NumberList {
             super(MAX_CAPACITY,0.75f,true);
         }
 
-        protected boolean removeEldestEntry(Map.Entry eldest) {
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
             if (size()>MAX_CAPACITY) {
                 Object key = eldest.getKey();
                 if (!dirtyBlocks.contains(key)) {

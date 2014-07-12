@@ -165,12 +165,12 @@ class LongMap extends AbstractLongMap {
             }
         }
 
-        List getReferences() {
+        List<Long> getReferences() {
             byte flags = getFlags();
             long ref = getReferencesPointer();
             if ((flags & NUMBER_LIST) == 0) {
                 if (ref == 0L) {
-                    return Collections.EMPTY_LIST;
+                    return Collections.<Long>emptyList();
                 } else {
                     return Collections.singletonList(new Long(ref));
                 }
@@ -181,7 +181,7 @@ class LongMap extends AbstractLongMap {
                     ex.printStackTrace();
                 }
             }
-            return Collections.EMPTY_LIST;
+            return Collections.<Long>emptyList();
         }
 
         long getOffset() {
@@ -232,10 +232,10 @@ class LongMap extends AbstractLongMap {
         public int compareTo(Object o) {
             RetainedSizeEntry other = (RetainedSizeEntry) o;
             // bigger object are at beginning
-            int diff = Long.compare(other.retainedSize, retainedSize);
+            int diff = longCompare(other.retainedSize, retainedSize);
             if (diff == 0) {
                 // sizes are the same, compare ids
-                return Long.compare(instanceId, other.instanceId);
+                return longCompare(instanceId, other.instanceId);
             }
             return diff;
         }
@@ -314,4 +314,9 @@ class LongMap extends AbstractLongMap {
         }
         return bigIds;
     }
+
+    private static int longCompare(long x, long y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
 }
