@@ -70,7 +70,7 @@ class SyntheticClassObjectValue extends HprofInstanceObjectValue {
         return new ClassDumpInstance(instance.dumpClass);
     }
 
-    long getInstanceId() {
+    public long getInstanceId() {
         return instance.dumpClass.getJavaClassId();
     }
 }

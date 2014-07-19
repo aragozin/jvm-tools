@@ -65,13 +65,18 @@ public interface Heap {
     List<JavaClass> getAllClasses();
 
     /**
+     * @return iterable walking through all instances in the heap
+     */
+    Iterable<Instance> getAllInstances();
+
+    /**
      * computes List of N biggest {@link JavaClass} instances in this heap.
      * The classes are ordered according to their retained size.
      * <br>
      * Speed: slow for the first time, subsequent invocations are normal.
      * @return list of N biggest {@link JavaClass} instances.
      */
-    List<JavaClass> getBiggestObjectsByRetainedSize(int number);
+    List<Instance> getBiggestObjectsByRetainedSize(int number);
 
     /**
      * returns {@link GCRoot} for {@link Instance}.

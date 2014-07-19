@@ -141,18 +141,18 @@ class ClassDump extends HprofObject implements JavaClass {
         return retainedSizeByClass;
     }
 
-    public List /*<Instance>*/ getInstances() {
+    public List<Instance> getInstances() {
         int instancesCount = getInstancesCount();
 
         if (instancesCount == 0) {
-            return Collections.EMPTY_LIST;
+            return Collections.<Instance>emptyList();
         }
 
         long classId = getJavaClassId();
         HprofHeap heap = getHprof();
         HprofByteBuffer dumpBuffer = getHprofBuffer();
         int idSize = dumpBuffer.getIDSize();
-        List instancesList = new ArrayList(instancesCount);
+        List<Instance> instancesList = new ArrayList<Instance>(instancesCount);
         TagBounds allInstanceDumpBounds = heap.getAllInstanceDumpBounds();
         long[] offset = new long[] { firstInstanceOffset };
 

@@ -198,7 +198,7 @@ class NearestGCRoot {
                         long refInstanceId;
 
                         if (val instanceof HprofFieldObjectValue) {
-                            refInstanceId = ((HprofFieldObjectValue) val).getInstanceID();
+                            refInstanceId = ((HprofFieldObjectValue) val).getInstanceId();
                         } else {
                              refInstanceId = ((HprofInstanceObjectValue) val).getInstanceId();
                         }

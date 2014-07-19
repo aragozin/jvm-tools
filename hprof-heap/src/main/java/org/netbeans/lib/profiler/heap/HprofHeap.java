@@ -143,7 +143,7 @@ class HprofHeap implements Heap {
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
 
-    public List /*<JavaClass>*/ getAllClasses() {
+    public List<JavaClass> getAllClasses() {
         ClassDumpSegment classDumpBounds;
 
         if (heapDumpSegment == null) {
@@ -159,7 +159,13 @@ class HprofHeap implements Heap {
         return classDumpBounds.createClassCollection();
     }
 
-    public List getBiggestObjectsByRetainedSize(int number) {
+    @Override
+    public Iterable<Instance> getAllInstances() {
+        return new HprofInstanceIterator.AsIterable(this);
+    }
+
+
+    public List<Instance> getBiggestObjectsByRetainedSize(int number) {
         long[] ids;
         List bigObjects = new ArrayList(number);
 
@@ -548,7 +554,7 @@ class HprofHeap implements Heap {
             while(fit.hasNext()) {
                 Object field = fit.next();
                 if (field instanceof HprofFieldObjectValue) {
-                    long outId = ((HprofFieldObjectValue)field).getInstanceID();
+                    long outId = ((HprofFieldObjectValue)field).getInstanceId();
 
                     if (outId != 0) {
                         LongMap.Entry entry = idToOffsetMap.get(outId);

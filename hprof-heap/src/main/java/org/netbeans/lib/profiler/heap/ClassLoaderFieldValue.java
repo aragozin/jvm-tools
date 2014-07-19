@@ -69,12 +69,12 @@ class ClassLoaderFieldValue extends HprofFieldObjectValue {
         return classDump.getClassLoader();
     }
 
-    long getInstanceID() {
+    public long getInstanceId() {
         return classDump.getClassLoaderId();
     }
 
     Object getTypeValue() {
-        return Long.valueOf(getInstanceID());
+        return Long.valueOf(getInstanceId());
     }
 
 

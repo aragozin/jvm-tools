@@ -58,4 +58,9 @@ public interface ObjectFieldValue extends FieldValue {
      * @return corresponding {@link Instance}
      */
     Instance getInstance();
+
+    /**
+     * @return id instance refered by field
+     */
+    long getInstanceId();
 }
