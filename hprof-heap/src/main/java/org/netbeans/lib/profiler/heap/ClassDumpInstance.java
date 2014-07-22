@@ -64,8 +64,8 @@ class ClassDumpInstance implements Instance {
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
 
-    public List getFieldValues() {
-        return Collections.EMPTY_LIST;
+    public List<FieldValue> getFieldValues() {
+        return Collections.emptyList();
     }
 
     public boolean isGCRoot() {
@@ -77,7 +77,7 @@ class ClassDumpInstance implements Instance {
     }
 
     public int getInstanceNumber() {
-        return classDump.getHprof().idToOffsetMap.get(getInstanceId()).getIndex();
+        return classDump.getHprof().idToInstanceNumber(getInstanceId());
     }
 
     public JavaClass getJavaClass() {
@@ -92,7 +92,7 @@ class ClassDumpInstance implements Instance {
         return 0;
     }
 
-    public List getReferences() {
+    public List<Value> getReferences() {
         return classDump.getReferences();
     }
 
@@ -104,7 +104,7 @@ class ClassDumpInstance implements Instance {
         return getJavaClass().getInstanceSize();
     }
 
-    public List getStaticFieldValues() {
+    public List<FieldValue> getStaticFieldValues() {
         return getJavaClass().getStaticFieldValues();
     }
 

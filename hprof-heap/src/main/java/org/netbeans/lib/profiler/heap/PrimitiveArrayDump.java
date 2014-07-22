@@ -69,7 +69,7 @@ class PrimitiveArrayDump extends ArrayDump implements PrimitiveArrayInstance {
         return dumpClass.classDumpSegment.getMinimumInstanceSize() + HPROF_ARRAY_OVERHEAD + (elementSize * getLength());
     }
 
-    public List /*<String>*/ getValues() {
+    public List<Object> getValues() {
         HprofByteBuffer dumpBuffer = dumpClass.getHprofBuffer();
         HprofHeap heap = dumpClass.getHprof();
         byte type = getType();

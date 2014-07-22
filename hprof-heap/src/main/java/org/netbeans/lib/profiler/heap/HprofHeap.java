@@ -55,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.netbeans.lib.profiler.heap.LongMap.Entry;
+
 /**
  *
  * @author Tomas Hurka
@@ -65,18 +67,18 @@ class HprofHeap implements Heap {
     // dump tags
     static final int STRING = 1;
     static final int LOAD_CLASS = 2;
-    private static final int UNLOAD_CLASS = 3;
+    static final int UNLOAD_CLASS = 3;
     static final int STACK_FRAME = 4;
     static final int STACK_TRACE = 5;
-    private static final int ALLOC_SITES = 6;
+    static final int ALLOC_SITES = 6;
     static final int HEAP_SUMMARY = 7;
-    private static final int START_THREAD = 0xa;
-    private static final int END_THREAD = 0xb;
-    private static final int HEAP_DUMP = 0xc;
-    private static final int HEAP_DUMP_SEGMENT = 0x1c;
-    private static final int HEAP_DUMP_END = 0x2c;
-    private static final int CPU_SAMPLES = 0xd;
-    private static final int CONTROL_SETTINGS = 0xe;
+    static final int START_THREAD = 0xa;
+    static final int END_THREAD = 0xb;
+    static final int HEAP_DUMP = 0xc;
+    static final int HEAP_DUMP_SEGMENT = 0x1c;
+    static final int HEAP_DUMP_END = 0x2c;
+    static final int CPU_SAMPLES = 0xd;
+    static final int CONTROL_SETTINGS = 0xe;
 
     // heap dump tags
     static final int ROOT_UNKNOWN = 0xff;
@@ -111,7 +113,7 @@ class HprofHeap implements Heap {
     LongMap idToOffsetMap;
     private NearestGCRoot nearestGCRoot;
     private ComputedSummary computedSummary;
-    private Map gcRoots;
+    private Map<Long, GCRoot> gcRoots;
     private DominatorTree domTree;
     final private Object gcRootLock = new Object();
     private TagBounds allInstanceDumpBounds;
@@ -137,8 +139,12 @@ class HprofHeap implements Heap {
             fillHeapTagBounds();
         }
 
-        idToOffsetMap = new LongMap(idMapSize,dumpBuffer.getIDSize(),dumpBuffer.getFoffsetSize());
+        idToOffsetMap = initIdMap();
         nearestGCRoot = new NearestGCRoot(this);
+    }
+
+    protected LongMap initIdMap() throws FileNotFoundException, IOException {
+        return new LongMap(idMapSize,dumpBuffer.getIDSize(),dumpBuffer.getFoffsetSize());
     }
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
@@ -147,13 +153,13 @@ class HprofHeap implements Heap {
         ClassDumpSegment classDumpBounds;
 
         if (heapDumpSegment == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         classDumpBounds = getClassDumpSegment();
 
         if (classDumpBounds == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         return classDumpBounds.createClassCollection();
@@ -164,10 +170,14 @@ class HprofHeap implements Heap {
         return new HprofInstanceIterator.AsIterable(this);
     }
 
+    @Override
+    public Iterable<Instance> getAllInstances(long instanceID) {
+        return new HprofInstanceIterator.AsIterable(this);
+    }
 
     public List<Instance> getBiggestObjectsByRetainedSize(int number) {
         long[] ids;
-        List bigObjects = new ArrayList(number);
+        List<Instance> bigObjects = new ArrayList<Instance>(number);
 
         computeRetainedSize();
         ids = idToOffsetMap.getBiggestObjectsByRetainedSize(number);
@@ -182,10 +192,10 @@ class HprofHeap implements Heap {
        return getGCRoot(instanceId);
     }
 
-    public Collection getGCRoots() {
+    public Collection<GCRoot> getGCRoots() {
         synchronized (gcRootLock) {
             if (heapDumpSegment == null) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             if (gcRoots == null) {
                 gcRoots = computeGCRootsFor(heapTagBounds[ROOT_UNKNOWN]);
@@ -266,9 +276,9 @@ class HprofHeap implements Heap {
         return getClassDumpSegment().getJavaClassByName(fqn);
     }
 
-    public Collection getJavaClassesByRegExp(String regexp) {
+    public Collection<JavaClass> getJavaClassesByRegExp(String regexp) {
         if (heapDumpSegment == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return getClassDumpSegment().getJavaClassesByRegExp(regexp);
     }
@@ -341,6 +351,25 @@ class HprofHeap implements Heap {
         }
     }
 
+    boolean eagerInstanceCounting() {
+        return false;
+    }
+
+    int idToInstanceNumber(long instanceId) {
+        Entry entry = idToOffsetMap.get(instanceId);
+        return entry == null ? 0 : entry.getIndex();
+    }
+
+    long idToDumpOffset(long instanceId) {
+        Entry entry = idToOffsetMap.get(instanceId);
+        return entry == null ? 0 : entry.getOffset();
+    }
+
+    void addClassEntry(long instanceId, long offset, int index) {
+        LongMap.Entry entry = idToOffsetMap.put(instanceId, offset);
+        entry.setIndex(index);
+    }
+
     int getValueSize(final byte type) {
         switch (type) {
             case HprofHeap.OBJECT:
@@ -374,7 +403,7 @@ class HprofHeap implements Heap {
         ClassDumpSegment classDumpBounds = getClassDumpSegment();
         int idSize = dumpBuffer.getIDSize();
         long[] offset = new long[] { allInstanceDumpBounds.startOffset };
-        Map classIdToClassMap = classDumpBounds.getClassIdToClassMap();
+        Map<Long, JavaClass> classIdToClassMap = classDumpBounds.getClassIdToClassMap();
 
         for (long counter = 0; offset[0] < allInstanceDumpBounds.endOffset; counter++) {
             int classIdOffset = 0;
@@ -417,21 +446,23 @@ class HprofHeap implements Heap {
         instancesCountComputed = true;
     }
 
-    List findReferencesFor(long instanceId) {
+    List<Value> findReferencesFor(long instanceId) {
         assert instanceId != 0L : "InstanceID is null";
         computeReferences();
 
-        List refs = new ArrayList();
-        List refIds = idToOffsetMap.get(instanceId).getReferences();
-        Iterator refIdsIt = refIds.iterator();
+        List<Value> refs = new ArrayList<Value>();
+        List<Long> refIds = idToOffsetMap.get(instanceId).getReferences();
+        Iterator<Long> refIdsIt = refIds.iterator();
         int idSize = dumpBuffer.getIDSize();
         ClassDumpSegment classDumpBounds = getClassDumpSegment();
         long[] offset = new long[1];
 
         while (refIdsIt.hasNext()) {
-            long foundInstanceId = ((Long)refIdsIt.next()).longValue();
+            long foundInstanceId = refIdsIt.next();
             offset[0] = idToOffsetMap.get(foundInstanceId).getOffset();
+            @SuppressWarnings("unused")
             int classIdOffset = 0;
+            @SuppressWarnings("unused")
             int instanceIdOffset = 0;
             long start = offset[0];
             int tag = readDumpTag(offset);
@@ -444,7 +475,7 @@ class HprofHeap implements Heap {
                 long classId = dumpBuffer.getID(start + 1 + idSize + 4);
                 ClassDump classDump = classDumpBounds.getClassDumpByID(classId);
                 InstanceDump instance = new InstanceDump(classDump, start);
-                Iterator fieldIt = instance.getFieldValues().iterator();
+                Iterator<FieldValue> fieldIt = instance.getFieldValues().iterator();
 
                 while (fieldIt.hasNext()) {
                     Object field = fieldIt.next();
@@ -493,7 +524,7 @@ class HprofHeap implements Heap {
         ClassDumpSegment classDumpBounds = getClassDumpSegment();
         int idSize = dumpBuffer.getIDSize();
         long[] offset = new long[] { allInstanceDumpBounds.startOffset };
-        Map classIdToClassMap = classDumpBounds.getClassIdToClassMap();
+        Map<Long, JavaClass> classIdToClassMap = classDumpBounds.getClassIdToClassMap();
 
         computeInstances();
         for (long counter=0; offset[0] < allInstanceDumpBounds.endOffset; counter++) {
@@ -505,8 +536,8 @@ class HprofHeap implements Heap {
                 ClassDump classDump = (ClassDump) classIdToClassMap.get(new Long(classId));
                 long instanceId = dumpBuffer.getID(start+1);
                 long inOff = start+1+idSize+4+idSize+4;
-                List fields = classDump.getAllInstanceFields();
-                Iterator fit = fields.iterator();
+                List<Field> fields = classDump.getAllInstanceFields();
+                Iterator<Field> fit = fields.iterator();
 
                 while(fit.hasNext()) {
                     HprofField field = (HprofField) fit.next();
@@ -544,12 +575,12 @@ class HprofHeap implements Heap {
             HeapProgress.progress(counter,allInstanceDumpBounds.startOffset,start,allInstanceDumpBounds.endOffset);
         }
 
-        Iterator classesIt = getClassDumpSegment().createClassCollection().iterator();
+        Iterator<JavaClass> classesIt = getClassDumpSegment().createClassCollection().iterator();
 
         while (classesIt.hasNext()) {
             ClassDump classDump = (ClassDump)classesIt.next();
-            List fields = classDump.getStaticFieldValues();
-            Iterator fit = fields.iterator();
+            List<FieldValue> fields = classDump.getStaticFieldValues();
+            Iterator<FieldValue> fit = fields.iterator();
 
             while(fit.hasNext()) {
                 Object field = fit.next();
@@ -942,8 +973,8 @@ class HprofHeap implements Heap {
         return tag;
     }
 
-    private Map computeGCRootsFor(TagBounds tagBounds) {
-        Map roots = new HashMap();
+    private Map<Long, GCRoot> computeGCRootsFor(TagBounds tagBounds) {
+        Map<Long, GCRoot> roots = new HashMap<Long, GCRoot>();
 
         if (tagBounds != null) {
             int rootTag = tagBounds.tag;
@@ -1127,6 +1158,7 @@ class HprofHeap implements Heap {
 
             offset[0] += idSize;
 
+            @SuppressWarnings("unused")
             byte type = readValue(offset);
         }
 

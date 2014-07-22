@@ -62,7 +62,7 @@ class ClassDumpSegment extends TagBounds {
     //~ Instance fields ----------------------------------------------------------------------------------------------------------
 
     HprofHeap hprofHeap;
-    Map /*<JavaClass represeting array,Integer - allInstanceSize>*/ arrayMap;
+    Map<JavaClass, Long> arrayMap;
     final int classIDOffset;
     final int classLoaderIDOffset;
     final int constantPoolSizeOffset;
@@ -79,9 +79,9 @@ class ClassDumpSegment extends TagBounds {
     final int stackTraceSerialNumberOffset;
     final int superClassIDOffset;
     ClassDump java_lang_Class;
-    Map /*<JavaClass,List<Field>>*/ fieldsCache;
-    private List /*<JavaClass>*/ classes;
-    private Map /*<Byte,JavaClass>*/ primitiveArrayMap;
+    Map<JavaClass,List<Field>> fieldsCache;
+    private List<JavaClass> classes;
+    private Map<Integer,JavaClass> primitiveArrayMap;
 
     //~ Constructors -------------------------------------------------------------------------------------------------------------
 
@@ -119,13 +119,13 @@ class ClassDumpSegment extends TagBounds {
         if (classObjectID == 0) {
             return null;
         }
-        List allClasses = createClassCollection();
-        LongMap.Entry entry = hprofHeap.idToOffsetMap.get(classObjectID);
+        List<JavaClass> allClasses = createClassCollection();
+        int index = hprofHeap.idToInstanceNumber(classObjectID);
 
-        if (entry != null) {
+        if (index > 0) {
             try {
-                ClassDump dump = (ClassDump) allClasses.get(entry.getIndex() - 1);
-                if (dump.fileOffset == entry.getOffset()) {
+                ClassDump dump = (ClassDump) allClasses.get(index - 1);
+                if (dump.fileOffset == hprofHeap.idToDumpOffset(classObjectID)) {
                     return dump;
                 }
             } catch (IndexOutOfBoundsException ex) { // classObjectID do not reffer to ClassDump, its instance number is > classes.size()
@@ -141,7 +141,7 @@ class ClassDumpSegment extends TagBounds {
     }
 
     JavaClass getJavaClassByName(String fqn) {
-        Iterator classIt = createClassCollection().iterator();
+        Iterator<JavaClass> classIt = createClassCollection().iterator();
 
         while (classIt.hasNext()) {
             ClassDump cls = (ClassDump) classIt.next();
@@ -154,9 +154,9 @@ class ClassDumpSegment extends TagBounds {
         return null;
     }
 
-    Collection getJavaClassesByRegExp(String regexp) {
-        Iterator classIt = createClassCollection().iterator();
-        Collection result = new ArrayList(256);
+    Collection<JavaClass> getJavaClassesByRegExp(String regexp) {
+        Iterator<JavaClass> classIt = createClassCollection().iterator();
+        Collection<JavaClass> result = new ArrayList<JavaClass>(256);
         Pattern pattern = Pattern.compile(regexp);
 
         while (classIt.hasNext()) {
@@ -183,15 +183,15 @@ class ClassDumpSegment extends TagBounds {
         return primitiveArray;
     }
 
-    Map getClassIdToClassMap() {
-        Collection allClasses = createClassCollection();
-        Map map = new HashMap(allClasses.size()*4/3);
-        Iterator classIt = allClasses.iterator();
+    Map<Long, JavaClass> getClassIdToClassMap() {
+        Collection<JavaClass> allClasses = createClassCollection();
+        Map<Long, JavaClass> map = new HashMap<Long, JavaClass>(allClasses.size()*4/3);
+        Iterator<JavaClass> classIt = allClasses.iterator();
 
         while(classIt.hasNext()) {
-            ClassDump cls = (ClassDump) classIt.next();
+            JavaClass cls = classIt.next();
 
-            map.put(new Long(cls.getJavaClassId()),cls);
+            map.put(cls.getJavaClassId(),cls);
         }
         return map;
     }
@@ -218,16 +218,16 @@ class ClassDumpSegment extends TagBounds {
             }
 
             size += (getMinimumInstanceSize() + ArrayDump.HPROF_ARRAY_OVERHEAD + (((long)elements) * elSize));
-            arrayMap.put(cls, Long.valueOf(size));
+            arrayMap.put((JavaClass)cls, Long.valueOf(size));
         }
     }
 
-    synchronized List /*<JavaClass>*/ createClassCollection() {
+    synchronized List<JavaClass> createClassCollection() {
         if (classes != null) {
             return classes;
         }
 
-        classes = new ArrayList /*<JavaClass>*/(1000);
+        classes = new ArrayList<JavaClass>(1000);
 
         long[] offset = new long[] { startOffset };
 
@@ -238,24 +238,22 @@ class ClassDumpSegment extends TagBounds {
             if (tag == HprofHeap.CLASS_DUMP) {
                 ClassDump classDump = new ClassDump(this, start);
                 long classId = classDump.getJavaClassId();
-                LongMap.Entry classEntry = hprofHeap.idToOffsetMap.put(classId, start);
-
                 classes.add(classDump);
-                classEntry.setIndex(classes.size());
+                hprofHeap.addClassEntry(classId, start, classes.size());
             }
         }
 
         hprofHeap.getLoadClassSegment().setLoadClassOffsets();
-        arrayMap = new HashMap(classes.size() / 15);
+        arrayMap = new HashMap<JavaClass, Long>(classes.size() / 15);
         extractSpecialClasses();
 
         return classes;
     }
 
     private void extractSpecialClasses() {
-        primitiveArrayMap = new HashMap();
+        primitiveArrayMap = new HashMap<Integer, JavaClass>();
 
-        Iterator classIt = classes.iterator();
+        Iterator<JavaClass> classIt = classes.iterator();
 
         while (classIt.hasNext()) {
             ClassDump jcls = (ClassDump) classIt.next();
@@ -306,14 +304,16 @@ class ClassDumpSegment extends TagBounds {
         }
     }
 
-    private static class FieldsCache extends LinkedHashMap {
+    @SuppressWarnings("serial")
+    private static class FieldsCache extends LinkedHashMap<JavaClass,List<Field>> {
+
         private static final int SIZE = 500;
 
         FieldsCache() {
             super(SIZE,0.75f,true);
         }
 
-        protected boolean removeEldestEntry(Map.Entry eldest) {
+        protected boolean removeEldestEntry(Map.Entry<JavaClass,List<Field>> eldest) {
             if (size() > SIZE) {
                 return true;
             }

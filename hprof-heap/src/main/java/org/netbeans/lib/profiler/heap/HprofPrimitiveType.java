@@ -54,10 +54,10 @@ import java.util.Map;
 class HprofPrimitiveType implements PrimitiveType {
     //~ Static fields/initializers -----------------------------------------------------------------------------------------------
 
-    private static Map primitiveTypeMap;
+    private static Map<Integer, PrimitiveType> primitiveTypeMap;
 
     static {
-        primitiveTypeMap = new HashMap(10);
+        primitiveTypeMap = new HashMap<Integer, PrimitiveType>(10);
         primitiveTypeMap.put(Integer.valueOf(HprofHeap.BOOLEAN), new HprofPrimitiveType("boolean")); //NOI18N
         primitiveTypeMap.put(Integer.valueOf(HprofHeap.CHAR), new HprofPrimitiveType("char")); //NOI18N
         primitiveTypeMap.put(Integer.valueOf(HprofHeap.FLOAT), new HprofPrimitiveType("float")); //NOI18N

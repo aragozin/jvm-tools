@@ -62,7 +62,7 @@ class StringSegment extends TagBounds {
     private final int timeOffset;
     private LongHashMap stringIDMap;
     private HprofHeap hprofHeap;
-    private Map stringCache = Collections.synchronizedMap(new StringCache());
+    private Map<Long, String> stringCache = Collections.synchronizedMap(new StringCache());
     //~ Constructors -------------------------------------------------------------------------------------------------------------
 
     StringSegment(HprofHeap heap, long start, long end) {
@@ -154,14 +154,15 @@ class StringSegment extends TagBounds {
         return getDumpBuffer().getID(start + stringIDOffset);
     }
 
-    private static class StringCache extends LinkedHashMap {
+    @SuppressWarnings("serial")
+    private static class StringCache extends LinkedHashMap<Long, String> {
         private static final int SIZE = 1000;
 
         StringCache() {
             super(SIZE,0.75f,true);
         }
 
-        protected boolean removeEldestEntry(Map.Entry eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Long, String> eldest) {
             if (size() > SIZE) {
                 return true;
             }

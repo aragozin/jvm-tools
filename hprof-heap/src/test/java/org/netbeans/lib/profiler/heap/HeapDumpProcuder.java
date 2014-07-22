@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2014 Alexey Ragozin
  *
  * Oracle and Java are registered trademarks of Oracle and/or its affiliates.
  * Other names may be trademarks of their respective owners.
@@ -40,48 +40,41 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
-
 package org.netbeans.lib.profiler.heap;
 
-import java.util.Iterator;
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- * @author Tomas Hurka
- */
-class JavaFrameHprofGCRoot extends HprofGCRoot implements JavaFrameGCRoot {
+import org.gridkit.lab.jvm.attach.HeapDumper;
 
-    JavaFrameHprofGCRoot(HprofHeap h, long offset) {
-        super(h,offset);
+public class HeapDumpProcuder {
+
+    private static int PID;
+    static {
+        String pid = ManagementFactory.getRuntimeMXBean().getName();
+        PID = Integer.valueOf(pid.substring(0, pid.indexOf('@')));
     }
 
-    //~ Methods ------------------------------------------------------------------------------------------------------------------
+    private static String HEAP_DUMP_PATH = "target/dump/test.dump";
 
-
-
-    private int getThreadSerialNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize());
-    }
-
-    public int getFrameNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize() + 4);
-    }
-
-    public ThreadObjectGCRoot getThreadGCRoot() {
-        int serial = getThreadSerialNumber();
-        Iterator<GCRoot> gcRootsIt = heap.getGCRoots().iterator();
-
-        while(gcRootsIt.hasNext()) {
-            Object gcRoot = gcRootsIt.next();
-
-            if (gcRoot instanceof ThreadObjectHprofGCRoot) {
-                ThreadObjectHprofGCRoot threadObjGC = (ThreadObjectHprofGCRoot) gcRoot;
-                if (serial == threadObjGC.getThreadSerialNumber()) {
-                    return threadObjGC;
-                }
-            }
+    public static File getHeapDump() {
+        File file = new File(HEAP_DUMP_PATH);
+        if (!file.exists()) {
+            System.out.println("Generating heap dump: " + HEAP_DUMP_PATH);
+            initTestHeap();
+            System.out.println(HeapDumper.dumpLive(PID, HEAP_DUMP_PATH, 120000));
         }
-        return null;
+        return file;
     }
 
+    static List<DummyA> dummyA = new ArrayList<DummyA>();
+
+    public static void initTestHeap() {
+
+        for(int i = 0; i != 50; ++i) {
+            dummyA.add(new DummyA());
+        }
+    }
 }

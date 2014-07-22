@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2014 Alexey Ragozin
  *
  * Oracle and Java are registered trademarks of Oracle and/or its affiliates.
  * Other names may be trademarks of their respective owners.
@@ -40,48 +40,51 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
-
 package org.netbeans.lib.profiler.heap;
 
-import java.util.Iterator;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- *
- * @author Tomas Hurka
- */
-class JavaFrameHprofGCRoot extends HprofGCRoot implements JavaFrameGCRoot {
+import org.junit.Test;
 
-    JavaFrameHprofGCRoot(HprofHeap h, long offset) {
-        super(h,offset);
+public abstract class BaseHeapTest {
+
+    public abstract Heap getHeap();
+
+    @Test
+    public void verify_DummyA_via_classes() {
+
+        Heap heap = getHeap();
+        JavaClass jclass = heap.getJavaClassByName(DummyA.class.getName());
+        int n = 0;
+        for(Instance i : jclass.getInstances()) {
+            ++n;
+            assertThat(i.getFieldValues().size()).isEqualTo(1);
+            FieldValue fv = i.getFieldValues().get(0);
+            assertThat(fv).isInstanceOf(ObjectFieldValue.class);
+            Instance ii = ((ObjectFieldValue)fv).getInstance();
+            assertThat(ii).isInstanceOf(PrimitiveArrayInstance.class);
+        }
+
+        assertThat(n).isEqualTo(50);
     }
 
-    //~ Methods ------------------------------------------------------------------------------------------------------------------
+    @Test
+    public void verify_DummyA_via_scan() {
 
-
-
-    private int getThreadSerialNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize());
-    }
-
-    public int getFrameNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize() + 4);
-    }
-
-    public ThreadObjectGCRoot getThreadGCRoot() {
-        int serial = getThreadSerialNumber();
-        Iterator<GCRoot> gcRootsIt = heap.getGCRoots().iterator();
-
-        while(gcRootsIt.hasNext()) {
-            Object gcRoot = gcRootsIt.next();
-
-            if (gcRoot instanceof ThreadObjectHprofGCRoot) {
-                ThreadObjectHprofGCRoot threadObjGC = (ThreadObjectHprofGCRoot) gcRoot;
-                if (serial == threadObjGC.getThreadSerialNumber()) {
-                    return threadObjGC;
-                }
+        Heap heap = getHeap();
+        JavaClass jclass = heap.getJavaClassByName(DummyA.class.getName());
+        int n = 0;
+        for(Instance i : heap.getAllInstances()) {
+            if (i.getJavaClass() == jclass) {
+                ++n;
+                assertThat(i.getFieldValues().size()).isEqualTo(1);
+                FieldValue fv = i.getFieldValues().get(0);
+                assertThat(fv).isInstanceOf(ObjectFieldValue.class);
+                Instance ii = ((ObjectFieldValue)fv).getInstance();
+                assertThat(ii).isInstanceOf(PrimitiveArrayInstance.class);
             }
         }
-        return null;
-    }
 
+        assertThat(n).isEqualTo(50);
+    }
 }

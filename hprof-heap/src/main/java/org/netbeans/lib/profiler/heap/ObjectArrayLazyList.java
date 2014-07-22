@@ -50,7 +50,7 @@ import java.util.AbstractList;
  *
  * @author Tomas Hurka
  */
-class ObjectArrayLazyList extends AbstractList {
+class ObjectArrayLazyList extends AbstractList<Instance> {
     //~ Instance fields ----------------------------------------------------------------------------------------------------------
 
     private final HprofByteBuffer dumpBuffer;
@@ -71,7 +71,7 @@ class ObjectArrayLazyList extends AbstractList {
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
 
-    public Object get(int index) {
+    public Instance get(int index) {
         return heap.getInstanceByID(dumpBuffer.getID(offset + ((long)index * (long)idSize)));
     }
 

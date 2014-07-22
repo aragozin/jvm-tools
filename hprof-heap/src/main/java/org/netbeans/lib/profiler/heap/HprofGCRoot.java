@@ -54,10 +54,10 @@ import java.util.Map;
 class HprofGCRoot extends HprofObject implements GCRoot {
     //~ Static fields/initializers -----------------------------------------------------------------------------------------------
 
-    static Map kindMap;
+    static Map<Integer, String> kindMap;
 
     static {
-        kindMap = new HashMap();
+        kindMap = new HashMap<Integer, String>();
         kindMap.put(Integer.valueOf(HprofHeap.ROOT_UNKNOWN), GCRoot.UNKNOWN);
         kindMap.put(Integer.valueOf(HprofHeap.ROOT_JNI_GLOBAL), GCRoot.JNI_GLOBAL);
         kindMap.put(Integer.valueOf(HprofHeap.ROOT_JNI_LOCAL), GCRoot.JNI_LOCAL);

@@ -50,7 +50,7 @@ import java.util.AbstractList;
  *
  * @author Tomas Hurka
  */
-class PrimitiveArrayLazyList extends AbstractList {
+class PrimitiveArrayLazyList extends AbstractList<Object> {
     //~ Instance fields ----------------------------------------------------------------------------------------------------------
 
     private final HprofByteBuffer dumpBuffer;

@@ -62,7 +62,7 @@ class ComputedSummary implements HeapSummary {
     ComputedSummary(HprofHeap heap) {
         long bytesCount = 0;
         long instancesCount = 0;
-        Iterator classIt = heap.getAllClasses().iterator();
+        Iterator<JavaClass> classIt = heap.getAllClasses().iterator();
 
         while (classIt.hasNext()) {
             JavaClass jcls = (JavaClass) classIt.next();

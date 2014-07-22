@@ -68,5 +68,5 @@ public interface ObjectArrayInstance extends Instance {
      * Speed: normal
      * @return list {@link Instance} of elements.
      */
-    List /*<Instance>*/ getValues();
+    List<Instance> getValues();
 }

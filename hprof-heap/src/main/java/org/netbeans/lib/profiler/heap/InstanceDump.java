@@ -44,7 +44,6 @@
 package org.netbeans.lib.profiler.heap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,11 +66,11 @@ class InstanceDump extends HprofObject implements Instance {
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
 
-    public List getFieldValues() {
+    public List<FieldValue> getFieldValues() {
         long offset = fileOffset + getInstanceFieldValuesOffset();
-        List fields = dumpClass.getAllInstanceFields();
-        List values = new ArrayList(fields.size());
-        Iterator fit = fields.iterator();
+        List<Field> fields = dumpClass.getAllInstanceFields();
+        List<FieldValue> values = new ArrayList<FieldValue>(fields.size());
+        Iterator<Field> fit = fields.iterator();
 
         while (fit.hasNext()) {
             HprofField field = (HprofField) fit.next();
@@ -97,7 +96,7 @@ class InstanceDump extends HprofObject implements Instance {
     }
 
     public int getInstanceNumber() {
-        return getHprof().idToOffsetMap.get(getInstanceId()).getIndex();
+        return getHprof().idToInstanceNumber(getInstanceId());
     }
 
     public JavaClass getJavaClass() {
@@ -112,7 +111,7 @@ class InstanceDump extends HprofObject implements Instance {
         return 0;
     }
 
-    public List getReferences() {
+    public List<Value> getReferences() {
         return getHprof().findReferencesFor(getInstanceId());
     }
 
@@ -124,12 +123,12 @@ class InstanceDump extends HprofObject implements Instance {
         return dumpClass.getInstanceSize();
     }
 
-    public List /*<FieldValue>*/ getStaticFieldValues() {
+    public List<FieldValue> getStaticFieldValues() {
         return dumpClass.getStaticFieldValues();
     }
 
     public Object getValueOfField(String name) {
-        Iterator fIt = getFieldValues().iterator();
+        Iterator<FieldValue> fIt = getFieldValues().iterator();
         FieldValue matchingFieldValue = null;
 
         while (fIt.hasNext()) {

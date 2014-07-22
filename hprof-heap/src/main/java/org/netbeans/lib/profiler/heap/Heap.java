@@ -70,6 +70,11 @@ public interface Heap {
     Iterable<Instance> getAllInstances();
 
     /**
+     * @return iterable walking through all instances in the heap, starting with given instanceID
+     */
+    Iterable<Instance> getAllInstances(long instanceID);
+
+    /**
      * computes List of N biggest {@link JavaClass} instances in this heap.
      * The classes are ordered according to their retained size.
      * <br>

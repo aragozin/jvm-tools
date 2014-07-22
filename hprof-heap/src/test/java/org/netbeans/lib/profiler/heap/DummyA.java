@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2014 Alexey Ragozin
  *
  * Oracle and Java are registered trademarks of Oracle and/or its affiliates.
  * Other names may be trademarks of their respective owners.
@@ -40,48 +40,14 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
-
 package org.netbeans.lib.profiler.heap;
 
-import java.util.Iterator;
+public class DummyA {
 
-/**
- *
- * @author Tomas Hurka
- */
-class JavaFrameHprofGCRoot extends HprofGCRoot implements JavaFrameGCRoot {
+    int[] values;
 
-    JavaFrameHprofGCRoot(HprofHeap h, long offset) {
-        super(h,offset);
-    }
-
-    //~ Methods ------------------------------------------------------------------------------------------------------------------
-
-
-
-    private int getThreadSerialNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize());
-    }
-
-    public int getFrameNumber() {
-        return heap.dumpBuffer.getInt(fileOffset + 1 + heap.dumpBuffer.getIDSize() + 4);
-    }
-
-    public ThreadObjectGCRoot getThreadGCRoot() {
-        int serial = getThreadSerialNumber();
-        Iterator<GCRoot> gcRootsIt = heap.getGCRoots().iterator();
-
-        while(gcRootsIt.hasNext()) {
-            Object gcRoot = gcRootsIt.next();
-
-            if (gcRoot instanceof ThreadObjectHprofGCRoot) {
-                ThreadObjectHprofGCRoot threadObjGC = (ThreadObjectHprofGCRoot) gcRoot;
-                if (serial == threadObjGC.getThreadSerialNumber()) {
-                    return threadObjGC;
-                }
-            }
-        }
-        return null;
+    public DummyA() {
+        values = new int[16];
     }
 
 }

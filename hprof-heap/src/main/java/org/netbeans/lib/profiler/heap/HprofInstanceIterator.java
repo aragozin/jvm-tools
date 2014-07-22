@@ -12,10 +12,10 @@ class HprofInstanceIterator implements Iterator<Instance> {
     private Instance nextInstance;
 
 
-    public HprofInstanceIterator(HprofHeap heap) {
+    public HprofInstanceIterator(HprofHeap heap, long start) {
         this.heap = heap;
         allInstanceDumpBounds = heap.getAllInstanceDumpBounds();
-        pointer = new long[]{allInstanceDumpBounds.startOffset};
+        pointer = new long[]{start};
         dumpBuffer = heap.dumpBuffer;
         nextInstance = seek();
     }
@@ -86,14 +86,21 @@ class HprofInstanceIterator implements Iterator<Instance> {
     static class AsIterable implements Iterable<Instance> {
 
         private final HprofHeap heap;
+        private final long start;
 
         public AsIterable(HprofHeap heap) {
             this.heap = heap;
+            this.start = heap.getAllInstanceDumpBounds().startOffset;
+        }
+
+        public AsIterable(HprofHeap heap, long start) {
+            this.heap = heap;
+            this.start = start;
         }
 
         @Override
         public Iterator<Instance> iterator() {
-            return new HprofInstanceIterator(heap);
+            return new HprofInstanceIterator(heap, start);
         }
     }
 }
