@@ -54,12 +54,12 @@ import java.util.Map;
  *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
-class FastHprofHeap extends HprofHeap {
+public class FastHprofHeap extends HprofHeap {
 
     private Map<Long, ClassEntry> classes;
     private HeapOffsetMap offsetMap;
 
-    FastHprofHeap(File dumpFile, int seg) throws FileNotFoundException, IOException {
+    public FastHprofHeap(File dumpFile, int seg) throws FileNotFoundException, IOException {
         super(dumpFile, seg);
         classes = new HashMap<Long, ClassEntry>();
         offsetMap = new HeapOffsetMap(this);
