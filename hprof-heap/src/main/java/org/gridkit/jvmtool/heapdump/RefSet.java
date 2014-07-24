@@ -1,7 +1,15 @@
-package org.gridkit.jvmtool.util;
+package org.gridkit.jvmtool.heapdump;
+
+import org.gridkit.jvmtool.util.PagedBitMap;
 
 
 
+/**
+ * This is thin wrapper around {@link PagedBitMap}
+ * enforcing 8 byte index alignment (and compressing indexes in underlying bitmap).
+ *
+ * @author Alexey Ragozin (alexey.ragozin@gmail.com)
+ */
 public class RefSet extends PagedBitMap {
 
     @Override

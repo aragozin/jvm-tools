@@ -1,8 +1,13 @@
 package org.gridkit.jvmtool.util;
 
-
-
-class PagedBitMap {
+/**
+ * Simple bit map using paged long array for storage.
+ * Untouched pages are not allocated, so it is reasonably efficient
+ * for bitmaps with large gaps.
+ *
+ * @author Alexey Ragozin (alexey.ragozin@gmail.com)
+ */
+public class PagedBitMap {
 
     private PagedLongArray array = new PagedLongArray();
 
@@ -40,14 +45,24 @@ class PagedBitMap {
     public void set(long index, boolean value) {
         long lindex = index / 64;
         long bit = 1l << (index % 64);
+        if (value) {
         array.set(lindex, bit | array.get(lindex));
+    }
+        else {
+            array.set(lindex, (~bit) & array.get(lindex));
+        }
     }
 
     public boolean getAndSet(long index, boolean value) {
         long lindex = index / 64;
         long bit = 1l << (index % 64);
         long ov = array.get(lindex);
+        if (value) {
         array.set(lindex, bit | ov);
+        }
+        else {
+            array.set(lindex, (~bit) & ov);
+        }
         return 0 != (bit & ov);
     }
 

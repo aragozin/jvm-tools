@@ -46,7 +46,7 @@ import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class LazyInstanceList extends AbstractList<Instance> {
+class LazyInstanceList extends AbstractList<Instance> {
 
     private final Heap heap;
     private final JavaClass jclass;

@@ -38,10 +38,8 @@ class HprofInstanceIterator implements Iterator<Instance> {
     }
 
     Instance seek() {
-        if (pointer[0] >= allInstanceDumpBounds.endOffset) {
-            return null;
-        }
-        else {
+        while(pointer[0] < allInstanceDumpBounds.endOffset) {
+
             long start = pointer[0];
             int classIdOffset = 0;
             long instanceClassId = 0L;
@@ -72,10 +70,12 @@ class HprofInstanceIterator implements Iterator<Instance> {
                 instance = new PrimitiveArrayDump(jc, start);
             } else {
                 // ignore
+                continue;
             }
 
             return instance;
         }
+        return null;
     }
 
     @Override

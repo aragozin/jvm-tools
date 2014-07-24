@@ -148,7 +148,58 @@ class ClassDump extends HprofObject implements JavaClass {
             return Collections.<Instance>emptyList();
         }
 
+        if (!getHprof().eagerInstanceCounting()) {
+            System.out.println("Using lazy instance list");
         LazyInstanceList instancesList = new LazyInstanceList(getHprof(), this, instancesCount);
+            return instancesList;
+        }
+
+        long classId = getJavaClassId();
+        HprofHeap heap = getHprof();
+        HprofByteBuffer dumpBuffer = getHprofBuffer();
+        int idSize = dumpBuffer.getIDSize();
+        List<Instance> instancesList = new ArrayList<Instance>(instancesCount);
+        TagBounds allInstanceDumpBounds = heap.getAllInstanceDumpBounds();
+        long[] offset = new long[] { firstInstanceOffset };
+
+        while (offset[0] < allInstanceDumpBounds.endOffset) {
+            long start = offset[0];
+            int classIdOffset = 0;
+            long instanceClassId = 0L;
+            int tag = heap.readDumpTag(offset);
+            Instance instance;
+
+            if (tag == HprofHeap.INSTANCE_DUMP) {
+                classIdOffset = idSize + 4;
+            } else if (tag == HprofHeap.OBJECT_ARRAY_DUMP) {
+                classIdOffset = idSize + 4 + 4;
+            } else if (tag == HprofHeap.PRIMITIVE_ARRAY_DUMP) {
+                byte type = dumpBuffer.get(start + 1 + idSize + 4 + 4);
+                instanceClassId = classDumpSegment.getPrimitiveArrayClass(type).getJavaClassId();
+            }
+
+            if (classIdOffset != 0) {
+                instanceClassId = dumpBuffer.getID(start + 1 + classIdOffset);
+            }
+
+            if (instanceClassId == classId) {
+                if (tag == HprofHeap.INSTANCE_DUMP) {
+                    instance = new InstanceDump(this, start);
+                } else if (tag == HprofHeap.OBJECT_ARRAY_DUMP) {
+                    instance = new ObjectArrayDump(this, start);
+                } else if (tag == HprofHeap.PRIMITIVE_ARRAY_DUMP) {
+                    instance = new PrimitiveArrayDump(this, start);
+                } else {
+                    throw new IllegalArgumentException("Illegal tag " + tag); // NOI18N
+                }
+
+                instancesList.add(instance);
+
+                if (--instancesCount == 0) {
+                    return instancesList;
+                }
+            }
+        }
 
         if (DEBUG) {
             System.out.println("Class " + getName() + " Col " + instancesList.size() + " instances " + getInstancesCount()); // NOI18N

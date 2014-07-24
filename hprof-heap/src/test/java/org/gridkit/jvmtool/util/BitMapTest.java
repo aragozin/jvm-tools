@@ -1,5 +1,8 @@
 package org.gridkit.jvmtool.util;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -53,6 +56,39 @@ public class BitMapTest {
             Assert.assertFalse(pbm.get(1000l * len + 3 * i + 1));
             Assert.assertFalse(pbm.get(1000l * len + 3 * i + 2));
         }
-
     }
+
+    @Test
+    public void delete_test() {
+        PagedBitMap pbm = new PagedBitMap();
+        pbm.set(20, true);
+        pbm.set(40, true);
+        pbm.set(60, true);
+        pbm.set(80, true);
+        pbm.set(100, true);
+        assertThat(pbm.get(20)).isTrue();
+        assertThat(pbm.get(40)).isTrue();
+        assertThat(pbm.get(60)).isTrue();
+        assertThat(pbm.get(80)).isTrue();
+        assertThat(pbm.get(100)).isTrue();
+        pbm.set(40, false);
+        assertThat(pbm.get(20)).isTrue();
+        assertThat(pbm.get(40)).isFalse();
+        assertThat(pbm.get(60)).isTrue();
+        assertThat(pbm.get(80)).isTrue();
+        assertThat(pbm.get(100)).isTrue();
+
+        assertThat(pbm.seekNext(0)).isEqualTo(20);
+        assertThat(pbm.seekNext(21)).isEqualTo(60);
+        assertThat(pbm.seekNext(41)).isEqualTo(60);
+        assertThat(pbm.seekNext(61)).isEqualTo(80);
+        assertThat(pbm.seekNext(81)).isEqualTo(100);
+        assertThat(pbm.seekNext(101)).isEqualTo(-1);
+
+        assertThat(pbm.getAndSet(60, false)).isTrue();
+        assertThat(pbm.getAndSet(40, true)).isFalse();
+        assertThat(pbm.get(40)).isTrue();
+        assertThat(pbm.get(60)).isFalse();
+    }
+
 }
