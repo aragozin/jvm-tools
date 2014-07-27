@@ -51,7 +51,7 @@ import java.util.Arrays;
  */
 class HeapOffsetMap {
 
-    private final int pageSizeBits = 14;
+    private final int pageSizeBits = 12;
     private final int pageSize = 1 << pageSizeBits;
     private final int allignment = 8;
 
@@ -76,7 +76,7 @@ class HeapOffsetMap {
         offsetMap = new long[(int)((span + pageSize - 1) / pageSize)];
         offsetMap[0] = bounds.startOffset;
 
-        cachePageId = new int[7];
+        cachePageId = new int[257];
         cachePageData = new int[cachePageId.length][pageSize];
         Arrays.fill(cachePageId, -1);
     }
