@@ -11,8 +11,12 @@ public class HeapPathTest {
     @Test
     public void parse_path() {
 
-        String text = Arrays.toString(HeapPathWalker.parsePath("inputsByName.table[*].value"));
+        String text;
+        text = Arrays.toString(HeapPathWalker.parsePath("inputsByName.table[*].value"));
         assertThat(text).isEqualTo("[inputsByName, table, [*], value]");
+
+        text = Arrays.toString(HeapPathWalker.parsePath("inputsByName.table[*].value(**.String)"));
+        assertThat(text).isEqualTo("[inputsByName, table, [*], value, (**.String)]");
 
     }
 

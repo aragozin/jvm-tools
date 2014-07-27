@@ -158,14 +158,12 @@ class HeapPathWalker {
 
     static Set<Instance> collect(Instance instance, PathStep[] steps) {
 
-        Set<Instance> past = new HashSet<Instance>();
         Set<Instance> active = new HashSet<Instance>();
         Set<Instance> next = new HashSet<Instance>();
         active.add(instance);
 
         for(PathStep step: steps) {
             for(Instance i: active) {
-                past.add(i);
                 Iterator<Instance> it = step.walk(i);
                 while(it.hasNext()) {
                     Instance sub = it.next();

@@ -43,7 +43,15 @@
 package org.netbeans.lib.profiler.heap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridkit.jvmtool.heapdump.HeapWalker.stringValue;
+import static org.gridkit.jvmtool.heapdump.HeapWalker.walkFirst;
 
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import org.gridkit.jvmtool.heapdump.HeapWalker;
 import org.junit.Test;
 
 public abstract class BaseHeapTest {
@@ -86,5 +94,73 @@ public abstract class BaseHeapTest {
         }
 
         assertThat(n).isEqualTo(50);
+    }
+
+    @Test
+    public void verify_heap_walker_for_dummyB() {
+
+        Heap heap = getHeap();
+        JavaClass jclass = heap.getJavaClassByName(DummyB.class.getName());
+        int n = 0;
+        for(Instance i : jclass.getInstances()) {
+            ++n;
+            int no = Integer.valueOf(stringValue(walkFirst(i, "seqNo")));
+            SortedSet<String> testSet = new TreeSet<String>();
+            for(Instance e :  HeapWalker.walk(i, "list.elementData[*]")) {
+                if (e != null) {
+                    testSet.add(stringValue(e));
+                }
+            }
+            assertThat(testSet).isEqualTo(testSet("", no));
+
+            testSet.clear();
+            for(Instance e :  HeapWalker.walk(i, "map.table[*].key")) {
+                if (e != null) {
+                    testSet.add(stringValue(e));
+                }
+            }
+            // some entries may be missing due to hash collisions
+            assertThat(testSet("k", no).containsAll(testSet)).isTrue();
+
+            testSet.clear();
+            for(Instance e :  HeapWalker.walk(i, "map.table[*].value")) {
+                if (e != null) {
+                    testSet.add(stringValue(e));
+                }
+            }
+            // some entries may be missing due to hash collisions
+            assertThat(testSet("v", no).containsAll(testSet)).isTrue();
+        }
+
+        assertThat(n).isEqualTo(50);
+    }
+
+    @SuppressWarnings("unused")
+    @Test
+    public void verify_heap_walker_for_array_list() {
+
+        Heap heap = getHeap();
+        JavaClass jclass = heap.getJavaClassByName(ArrayList.class.getName());
+        int n = 0;
+        for(Instance i : jclass.getInstances()) {
+            int m = 0;
+            for(Instance e :  HeapWalker.walk(i, "elementData[*](**.DummyA)")) {
+                ++m;
+            }
+            if (m != 0) {
+                ++n;
+                assertThat(m).isEqualTo(50);
+            }
+        }
+
+        assertThat(n).isEqualTo(1);
+    }
+
+    private Set<String> testSet(String pref, int limit) {
+        Set<String> result = new TreeSet<String>();
+        for(int i = 0; i != limit; ++i) {
+            result.add(pref + i);
+        }
+        return result;
     }
 }
