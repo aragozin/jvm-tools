@@ -1,5 +1,8 @@
 package org.gridkit.jvmtool.util;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 /**
  * Simple bit map using paged long array for storage.
  * Untouched pages are not allocated, so it is reasonably efficient
@@ -105,6 +108,46 @@ public class PagedBitMap {
             long v = array.get(n) & ta.get(n);
             array.set(n, v);
             ++n;
+        }
+    }
+
+    public Iterable<Long> ones() {
+        return new Iterable<Long>() {
+            @Override
+            public Iterator<Long> iterator() {
+                return new SeekerIterator(PagedBitMap.this);
+            }
+        };
+    }
+
+    protected static class SeekerIterator implements Iterator<Long> {
+
+        private PagedBitMap bitmap;
+        private long next;
+
+        public SeekerIterator(PagedBitMap bitmap) {
+            this.bitmap = bitmap;
+            this.next = bitmap.seekNext(0);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next >= 0;
+        }
+
+        @Override
+        public Long next() {
+            if (next < 0) {
+                throw new NoSuchElementException();
+            }
+            long n = next;
+            next = bitmap.seekNext(next + 1);
+            return n;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

@@ -43,40 +43,31 @@
 
 package org.netbeans.lib.profiler.heap;
 
-import java.util.List;
+import java.util.Arrays;
 
 
 /**
- * represents instance of array of objects
- * @author Tomas Hurka
+ * Represent list of instance referenced by object array, sorted by instance ID.
+ * Ordering may improve performance of further array scanning.
+ *
+ * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
-public interface ObjectArrayInstance extends Instance {
-    //~ Methods ------------------------------------------------------------------------------------------------------------------
+class ObjectArraySortedList extends InstanceList {
 
-    /**
-     * return number of elements in the array (arr.length).
-     * <br>
-     * Speed: fast
-     * @return number of elements in the array
-     */
-    int getLength();
 
-    /**
-     * returns list of elements. The elements are instances of {@link Instance}.
-     * The list is ordered as the original array.
-     * <br>
-     * Speed: normal
-     * @return list {@link Instance} of elements.
-     */
-    List<Instance> getValues();
+    ObjectArraySortedList(HprofHeap h, HprofByteBuffer buf, int len, long off) {
+        super(h, collectIDs(buf, len, off));
+    }
 
-    /**
-     * returns list of elements. The elements are instances of {@link Instance}.
-     * The list is ordered by instance ID which could improve performance of further scan,
-     * provided that original ordering is not important.
-     * <br>
-     * Speed: normal
-     * @return list {@link Instance} of elements.
-     */
-    List<Instance> getValuesSortedByID();
+    private static long[] collectIDs(HprofByteBuffer buf, int len, long off) {
+        long[] array = new long[len];
+        long ptr = off;
+        long idSize = buf.getIDSize();
+        for(int i = 0; i != len; ++i) {
+            array[i] = buf.getID(ptr);
+            ptr += idSize;
+        }
+        Arrays.sort(array);
+        return array;
+    }
 }

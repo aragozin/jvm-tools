@@ -72,6 +72,13 @@ class ObjectArrayDump extends ArrayDump implements ObjectArrayInstance {
         return new ObjectArrayLazyList(heap, dumpBuffer, getLength(), getOffset());
     }
 
+    public List<Instance> getValuesSortedByID() {
+        HprofByteBuffer dumpBuffer = dumpClass.getHprofBuffer();
+        HprofHeap heap = dumpClass.getHprof();
+
+        return new ObjectArraySortedList(heap, dumpBuffer, getLength(), getOffset());
+    }
+
     long getOffset() {
         int idSize = dumpClass.getHprofBuffer().getIDSize();
 
