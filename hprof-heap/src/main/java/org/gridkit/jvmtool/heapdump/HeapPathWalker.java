@@ -10,7 +10,7 @@ import org.netbeans.lib.profiler.heap.Instance;
 
 class HeapPathWalker {
 
-    static PathStep[] parsePath(String path) {
+    static PathStep[] parsePath(String path, boolean strictPath) {
 
         List<PathStep> result = new ArrayList<PathStep>();
 
@@ -18,7 +18,9 @@ class HeapPathWalker {
             throw new IllegalArgumentException("Invalid path spec: " + path);
         }
 
-        int n = 0; ;
+        boolean fieldRequired = false;
+        boolean dotAllowed = false;
+        int n = 0;
         while(n < path.length()) {
             String token = token(n, path);
             n += token.length();
@@ -26,9 +28,18 @@ class HeapPathWalker {
                 throw new RuntimeException("Internal error parsing: " + path);
             }
             if (".".equals(token)) {
+                if (dotAllowed) {
+                    fieldRequired = true;
+                    dotAllowed = false;
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid path spec: " + path);
+                }
+            }
+            else if (token.charAt(0) == '(') {
+                if (fieldRequired) {
                 throw new IllegalArgumentException("Invalid path spec: " + path);
             }
-            if (token.charAt(0) == '(') {
                 String pattern = token.substring(1, token.length() - 1);
                 try {
                     TypeFilterStep step = new TypeFilterStep(pattern, true);
@@ -37,9 +48,15 @@ class HeapPathWalker {
                 catch(RuntimeException e) {
                     throw new IllegalArgumentException("Invalid path spec: " + path, e);
                 }
+
+                dotAllowed = false;
+                fieldRequired = false;
                 continue;
             }
             else if (token.charAt(0) == '[') {
+                if (fieldRequired) {
+                    throw new IllegalArgumentException("Invalid path spec: " + path);
+                }
                 String index = token.substring(1, token.length() - 1).trim();
                 if (index.equals("*")) {
                     result.add(new ArrayIndexStep(-1));
@@ -54,29 +71,71 @@ class HeapPathWalker {
                     }
                 }
 
-                String next = token(n, path);
-                if (".".equals(next)) {
-                    ++n;
-                }
+                dotAllowed = true;
+                fieldRequired = false;
 
                 continue;
             }
             else {
-                if (token.equals("*")) {
-                    result.add(new FieldStep(null));
+                if (token.charAt(0) == '?') {
+                    if ("?entrySet".equals(token)) {
+                        result.add(new MapEntrySetStep());
                 }
                 else {
-                    result.add(new FieldStep(token));
+                        throw new IllegalArgumentException("Invalid path spec: " + path);
                 }
-                String next = token(n, path);
-                if (".".equals(next)) {
-                    ++n;
                 }
+                else if (dotAllowed && token.equals("*")) {
+                    if (lastIsDoubleAsterisk(result)) {
+                        throw new IllegalArgumentException("Invalid path spec: " + path);
+                    }
+                    else if (lastIsAsterisk(result)) {
+                        if (strictPath) {
+                            throw new IllegalArgumentException("Invalid path spec: " + path);
+                        }
+                        result.set(result.size() - 1, new AnyPathStep());
+                    }
+                    else {
+                        result.add(new FieldStep(null));
+                    }
+                }
+                else {
+                    result.add(new FieldStep(token.equals("*") ? null : token));
+                }
+
+                dotAllowed = true;
+                fieldRequired = false;
                 continue;
             }
         }
 
         return result.toArray(new PathStep[result.size()]);
+    }
+
+    private static boolean lastIsAsterisk(List<PathStep> result) {
+        if (result.isEmpty()) {
+            return false;
+        }
+        else {
+            PathStep step = result.get(result.size() - 1);
+            if (step instanceof FieldStep && ((FieldStep)step).getFieldName() == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean lastIsDoubleAsterisk(List<PathStep> result) {
+        if (result.isEmpty()) {
+            return false;
+        }
+        else {
+            PathStep step = result.get(result.size() - 1);
+            if (step instanceof AnyPathStep) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String token(int n, String path) {
@@ -115,9 +174,16 @@ class HeapPathWalker {
                     return sb.toString();
                 }
             }
-            if (Character.isJavaIdentifierStart(ch)) {
+            if (ch == '?') {
+                if (sb.length() == 0) {
+                    sb.append(ch);
+                }
+                else {
+                    return sb.toString();
+                }
+            }
+            else if (Character.isJavaIdentifierStart(ch)) {
                 sb.append(ch);
-
             }
             else if (Character.isJavaIdentifierPart(ch)) {
                 if (sb.length() == 0) {

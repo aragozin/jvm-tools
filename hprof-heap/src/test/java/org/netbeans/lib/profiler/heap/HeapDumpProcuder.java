@@ -71,6 +71,7 @@ public class HeapDumpProcuder {
 
     static List<DummyA> dummyA = new ArrayList<DummyA>();
     static List<DummyB> dummyB = new ArrayList<DummyB>();
+    static DummyC dummyC = new DummyC();
 
     public static void initTestHeap() {
 

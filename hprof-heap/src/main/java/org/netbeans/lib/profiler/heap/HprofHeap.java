@@ -167,6 +167,8 @@ class HprofHeap implements Heap {
 
     @Override
     public Iterable<Instance> getAllInstances() {
+        // ensure class metadata is initialized
+        getAllClasses();
         return new HprofInstanceIterator.AsIterable(this);
     }
 

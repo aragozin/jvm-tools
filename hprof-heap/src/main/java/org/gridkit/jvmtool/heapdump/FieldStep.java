@@ -16,6 +16,10 @@ class FieldStep extends PathStep {
         this.fieldName = fieldName;
     }
 
+    public String getFieldName() {
+        return fieldName;
+    }
+
     @Override
     public Iterator<Instance> walk(Instance instance) {
         List<Instance> result = new ArrayList<Instance>();

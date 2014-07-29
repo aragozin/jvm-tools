@@ -71,7 +71,7 @@ class LazyInstanceList extends AbstractList<Instance> {
         if (currentIndex == index) {
             return currentInstance;
         }
-        if (currentIndex > index) {
+        if (currentIndex > index || cursor == null) {
             currentIndex = -1;
             cursor = new FilteredIterator(jclass, heap.getAllInstances().iterator());
         }
