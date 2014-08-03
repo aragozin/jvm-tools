@@ -12,6 +12,11 @@ class AnyPathStep extends PathStep {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Iterator<Move> track(Instance instance) {
+        throw new UnsupportedOperationException();
+    }
+
     public String toString() {
         return "**";
     }

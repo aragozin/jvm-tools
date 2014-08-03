@@ -1,5 +1,6 @@
 package org.gridkit.jvmtool.heapdump;
 
+import org.gridkit.jvmtool.heapdump.HeapHistogram.ClassRecord;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.Heap;
 import org.netbeans.lib.profiler.heap.Instance;
@@ -16,6 +17,10 @@ public class StringCollector {
     }
 
     public void collect(Heap heap) {
+        collect(heap, null);
+    }
+
+    public void collect(Heap heap, InstanceCallback callback) {
         JavaClass string = heap.getJavaClassByName("java.lang.String");
         RefSet arrays = new RefSet();
         for(Instance i : heap.getAllInstances()) {
@@ -28,6 +33,9 @@ public class StringCollector {
                 }
                 ++count;
                 totalSize += i.getSize();
+            }
+            if (callback != null) {
+                callback.feed(i);
             }
         }
         for(Long id: arrays.ones()) {
@@ -45,5 +53,16 @@ public class StringCollector {
 
     public RefSet getInstances() {
         return strings;
+    }
+
+    public ClassRecord asClassRecord() {
+        ClassRecord cr = new ClassRecord(String.class.getName() + " (retained)");
+        cr.instanceCount = count;
+        cr.totalSize = totalSize;
+        return cr;
+    }
+
+    public String toString() {
+        return "strings: " + totalSize + " (" + count + ")";
     }
 }

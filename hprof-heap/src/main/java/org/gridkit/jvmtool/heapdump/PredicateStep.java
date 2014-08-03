@@ -27,6 +27,25 @@ public class PredicateStep extends PathStep {
 
     @Override
     public Iterator<Instance> walk(Instance instance) {
+        if (instance != null && evaluate(instance)) {
+            return Collections.singleton(instance).iterator();
+        }
+        else {
+            return Collections.<Instance>emptyList().iterator();
+        }
+    }
+
+    @Override
+    public Iterator<Move> track(Instance instance) {
+        if (instance != null && evaluate(instance)) {
+            return Collections.singleton(new Move("", instance)).iterator();
+        }
+        else {
+            return Collections.<Move>emptyList().iterator();
+        }
+    }
+
+    protected boolean evaluate(Instance instance) {
         for(Instance i: HeapPath.collect(instance, path)) {
             if (lastStep != null) {
                 String fname = lastStep.getFieldName();
@@ -44,7 +63,7 @@ public class PredicateStep extends PathStep {
                         if (!(obj instanceof Instance)) {
                             String str = String.valueOf(obj);
                             if (str.equals(matcher)) {
-                                return Collections.singleton(instance).iterator();
+                                return true;
                             }
                         }
                     }
@@ -55,12 +74,12 @@ public class PredicateStep extends PathStep {
                 if (!(obj instanceof Instance)) {
                     String str = String.valueOf(obj);
                     if (str.equals(matcher)) {
-                        return Collections.singleton(instance).iterator();
+                        return true;
                     }
                 }
             }
         }
-        return Collections.<Instance>emptyList().iterator();
+        return false;
     }
 
     public String toString() {

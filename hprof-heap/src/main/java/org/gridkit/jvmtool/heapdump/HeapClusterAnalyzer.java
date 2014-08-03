@@ -1,10 +1,13 @@
 package org.gridkit.jvmtool.heapdump;
 
+import static org.assertj.core.api.Assertions.contentOf;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.gridkit.jvmtool.heapdump.PathStep.Move;
 import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.Heap;
@@ -28,13 +31,7 @@ public class HeapClusterAnalyzer {
     private List<EntryPoint> entryPoints = new ArrayList<EntryPoint>();
     private Set<String> blacklist = new HashSet<String>();
 
-    private PathListener tooDeepListener = new PathListener() {
-
-        @Override
-        public void onPath(Instance root, String path, Instance shared) {
-            System.err.println("DEEP REF: " + root.getInstanceId() + " " + path);
-        }
-    };
+    private PathListener tooDeepListener = new DeepPathListener();
 
     private PathListener sharedPathListener = null;
 
@@ -134,8 +131,11 @@ public class HeapClusterAnalyzer {
     }
 
     public ClusterDetails feed(Instance i) {
+        if (rootClasses.isEmpty()) {
+            throw new IllegalStateException("Interesting types are not defined");
+        }
         String type = i.getJavaClass().getName();
-        if (interestingTypes.contains(type)) {
+        if (rootClasses.contains(type)) {
             Cluster cluster = new Cluster();
             cluster.root = i;
             cluster.objects = new RefSet();
@@ -172,9 +172,10 @@ public class HeapClusterAnalyzer {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
             path.setLength(0);
-            path.append(ep.path);
-            for(Instance i: HeapPath.collect(details.root, ep.locator)) {
-                mark(details, i, path, 0, false, false);
+            path.append("(" + shortName(details.root.getJavaClass().getName()) + ")");
+            for(Move i: HeapPath.track(details.root, ep.locator)) {
+                path.append(i.pathSpec);
+                walk(details, i.instance, path, 0, false, false);
             }
         }
     }
@@ -185,7 +186,7 @@ public class HeapClusterAnalyzer {
             path.setLength(0);
             path.append(ep.path);
             for(Instance i: HeapPath.collect(details.root, ep.locator)) {
-                mark(details, i, path, 0, true, false);
+                walk(details, i, path, 0, true, false);
             }
         }
     }
@@ -196,12 +197,12 @@ public class HeapClusterAnalyzer {
             path.setLength(0);
             path.append(ep.path);
             for(Instance i: HeapPath.collect(details.root, ep.locator)) {
-                mark(details, i, path, 0, false, true);
+                walk(details, i, path, 0, false, true);
             }
         }
     }
 
-    private void mark(Cluster details, Instance i, StringBuilder path, int depth, boolean reportShared, boolean accountShared) {
+    private void walk(Cluster details, Instance i, StringBuilder path, int depth, boolean reportShared, boolean accountShared) {
         int len = path.length();
         try {
             if (i == null) {
@@ -247,9 +248,10 @@ public class HeapClusterAnalyzer {
                             if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
                                 path.setLength(len);
                                 path.append('[').append(n).append(']');
-                                mark(details, heap.getInstanceByID(ref), path, depth + 1, reportShared, accountShared);
+                                walk(details, heap.getInstanceByID(ref), path, depth + 1, reportShared, accountShared);
                             }
                         }
+                        ++n;
                     }
                 }
             }
@@ -264,7 +266,7 @@ public class HeapClusterAnalyzer {
                             if (!ignoreRefs.get(id)) {
                                 path.setLength(len);
                                 path.append('.').append(fieldName);
-                                mark(details, of.getInstance(), path, depth + 1, reportShared, accountShared);
+                                walk(details, of.getInstance(), path, depth + 1, reportShared, accountShared);
                             }
                         }
                     }
@@ -284,6 +286,36 @@ public class HeapClusterAnalyzer {
     private boolean isBlackListed(Field field) {
         String tn = field.getDeclaringClass().getName() + "#" + field.getName();
         return blacklist.contains(tn);
+    }
+
+    private static final String shortName(String name) {
+        int c = name.lastIndexOf('.');
+        if (c >= 0) {
+            return "**." + name.substring(c + 1);
+        }
+        else {
+            return name;
+        }
+    }
+
+    private final class DeepPathListener implements PathListener {
+        @Override
+        public void onPath(Instance root, String path, Instance shared) {
+            PathStep[] chain = HeapPath.parsePath(path, true);
+            StringBuilder sb = new StringBuilder();
+            Instance o = root;
+            for(int i = 0; i != chain.length; ++i) {
+                if (chain[i] instanceof TypeFilterStep) {
+                    continue;
+                }
+                sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
+                Move m = chain[i].track(o).next();
+                sb.append(m.pathSpec);
+                o = m.instance;
+            }
+
+            System.err.println("DEEP REF: " + root.getInstanceId() + " " + sb);
+        }
     }
 
     public interface ClusterDetails {

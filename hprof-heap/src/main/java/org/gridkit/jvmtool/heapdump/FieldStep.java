@@ -35,6 +35,20 @@ class FieldStep extends PathStep {
     }
 
     @Override
+    public Iterator<Move> track(Instance instance) {
+        List<Move> result = new ArrayList<Move>();
+        for(FieldValue fv: instance.getFieldValues()) {
+            if (fieldName == null || fieldName.equals(fv.getField().getName())) {
+                if (fv instanceof ObjectFieldValue) {
+                    result.add(new Move("." + fv.getField().getName(), ((ObjectFieldValue) fv).getInstance()));
+                }
+            }
+        }
+
+        return result.iterator();
+    }
+
+    @Override
     public String toString() {
         return fieldName == null ? "*" :  fieldName;
     }

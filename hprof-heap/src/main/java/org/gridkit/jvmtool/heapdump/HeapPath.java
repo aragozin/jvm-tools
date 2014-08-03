@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.gridkit.jvmtool.heapdump.PathStep.Move;
 import org.netbeans.lib.profiler.heap.Instance;
 
 class HeapPath {
@@ -49,7 +50,7 @@ class HeapPath {
                     throw new IllegalArgumentException("Invalid path spec: " + path, e);
                 }
 
-                dotAllowed = false;
+                dotAllowed = true;
                 fieldRequired = false;
                 continue;
             }
@@ -259,7 +260,34 @@ class HeapPath {
         }
 
         return active;
-
     }
 
+    static Set<Move> track(Instance instance, PathStep[] steps) {
+
+        Set<Move> active = new HashSet<Move>();
+        Set<Move> next = new HashSet<Move>();
+        active.add(new Move("", instance));
+
+        for(PathStep step: steps) {
+            for(Move i: active) {
+                Iterator<Move> it = step.track(i.instance);
+                while(it.hasNext()) {
+                    Move sub = it.next();
+                    if (sub != null) {
+                        next.add(new Move(i.pathSpec + sub.pathSpec, sub.instance));
+                    }
+                }
+            }
+            // swap buffers
+            active.clear();
+            Set<Move> s = active;
+            active = next;
+            next = s;
+            if (active.isEmpty()) {
+                return active;
+            }
+    }
+
+        return active;
+    }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.netbeans.lib.profiler.heap.Instance;
 
-public class HeapHistogram {
+public class HeapHistogram implements InstanceCallback {
 
     public static final Comparator<ClassRecord> BY_NAME = new Comparator<ClassRecord>() {
 
@@ -28,7 +28,7 @@ public class HeapHistogram {
 
         @Override
         public int compare(ClassRecord o1, ClassRecord o2) {
-            return Long.valueOf(o1.totalSize).compareTo(o2.totalSize);
+            return Long.valueOf(o2.totalSize).compareTo(o1.totalSize);
         }
 
         public String toString() {
@@ -40,7 +40,7 @@ public class HeapHistogram {
 
         @Override
         public int compare(ClassRecord o1, ClassRecord o2) {
-            return Long.valueOf(o1.instanceCount).compareTo(o2.instanceCount);
+            return Long.valueOf(o2.instanceCount).compareTo(o1.instanceCount);
         }
 
         public String toString() {
@@ -58,6 +58,11 @@ public class HeapHistogram {
         }
     }
 
+    @Override
+    public void feed(Instance instance) {
+        accumulate(instance);
+    }
+
     public void accumulate(Instance i) {
         if (known != null) {
             if (known.getAndSet(i.getInstanceId(), true)) {
@@ -72,6 +77,8 @@ public class HeapHistogram {
             cr = new ClassRecord(cn);
             classes.put(cn, cr);
         }
+        ++cr.instanceCount;
+        cr.totalSize += i.getSize();
     }
 
     public long getTotalCount() {
@@ -148,10 +155,13 @@ public class HeapHistogram {
     @Override
     public String toString() {
         TextTable table = new TextTable();
-        table.addRow("Size", "Count", "Type");
+        table.addRow("", "Size", " Count", " Type");
+        int n = 0;
         for(ClassRecord cr: getHistoBySize()) {
-            table.addRow("" + cr.getTotalSize(), "" + cr.getInstanceCount(), cr.getClassName());
+            table.addRow("" + n, " " + cr.getTotalSize(), " " + cr.getInstanceCount(), " " + cr.getClassName());
+            ++n;
         }
-        return table.toString();
+        table.addRow("TOTAL", " " + total.totalSize, " " + total.instanceCount, "");
+        return table.formatTextTableUnbordered(180);
     }
 }

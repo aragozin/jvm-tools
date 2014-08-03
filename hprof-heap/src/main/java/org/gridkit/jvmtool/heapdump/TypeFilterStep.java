@@ -37,11 +37,21 @@ class TypeFilterStep extends PathStep {
 
     @Override
     public Iterator<Instance> walk(Instance instance) {
-        if (match(instance.getJavaClass())) {
+        if (instance != null && match(instance.getJavaClass())) {
             return Collections.singleton(instance).iterator();
         }
         else {
             return Collections.<Instance>emptyList().iterator();
+        }
+    }
+
+    @Override
+    public Iterator<Move> track(Instance instance) {
+        if (instance != null && match(instance.getJavaClass())) {
+            return Collections.singleton(new Move("", instance)).iterator();
+        }
+        else {
+            return Collections.<Move>emptyList().iterator();
         }
     }
 

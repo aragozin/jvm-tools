@@ -156,7 +156,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("", no));
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map.table?entrySet.key")) {
+            for(Instance e :  HeapWalker.walk(i, "map?entrySet.key")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -164,7 +164,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("k", no));
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map.table?entrySet.value")) {
+            for(Instance e :  HeapWalker.walk(i, "map?entrySet.value")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -172,7 +172,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("v", no));
 
             if (testSet.size() > 5) {
-                assertThat(HeapWalker.valueOf(i, "map.table?entrySet[key=k3].value")).isEqualTo("v3");
+                assertThat(HeapWalker.valueOf(i, "map?entrySet[key=k3].value")).isEqualTo("v3");
             }
         }
 
