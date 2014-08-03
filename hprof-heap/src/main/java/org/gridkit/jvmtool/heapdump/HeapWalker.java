@@ -83,7 +83,13 @@ public class HeapWalker {
             t = t.getSuperClass();
             c = CONVERTERS.get(obj.getJavaClass().getName());
         }
+        if (c == null) {
+            // return instance as is
+            return (T) obj;
+        }
+        else {
         return (T)c.convert(obj);
+    }
     }
 
     /**
@@ -111,12 +117,12 @@ public class HeapWalker {
      */
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(Instance obj, String pathSpec) {
-        PathStep[] steps = HeapPathWalker.parsePath(pathSpec, true);
+        PathStep[] steps = HeapPath.parsePath(pathSpec, true);
         if (steps.length > 0 && steps[steps.length - 1] instanceof FieldStep) {
             PathStep[] shortPath = Arrays.copyOf(steps, steps.length - 1);
             FieldStep lastStep = (FieldStep) steps[steps.length - 1];
             String fieldName = lastStep.getFieldName();
-            for(Instance i: HeapPathWalker.collect(obj, shortPath)) {
+            for(Instance i: HeapPath.collect(obj, shortPath)) {
                 for(FieldValue fv: i.getFieldValues()) {
                     if ((fieldName == null && fv.getField().isStatic())
                             || (fieldName.equals(fv.getField().getName()))) {
@@ -125,7 +131,7 @@ public class HeapWalker {
                         }
                         else {
                             // have to use this as private package API is used behind scene
-                            return (T) i.getValueOfField(fieldName);
+                            return (T) i.getValueOfField(fv.getField().getName());
                         }
                     }
                 }
@@ -133,7 +139,7 @@ public class HeapWalker {
             return null;
         }
         else {
-            for(Instance i: HeapPathWalker.collect(obj, steps)) {
+            for(Instance i: HeapPath.collect(obj, steps)) {
                 return valueOf(i);
             }
             return null;
@@ -190,7 +196,7 @@ public class HeapWalker {
     }
 
     public static Iterable<Instance> walk(Instance root, String path) {
-        return HeapPathWalker.collect(root, HeapPathWalker.parsePath(path, true));
+        return HeapPath.collect(root, HeapPath.parsePath(path, true));
     }
 
     public static Instance walkFirst(Instance root, String path) {

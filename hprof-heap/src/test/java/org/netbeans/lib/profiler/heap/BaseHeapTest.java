@@ -170,6 +170,10 @@ public abstract class BaseHeapTest {
                 }
             }
             assertThat(testSet).isEqualTo(testSet("v", no));
+
+            if (testSet.size() > 5) {
+                assertThat(HeapWalker.valueOf(i, "map.table?entrySet[key=k3].value")).isEqualTo("v3");
+            }
         }
 
         assertThat(n).isEqualTo(50);

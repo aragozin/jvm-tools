@@ -33,6 +33,7 @@ public class HeapPathParserTest {
         addCase(result, "inputsByName.***.table[*].value(**.String)", false, null);
         addCase(result, "inputsByName.*.*.table[*].value(**.String)", true, "[inputsByName, *, *, table, [*], value, (**.String)]");
         addCase(result, "inputsByName.**.*.table[*].value(**.String)", false, "[inputsByName, **, *, table, [*], value, (**.String)]");
+        addCase(result, "inputsByName.table?entrySet[key=123].value(**.String)", true, "[inputsByName, table, ?entrySet, [key=123], value, (**.String)]");
 
         return result;
     }
@@ -58,13 +59,13 @@ public class HeapPathParserTest {
 
         if (expected != null) {
             String text;
-            text = Arrays.toString(HeapPathWalker.parsePath(expr, strictPath));
+            text = Arrays.toString(HeapPath.parsePath(expr, strictPath));
             System.out.println(text);
             assertThat(text).isEqualTo(expected);
         }
         else {
             try {
-                System.out.println(Arrays.toString(HeapPathWalker.parsePath(expr, strictPath)));
+                System.out.println(Arrays.toString(HeapPath.parsePath(expr, strictPath)));
                 Assert.fail("Exception expected");
             }
             catch(IllegalArgumentException e) {

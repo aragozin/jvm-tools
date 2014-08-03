@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.netbeans.lib.profiler.heap.Instance;
 
-class HeapPathWalker {
+class HeapPath {
 
     static PathStep[] parsePath(String path, boolean strictPath) {
 
@@ -38,8 +38,8 @@ class HeapPathWalker {
             }
             else if (token.charAt(0) == '(') {
                 if (fieldRequired) {
-                throw new IllegalArgumentException("Invalid path spec: " + path);
-            }
+                    throw new IllegalArgumentException("Invalid path spec: " + path);
+                }
                 String pattern = token.substring(1, token.length() - 1);
                 try {
                     TypeFilterStep step = new TypeFilterStep(pattern, true);
@@ -67,7 +67,17 @@ class HeapPathWalker {
                         result.add(new ArrayIndexStep(ai));
                     }
                     catch(NumberFormatException e) {
-                        throw new IllegalArgumentException("Invalid path spec: " + path, e);
+                        // try to parse predicate
+                        int c = index.lastIndexOf('=');
+                        if (c > 0) {
+                            String subpath = index.substring(0, c);
+                            String matcher = index.substring(c + 1, index.length());
+                            PathStep[] steps = parsePath(subpath, true);
+                            result.add(new PredicateStep(steps, matcher));
+                        }
+                        else {
+                            throw new IllegalArgumentException("Invalid path spec: " + path, e);
+                        }
                     }
                 }
 
@@ -80,10 +90,10 @@ class HeapPathWalker {
                 if (token.charAt(0) == '?') {
                     if ("?entrySet".equals(token)) {
                         result.add(new MapEntrySetStep());
-                }
-                else {
+                    }
+                    else {
                         throw new IllegalArgumentException("Invalid path spec: " + path);
-                }
+                    }
                 }
                 else if (dotAllowed && token.equals("*")) {
                     if (lastIsDoubleAsterisk(result)) {
