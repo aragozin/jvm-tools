@@ -1,7 +1,10 @@
 package org.gridkit.jvmtool.heapdump;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,13 +14,25 @@ import org.netbeans.lib.profiler.heap.JavaClass;
 class TypeFilterStep extends PathStep {
 
     private final String pattern;
-    private final Pattern filter;
-    private final boolean matchSuperclass;
+    private final List<MatchOption> matchers = new ArrayList<TypeFilterStep.MatchOption>();
 
-    TypeFilterStep(String pattern, boolean matchSuperclass) {
+    TypeFilterStep(String pattern) {
         this.pattern = pattern;
-        this.filter = translate(pattern, ".");
-        this.matchSuperclass = matchSuperclass;
+        initMatchers(pattern);
+    }
+
+    public boolean evaluate(JavaClass jc) {
+        return match(jc);
+    }
+
+    public Collection<JavaClass> filter(Collection<JavaClass> col) {
+        List<JavaClass> result = new ArrayList<JavaClass>();
+        for(JavaClass jc: col) {
+            if (match(jc)) {
+                result.add(jc);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -32,15 +47,41 @@ class TypeFilterStep extends PathStep {
 
     private boolean match(JavaClass javaClass) {
         String name = javaClass.getName();
-        if (filter.matcher(name).matches()) {
+        boolean checkSuper = false;
+        for(MatchOption m: matchers) {
+            if (m.pattern.matcher(name).matches()) {
+                return true;
+            }
+            checkSuper |= m.hierarchy;
+        }
+
+        if (checkSuper) {
+            JavaClass cc = javaClass.getSuperClass();
+            while(cc != null) {
+                for(MatchOption m: matchers) {
+                    if (m.hierarchy) {
+                        if (m.pattern.matcher(name).matches()) {
             return true;
         }
-        else {
-            if (matchSuperclass) {
-                JavaClass sc = javaClass.getSuperClass();
-                return sc != null && match(sc);
             }
+                }
+                cc = javaClass.getSuperClass();
+            }
+        }
+
             return false;
+        }
+
+    private void initMatchers(String pattern) {
+        String[] parts = pattern.split("[|]");
+        for(String part: parts) {
+            MatchOption opt = new MatchOption();
+            if (part.startsWith("+")) {
+                opt.hierarchy = true;
+                part = part.substring(1);
+            }
+            opt.pattern = translate(part, ".");
+            matchers.add(opt);
         }
     }
 
@@ -118,5 +159,12 @@ class TypeFilterStep extends PathStep {
     @Override
     public String toString() {
         return "(" + pattern + ")";
+    }
+
+    private static class MatchOption {
+
+        boolean hierarchy;
+        Pattern pattern;
+
     }
 }

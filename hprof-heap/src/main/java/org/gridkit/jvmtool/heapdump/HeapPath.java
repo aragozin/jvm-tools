@@ -42,7 +42,7 @@ class HeapPath {
                 }
                 String pattern = token.substring(1, token.length() - 1);
                 try {
-                    TypeFilterStep step = new TypeFilterStep(pattern, true);
+                    TypeFilterStep step = new TypeFilterStep(pattern);
                     result.add(step);
                 }
                 catch(RuntimeException e) {

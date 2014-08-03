@@ -71,6 +71,15 @@ public interface ObjectArrayInstance extends Instance {
     List<Instance> getValues();
 
     /**
+     * returns list of instance IDs for elements of this array.
+     * The list is ordered as the original array.
+     * <br>
+     * Speed: normal
+     * @return list {@link Long} of elements.
+     */
+    List<Long> getValueIDs();
+
+    /**
      * returns list of elements. The elements are instances of {@link Instance}.
      * The list is ordered by instance ID which could improve performance of further scan,
      * provided that original ordering is not important.

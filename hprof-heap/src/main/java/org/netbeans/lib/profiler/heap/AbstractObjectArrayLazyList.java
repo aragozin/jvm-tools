@@ -43,53 +43,43 @@
 
 package org.netbeans.lib.profiler.heap;
 
-import java.util.List;
+import java.util.AbstractList;
 
 
 /**
  *
  * @author Tomas Hurka
  */
-class ObjectArrayDump extends ArrayDump implements ObjectArrayInstance {
+abstract class AbstractObjectArrayLazyList<T> extends AbstractList<T> {
+    //~ Instance fields ----------------------------------------------------------------------------------------------------------
+
+    private final HprofByteBuffer dumpBuffer;
+    private final HprofHeap heap;
+    private final int idSize;
+    private final int length;
+    private final long offset;
+
     //~ Constructors -------------------------------------------------------------------------------------------------------------
 
-    ObjectArrayDump(ClassDump cls, long offset) {
-        super(cls, offset);
+    AbstractObjectArrayLazyList(HprofHeap h, HprofByteBuffer buf, int len, long off) {
+        heap = h;
+        dumpBuffer = buf;
+        length = len;
+        offset = off;
+        idSize = dumpBuffer.getIDSize();
     }
 
     //~ Methods ------------------------------------------------------------------------------------------------------------------
 
-    public long getSize() {
-        int idSize = dumpClass.getHprofBuffer().getIDSize();
-
-        return dumpClass.classDumpSegment.getMinimumInstanceSize() + HPROF_ARRAY_OVERHEAD + ((long)idSize * getLength());
+    protected Instance getInstance(int index) {
+        return heap.getInstanceByID(dumpBuffer.getID(offset + ((long)index * (long)idSize)));
     }
 
-    public List<Instance> getValues() {
-        HprofByteBuffer dumpBuffer = dumpClass.getHprofBuffer();
-        HprofHeap heap = dumpClass.getHprof();
-
-        return new ObjectArrayLazyList(heap, dumpBuffer, getLength(), getOffset());
+    protected long getInstanceID(int index) {
+        return dumpBuffer.getID(offset + ((long)index * (long)idSize));
     }
 
-    @Override
-    public List<Long> getValueIDs() {
-        HprofByteBuffer dumpBuffer = dumpClass.getHprofBuffer();
-        HprofHeap heap = dumpClass.getHprof();
-
-        return new ObjectIdArrayLazyList(heap, dumpBuffer, getLength(), getOffset());
-    }
-
-    public List<Instance> getValuesSortedByID() {
-        HprofByteBuffer dumpBuffer = dumpClass.getHprofBuffer();
-        HprofHeap heap = dumpClass.getHprof();
-
-        return new ObjectArraySortedList(heap, dumpBuffer, getLength(), getOffset());
-    }
-
-    long getOffset() {
-        int idSize = dumpClass.getHprofBuffer().getIDSize();
-
-        return fileOffset + 1 + idSize + 4 + 4 + idSize;
+    public int size() {
+        return length;
     }
 }

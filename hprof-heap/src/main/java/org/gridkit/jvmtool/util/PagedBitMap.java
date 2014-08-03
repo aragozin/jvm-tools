@@ -69,6 +69,10 @@ public class PagedBitMap {
         return 0 != (bit & ov);
     }
 
+    /**
+     * Bitwise <br/>
+     * <code>this = this | that</code>
+     */
     public void add(PagedBitMap that) {
         PagedLongArray ta = that.array;
         long n = 0;
@@ -83,6 +87,36 @@ public class PagedBitMap {
         }
     }
 
+    /**
+     * Bitwise <br/>
+     * <code>overflow = this & that</code>
+     * <br/>
+     * <code>this = this | that</code>
+     */
+    public void addWithOverflow(PagedBitMap that, PagedBitMap overflow) {
+        PagedLongArray ta = that.array;
+        PagedLongArray of = overflow.array;
+        long n = 0;
+        while(true) {
+            n = ta.seekNext(n);
+            if (n < 0) {
+                break;
+            }
+            long o = array.get(n) & ta.get(n);
+            long v = array.get(n) | ta.get(n);
+            array.set(n, v);
+            if (o != 0) {
+                o |= of.get(n);
+                of.set(n, o);
+            }
+            ++n;
+        }
+    }
+
+    /**
+     * Bitwise <br/>
+     * <code>this = this & (~that)</code>
+     */
     public void sub(PagedBitMap that) {
         PagedLongArray ta = that.array;
         long n = 0;
@@ -97,6 +131,10 @@ public class PagedBitMap {
         }
     }
 
+    /**
+     * Bitwise <br/>
+     * <code>this = this & that</code>
+     */
     public void mult(PagedBitMap that) {
         PagedLongArray ta = that.array;
         long n = 0;
