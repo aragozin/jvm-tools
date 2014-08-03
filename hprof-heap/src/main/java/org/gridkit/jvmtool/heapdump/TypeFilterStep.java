@@ -68,6 +68,7 @@ class TypeFilterStep extends PathStep {
         if (checkSuper) {
             JavaClass cc = javaClass.getSuperClass();
             while(cc != null) {
+                name = cc.getName();
                 for(MatchOption m: matchers) {
                     if (m.hierarchy) {
                         if (m.pattern.matcher(name).matches()) {
@@ -75,7 +76,7 @@ class TypeFilterStep extends PathStep {
         }
             }
                 }
-                cc = javaClass.getSuperClass();
+                cc = cc.getSuperClass();
             }
         }
 
