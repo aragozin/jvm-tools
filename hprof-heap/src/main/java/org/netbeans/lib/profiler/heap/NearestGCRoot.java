@@ -44,7 +44,6 @@
 package org.netbeans.lib.profiler.heap;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +75,7 @@ class NearestGCRoot {
     private LongBuffer writeBuffer;
     private LongBuffer leaves;
     private LongBuffer multipleParents;
-    private Set referenceClasses;
+    private Set<JavaClass> referenceClasses;
     private boolean gcRootsComputed;
     private long allInstances;
     private long processedInstances;
@@ -111,7 +110,7 @@ class NearestGCRoot {
         if (gcRootsComputed) {
             return;
         }
-        referenceClasses = new HashSet();
+        referenceClasses = new HashSet<JavaClass>();
         for (int i=0; i<REF_CLASSES.length; i++) {
             JavaClass ref = heap.getJavaClassByName(REF_CLASSES[i]);
             if (ref != null) {
@@ -122,7 +121,7 @@ class NearestGCRoot {
         referentFiled = computeReferentFiled();
         heap.computeReferences(); // make sure references are computed first
         allInstances = heap.getSummary().getTotalLiveInstances();
-        Set processedClasses = new HashSet(heap.getAllClasses().size()*4/3);
+        Set<JavaClass> processedClasses = new HashSet<JavaClass>(heap.getAllClasses().size()*4/3);
 
         try {
             createBuffers();
@@ -142,13 +141,13 @@ class NearestGCRoot {
         gcRootsComputed = true;
     }
 
-    private void computeOneLevel(Set processedClasses) throws IOException {
+    private void computeOneLevel(Set<JavaClass> processedClasses) throws IOException {
         int idSize = heap.dumpBuffer.getIDSize();
         for (;;) {
             long instanceId = readLong();
             Instance instance;
-            List fieldValues;
-            Iterator valuesIt;
+            List<FieldValue> fieldValues;
+            Iterator<FieldValue> valuesIt;
             boolean hasValues = false;
 
             if (instanceId == 0L) { // end of level
@@ -220,7 +219,7 @@ class NearestGCRoot {
 
     private Field computeReferentFiled() {
         JavaClass reference = heap.getJavaClassByName(JAVA_LANG_REF_REFERENCE);
-        Iterator fieldRef = reference.getFields().iterator();
+        Iterator<Field> fieldRef = reference.getFields().iterator();
 
         while (fieldRef.hasNext()) {
             Field f = (Field) fieldRef.next();
@@ -247,7 +246,7 @@ class NearestGCRoot {
     }
 
     private void fillZeroLevel() throws IOException {
-        Iterator gcIt = heap.getGCRoots().iterator();
+        Iterator<GCRoot> gcIt = heap.getGCRoots().iterator();
 
         while (gcIt.hasNext()) {
             HprofGCRoot root = (HprofGCRoot) gcIt.next();
@@ -272,7 +271,7 @@ class NearestGCRoot {
         writeBuffer.reset();
     }
 
-    private boolean writeClassConnection(final Set processedClasses, final long instanceId, final JavaClass jcls) throws IOException {
+    private boolean writeClassConnection(final Set<JavaClass> processedClasses, final long instanceId, final JavaClass jcls) throws IOException {
         if (!processedClasses.contains(jcls)) {
             long jclsId = jcls.getJavaClassId();
 
@@ -315,7 +314,7 @@ class NearestGCRoot {
 
     private boolean checkReferences(final long refInstanceId, final long instanceId) {
         Instance instance = heap.getInstanceByID(instanceId);
-        Iterator fieldIt = instance.getFieldValues().iterator();
+        Iterator<FieldValue> fieldIt = instance.getFieldValues().iterator();
 
         while (fieldIt.hasNext()) {
             Object field = fieldIt.next();

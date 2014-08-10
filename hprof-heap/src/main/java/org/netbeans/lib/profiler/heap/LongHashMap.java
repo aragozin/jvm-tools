@@ -86,6 +86,7 @@ class LongHashMap {
     /**
      * The number of modifications, to support fast-fail iterators
      */
+    @SuppressWarnings("unused")
     private transient int modCount;
 
     /**
@@ -429,6 +430,7 @@ class LongHashMap {
      * @return  <code>true</code> if and only if the specified key-value
      *          mapping was in the map
      */
+    @SuppressWarnings("unused")
     private boolean removeMapping(long key, long value) {
         long k = key;
         long[] tab = table;
@@ -534,7 +536,7 @@ class LongHashMap {
             }
             return true;
         } else if (o instanceof Map) {
-            Map m = (Map)o;
+//            Map m = (Map)o;
             return false;
         } else {
             return false;  // o is not a Map

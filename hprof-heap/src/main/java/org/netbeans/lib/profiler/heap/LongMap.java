@@ -220,7 +220,7 @@ class LongMap extends AbstractLongMap {
         }
     }
 
-    private static class RetainedSizeEntry implements Comparable {
+    private static class RetainedSizeEntry implements Comparable<RetainedSizeEntry> {
         private final long instanceId;
         private final long retainedSize;
 
@@ -229,7 +229,7 @@ class LongMap extends AbstractLongMap {
             retainedSize = size;
         }
 
-        public int compareTo(Object o) {
+        public int compareTo(RetainedSizeEntry o) {
             RetainedSizeEntry other = (RetainedSizeEntry) o;
             // bigger object are at beginning
             int diff = longCompare(other.retainedSize, retainedSize);
@@ -290,7 +290,7 @@ class LongMap extends AbstractLongMap {
     }
 
     long[] getBiggestObjectsByRetainedSize(int number) {
-        SortedSet bigObjects = new TreeSet();
+        SortedSet<RetainedSizeEntry> bigObjects = new TreeSet<RetainedSizeEntry>();
         long[] bigIds = new long[number];
         long min = 0;
         for (long index=0;index<fileSize;index+=ENTRY_SIZE) {
@@ -308,7 +308,7 @@ class LongMap extends AbstractLongMap {
             }
         }
         int i = 0;
-        Iterator it = bigObjects.iterator();
+        Iterator<RetainedSizeEntry> it = bigObjects.iterator();
         while(it.hasNext()) {
             bigIds[i++]=((RetainedSizeEntry)it.next()).instanceId;
         }

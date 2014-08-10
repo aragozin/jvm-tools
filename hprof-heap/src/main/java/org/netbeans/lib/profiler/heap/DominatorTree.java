@@ -59,6 +59,7 @@ import java.util.TreeMap;
  *
  * @author Tomas Hurka
  */
+@SuppressWarnings({"unused", "rawtypes", "unchecked"})
 class DominatorTree {
     //~ Static fields/initializers -----------------------------------------------------------------------------------------------
 
@@ -108,6 +109,7 @@ class DominatorTree {
         deleteBuffers();
         dirtySet = Collections.EMPTY_SET;
     }
+
 
     private boolean computeOneLevel(boolean ignoreDirty) throws IOException {
         boolean changed = false;
@@ -361,6 +363,7 @@ class DominatorTree {
 
     }
 
+    @SuppressWarnings("serial")
     private static final class NearestGCRootCache extends LinkedHashMap {
         private final int maxSize;
 

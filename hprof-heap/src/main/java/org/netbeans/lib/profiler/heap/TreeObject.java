@@ -99,8 +99,8 @@ class TreeObject {
         for (;;) {
             long instanceId = readLong();
             Instance instance;
-            List fieldValues;
-            Iterator valuesIt;
+            List<FieldValue> fieldValues;
+            Iterator<FieldValue> valuesIt;
             long retainedSize = 0;
 
             if (instanceId == 0) {  // end of level
@@ -108,7 +108,7 @@ class TreeObject {
             }
             instance = heap.getInstanceByID(instanceId);
             if (instance instanceof ObjectArrayInstance) {
-                Iterator instanceIt = ((ObjectArrayInstance) instance).getValues().iterator();
+                Iterator<Instance> instanceIt = ((ObjectArrayInstance) instance).getValues().iterator();
                 long size = 0;
                 while (instanceIt.hasNext() && size != -1) {
                     Instance refInstance = (Instance) instanceIt.next();
@@ -187,7 +187,7 @@ class TreeObject {
         writeBuffer = b;
         readBuffer.startReading();
         writeBuffer.reset();
-        unique = new HashSet(4000);
+        unique = new HashSet<Long>(4000);
     }
 
     private void writeLong(long instanceId) throws IOException {

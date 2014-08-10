@@ -51,7 +51,11 @@ import java.util.Arrays;
  */
 class HeapOffsetMap {
 
-    private final int pageSizeBits = 12;
+    private final static int DEFAULT_CACHE_SIZE = 1027;
+//    private final static int DEFAULT_CACHE_SIZE = 5027;
+
+//    private final int pageSizeBits = 12;
+    private final int pageSizeBits = 10;
     private final int pageSize = 1 << pageSizeBits;
     private final int allignment = 8;
 
@@ -76,7 +80,7 @@ class HeapOffsetMap {
         offsetMap = new long[(int)((span + pageSize - 1) / pageSize)];
         offsetMap[0] = bounds.startOffset;
 
-        cachePageId = new int[257];
+        cachePageId = new int[DEFAULT_CACHE_SIZE];
         cachePageData = new int[cachePageId.length][pageSize];
         Arrays.fill(cachePageId, -1);
     }
@@ -103,9 +107,6 @@ class HeapOffsetMap {
     private void scanPage(int page) {
         int n = maxPage;
         while(n <= page) {
-            if (n == 1994) {
-                new String();
-            }
             if (offsetMap.length <= n) {
                 offsetMap = Arrays.copyOf(offsetMap, page + 1);
             }
@@ -220,7 +221,7 @@ class HeapOffsetMap {
 
     private long compressID(long origId) {
         if (idOffset > origId) {
-            throw new IllegalArgumentException("ID is below threshold: " + origId);
+            throw new IllegalArgumentException("ID is below threshold (" + idOffset + "): " + origId);
         }
         if ((origId - idOffset) % allignment != 0) {
             throw new IllegalArgumentException("ID is not alligned: " + origId);

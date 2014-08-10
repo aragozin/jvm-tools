@@ -63,7 +63,7 @@ class HprofProxy {
         ObjectArrayDump entriesObj = (ObjectArrayDump) propertiesInstance.getValueOfField("table"); // NOI18N
         if (entriesObj != null) {
             Instance defaultsObj = (Instance) propertiesInstance.getValueOfField("defaults"); // NOI18N
-            Iterator enIt = entriesObj.getValues().iterator();
+            Iterator<Instance> enIt = entriesObj.getValues().iterator();
             Properties props;
 
             if (defaultsObj != null) {

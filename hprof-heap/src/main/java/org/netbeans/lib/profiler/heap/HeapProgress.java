@@ -54,7 +54,7 @@ import javax.swing.SwingUtilities;
 public final class HeapProgress {
 
     public static final int PROGRESS_MAX = 1000;
-    private static ThreadLocal progressThreadLocal = new ThreadLocal();
+    private static ThreadLocal<BoundedRangeModel> progressThreadLocal = new ThreadLocal<BoundedRangeModel>();
 
     private HeapProgress() {
 
