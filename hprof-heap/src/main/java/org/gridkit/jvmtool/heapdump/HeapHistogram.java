@@ -89,6 +89,10 @@ public class HeapHistogram implements InstanceCallback {
         return total.getTotalSize();
     }
 
+    public ClassRecord getClassInfo(String type) {
+        return classes.get(type);
+    }
+
     public Collection<ClassRecord> getHisto() {
         return classes.values();
     }
@@ -150,6 +154,21 @@ public class HeapHistogram implements InstanceCallback {
         else {
             return String.valueOf(n >> 30) + "g";
         }
+    }
+
+    public String formatTop(int top) {
+        TextTable table = new TextTable();
+        table.addRow("", "Size", " Count", " Type");
+        int n = 0;
+        for(ClassRecord cr: getHistoBySize()) {
+            ++n;
+            table.addRow("" + n, " " + cr.getTotalSize(), " " + cr.getInstanceCount(), " " + cr.getClassName());
+            if (n == top) {
+                break;
+            }
+        }
+        table.addRow("TOTAL", " " + total.totalSize, " " + total.instanceCount, "");
+        return table.formatTextTableUnbordered(180);
     }
 
     @Override
