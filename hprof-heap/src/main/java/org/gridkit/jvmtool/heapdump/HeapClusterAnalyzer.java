@@ -1,10 +1,9 @@
 package org.gridkit.jvmtool.heapdump;
 
-import static org.assertj.core.api.Assertions.contentOf;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gridkit.jvmtool.heapdump.PathStep.Move;
@@ -21,7 +20,9 @@ public class HeapClusterAnalyzer {
     private final Heap heap;
 
     private int recursionThreshold = 30;
+    private boolean keepClusters = true;
     private boolean keepClusterMembership = false;
+    private boolean useBreadthSearch = false;
 
     private List<TypeFilterStep> interestingTypes = new ArrayList<TypeFilterStep>();
     private List<TypeFilterStep> blacklistedTypes = new ArrayList<TypeFilterStep>();
@@ -58,6 +59,22 @@ public class HeapClusterAnalyzer {
 
     public long getSharedErrorMargin() {
         return sharedErrorMargin;
+    }
+
+    public void setGraphDepthThreshold(int threshold) {
+        this.recursionThreshold = threshold;
+    }
+
+    public void useBreadthSearch() {
+        useBreadthSearch = true;
+    }
+
+    public void keepClusters(boolean enable) {
+        keepClusters = enable;
+    }
+
+    public void keepClusterMembership(boolean enable) {
+        keepClusterMembership = enable;
     }
 
     /**
@@ -130,6 +147,10 @@ public class HeapClusterAnalyzer {
         }
     }
 
+    public void addTokenToBlacklist(String token) {
+        blacklist.add(token);
+    }
+
     public ClusterDetails feed(Instance i) {
         if (rootClasses.isEmpty()) {
             throw new IllegalStateException("Interesting types are not defined");
@@ -144,7 +165,9 @@ public class HeapClusterAnalyzer {
             analyze(cluster);
             updateKnownMap(cluster);
 
+            if (keepClusters) {
             clusters.add(cluster);
+            }
 
             if (!keepClusterMembership) {
                 cluster.objects = null;
@@ -169,6 +192,7 @@ public class HeapClusterAnalyzer {
     }
 
     private void analyze(Cluster details) {
+        if (!useBreadthSearch) {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
             path.setLength(0);
@@ -179,7 +203,17 @@ public class HeapClusterAnalyzer {
             }
         }
     }
+        else {
+            for(EntryPoint ep: entryPoints) {
+                for(Instance i: HeapPath.collect(details.root, ep.locator)) {
+                    widthWalk(details, i, false);
+                }
+            }
 
+        }
+    }
+
+    @SuppressWarnings("unused")
     private void reportSharedPaths(Cluster details) {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
@@ -191,6 +225,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
+    @SuppressWarnings("unused")
     private void calculateShared(Cluster details) {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
@@ -273,8 +308,87 @@ public class HeapClusterAnalyzer {
                 }
             }
         }
+        catch(RuntimeException e) {
+            System.err.println("Fail path < " + path + " > ending with " + i.getJavaClass().getName());
+            throw e;
+        }
         finally {
             path.setLength(len);
+        }
+    }
+
+    private void widthWalk(Cluster details, Instance root, boolean accountShared) {
+        RefSet queue = new RefSet();
+        queue.set(root.getInstanceId(), true);
+        @SuppressWarnings("unused")
+        long count = 0;
+        while(true) {
+            long n = queue.seekNext(1); // 0 is null, so ignore it
+            if (n < 0) {
+                break;
+            }
+            while(true) {
+                long id = queue.seekNext(n);
+                if (id < 0) {
+                    break;
+                }
+                else {
+                    n = id + 1;
+                }
+
+                queue.set(id, false);
+                if (ignoreRefs.get(id)) {
+                    continue;
+                }
+
+                if (details.objects.getAndSet(id, true)) {
+                    continue;
+                }
+
+                Instance i = heap.getInstanceByID(id);
+                if (blacklist.contains(i.getJavaClass().getName())) {
+                    continue;
+                }
+
+                ++count;
+
+                @SuppressWarnings("unused")
+                String type = i.getJavaClass().getName();
+
+                if (!accountShared || sharedRefs.get(i.getInstanceId())) {
+                    details.summary.accumulate(i);
+                }
+
+                if (i instanceof ObjectArrayInstance) {
+                    ObjectArrayInstance array = (ObjectArrayInstance) i;
+                    if (!isBlackListedArray(array.getJavaClass())) {
+                        for(Long ref: array.getValueIDs()) {
+                            if (ref != 0) {
+                                // early check to avoid needless instantiation
+                                if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
+                                    queue.set(ref, true);
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    for(FieldValue f: i.getFieldValues()) {
+                        @SuppressWarnings("unused")
+                        String fieldName = f.getField().getName();
+                        if (f instanceof ObjectFieldValue) {
+                            ObjectFieldValue of = (ObjectFieldValue) f;
+                            if (!isBlackListed(of.getField())) {
+                                long ref = of.getInstanceId();
+                                // early check to avoid instantiation
+                                if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
+                                    queue.set(ref, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -309,9 +423,14 @@ public class HeapClusterAnalyzer {
                     continue;
                 }
                 sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
+                try {
                 Move m = chain[i].track(o).next();
                 sb.append(m.pathSpec);
                 o = m.instance;
+            }
+                catch(NoSuchElementException e) {
+                    sb.append("{failed: " + chain[i] + "}");
+                }
             }
 
             System.err.println("DEEP REF: " + root.getInstanceId() + " " + sb);
