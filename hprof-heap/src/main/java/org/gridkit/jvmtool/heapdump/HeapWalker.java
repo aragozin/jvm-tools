@@ -1,9 +1,11 @@
 package org.gridkit.jvmtool.heapdump;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,9 +46,23 @@ public class HeapWalker {
                 return primitiveValue(instance);
             }
         };
+        InstanceConverter primitiveArrayConverter = new InstanceConverter() {
+            @Override
+            public Object convert(Instance instance) {
+                return primitiveArrayValue(instance);
+            }
+        };
         for(String ptype: BOX_TYPES) {
             CONVERTERS.put(ptype, primitiveConverter);
         }
+        CONVERTERS.put("boolean[]", primitiveArrayConverter);
+        CONVERTERS.put("byte[]", primitiveArrayConverter);
+        CONVERTERS.put("char[]", primitiveArrayConverter);
+        CONVERTERS.put("short[]", primitiveArrayConverter);
+        CONVERTERS.put("int[]", primitiveArrayConverter);
+        CONVERTERS.put("long[]", primitiveArrayConverter);
+        CONVERTERS.put("float[]", primitiveArrayConverter);
+        CONVERTERS.put("double[]", primitiveArrayConverter);
     }
 
     /**
@@ -192,6 +208,60 @@ public class HeapWalker {
         }
         else {
             throw new IllegalArgumentException("Is not a primitive wrapper: " + obj.getInstanceId() + " (" + obj.getJavaClass().getName() + ")");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T primitiveArrayValue(Instance obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof PrimitiveArrayInstance) {
+            PrimitiveArrayInstance pa = (PrimitiveArrayInstance) obj;
+            String type = pa.getJavaClass().getName();
+            Object array;
+            int len = pa.getLength();
+            if ("boolean[]".equals(type)) {
+                array = new boolean[len];
+            }
+            else if ("byte[]".equals(type)) {
+                array = new byte[len];
+            }
+            else if ("char[]".equals(type)) {
+                array = new char[len];
+            }
+            else if ("short[]".equals(type)) {
+                array = new short[len];
+            }
+            else if ("int[]".equals(type)) {
+                array = new int[len];
+            }
+            else if ("long[]".equals(type)) {
+                array = new long[len];
+            }
+            else if ("float[]".equals(type)) {
+                array = new float[len];
+            }
+            else if ("double[]".equals(type)) {
+                array = new double[len];
+            }
+            else {
+                throw new IllegalArgumentException("Is not a primitive array: " + obj.getInstanceId() + " (" + obj.getJavaClass().getName() + ")");
+            }
+
+            List<Object> values = pa.getValues();
+            for(int i = 0; i != values.size(); ++i) {
+                Object val = values.get(i);
+                if (val instanceof String) {
+                    val = Character.valueOf(((String)val).charAt(0));
+                }
+                Array.set(array, i, val);
+            }
+
+            return (T)array;
+        }
+        else {
+            throw new IllegalArgumentException("Is not a primitive array: " + obj.getInstanceId() + " (" + obj.getJavaClass().getName() + ")");
         }
     }
 
