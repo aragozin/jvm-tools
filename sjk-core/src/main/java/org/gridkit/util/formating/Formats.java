@@ -65,5 +65,6 @@ public class Formats {
 		System.out.println("FILE_DATE_STAMP: " + String.format(FILE_DATE_STAMP, System.currentTimeMillis()));
 		System.out.println("ZERO_LEAD_DECIMAL_6: " + String.format(ZERO_LEAD_DECIMAL_6, 1234));
 		System.out.println(String.format("[%-6s]", "x"));
+		System.out.println(String.format("[%.2f]", 0.1));
 	}
 }
