@@ -17,11 +17,11 @@ public class PerfCounterGcCpuUsageMonitor implements GcCpuUsageMonitor {
     
     @Override
     public long getYoungGcCpu() {
-        return gc0 == null ? 0 : gc0.geNanos();
+        return gc0 == null ? 0 : gc0.getNanos();
     }
 
     @Override
     public long getOldGcCpu() {
-        return gc1 == null ? 0 : gc1.geNanos();
+        return gc1 == null ? 0 : gc1.getNanos();
     }
 }
