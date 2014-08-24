@@ -26,8 +26,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
-public class StackTraceCoder {
+public class StackTraceCodec {
 
     static final byte[] MAGIC = "TRACEDUMP_1 ".getBytes();
     
@@ -36,7 +38,7 @@ public class StackTraceCoder {
     static final byte TAG_TRACE = 3;  
     
     public static StackTraceWriter newWriter(OutputStream os) throws IOException {
-        return new StackTraceWriter(new DataOutputStream(os));
+        return new StackTraceWriter(os);
     }
 
     public static StackTraceReader newReader(InputStream is) throws IOException {
@@ -46,7 +48,7 @@ public class StackTraceCoder {
         if (!Arrays.equals(MAGIC, magic)) {
             throw new IOException("Unknown magic [" + new String(magic) + "]");
         }
-        return new StackTraceReader(dis);
+        return new StackTraceReader(is);
     }
     
     public static class StackTraceWriter {
@@ -55,9 +57,10 @@ public class StackTraceCoder {
         private Map<String, Integer> stringDic = new HashMap<String, Integer>();
         private Map<StackTraceElement, Integer> frameDic = new HashMap<StackTraceElement, Integer>();
 
-        public StackTraceWriter(DataOutputStream dos) throws IOException {
-            this.dos = dos;
-            dos.write(MAGIC);
+        public StackTraceWriter(OutputStream os) throws IOException {
+            os.write(MAGIC);
+            DeflaterOutputStream def = new DeflaterOutputStream(os);
+            this.dos = new DataOutputStream(def);
         }
         
         public void write(long threadId, long timestamp, StackTraceElement[] trace) throws IOException {
@@ -136,8 +139,8 @@ public class StackTraceCoder {
         private long timestamp;
         private StackTraceElement[] trace;
         
-        public StackTraceReader(DataInputStream dis) {
-            this.dis = dis;
+        public StackTraceReader(InputStream is) {
+            this.dis = new DataInputStream(new InflaterInputStream(is));
             stringDic.add(null);
             frameDic.add(null);
             loaded = false;;
@@ -168,7 +171,7 @@ public class StackTraceCoder {
             return trace;            
         }
         
-        public void loadNext() throws IOException {
+        public boolean loadNext() throws IOException {
             loaded = false;
             while(true) {
                 int tag = dis.read();
@@ -200,6 +203,7 @@ public class StackTraceCoder {
                     throw new IOException("Data format error");
                 }
             }
+            return loaded;
         }
 
         private StackTraceElement readStackTraceElement() throws IOException {
@@ -220,7 +224,7 @@ public class StackTraceCoder {
         }        
     }
     
-    private static int readVarInt(DataInputStream dis) throws IOException {
+    static int readVarInt(DataInputStream dis) throws IOException {
         int b = dis.readByte();
         if ((b & 0x80) == 0) {
             return 0x7F & b;
@@ -243,7 +247,7 @@ public class StackTraceCoder {
         }
     }
     
-    private static void writeVarInt(DataOutputStream dos, int v) throws IOException {
+    static void writeVarInt(DataOutputStream dos, int v) throws IOException {
         int val = v;
         if ((val & 0xFFFFFF80) == 0) {
             dos.write(val);

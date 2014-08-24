@@ -147,6 +147,31 @@ public class CliCheck {
 	public void mx_info_ambiguous() {
 		fail("mx", "-p", PID, "--info", "--bean", "*:type=GarbageCollector,*");
 	}
+
+	@Test
+	public void stcap() {
+	    exec("stcap", "-p", PID, "-o", "target/test.stp");
+	}
+
+	@Test
+	public void stcap_rotate() {
+	    exec("stcap", "-p", PID, "-r", "5000", "-o", "target/test.stp");
+	}
+
+	@Test
+	public void stcap_rotate_limit() {
+	    exec("stcap", "-p", PID, "-l", "50000", "-r", "5000", "-o", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_print() {
+	    exec("ssa", "--print", "-f", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_histo() {
+	    exec("ssa", "--histo", "-f", "target/test.stp");
+	}
 	
 	private void exec(String... cmd) {
 		SJK sjk = new SJK();

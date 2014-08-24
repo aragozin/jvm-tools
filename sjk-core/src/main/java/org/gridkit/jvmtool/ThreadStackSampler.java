@@ -49,9 +49,12 @@ public class ThreadStackSampler {
 	private ThreadMXBean threading;
 
 	private Pattern threadFilter;
-	private String rootElement;
+	private List<String> frameFilter = new ArrayList<String>();
+	private Map<StackTraceElement, Boolean> frameFilterCache = new HashMap<StackTraceElement, Boolean>();
 	private Map<StackTraceElement, Integer> siteIndex = new HashMap<StackTraceElement, Integer>();
 	private StackTraceElement[] sites = new StackTraceElement[0];
+	private boolean[] siteFilterWhiteCache = new boolean[0];
+	private boolean[] siteFilterBlackCache = new boolean[0];
 	private long[] threadSet;
 	
 	private List<Trace> traces = new ArrayList<Trace>();
@@ -64,8 +67,8 @@ public class ThreadStackSampler {
 	    this.threadFilter = Pattern.compile(pattern);
 	}
 
-	public void setRootElement(String rootElement) {
-	    this.rootElement = rootElement;
+	public void addFrame(String frameMatcher) {
+	    this.frameFilter.add(frameMatcher);
 	}
 	
 	public void prime() {
@@ -99,6 +102,7 @@ public class ThreadStackSampler {
 	
 	public void clearTraces() {
 	    traces.clear();
+	    frameFilterCache.clear();
 	}
 	
 	public void collect() {
@@ -117,13 +121,29 @@ public class ThreadStackSampler {
 	private Trace newTrace(long timestamp, ThreadInfo ti) {
 	    StackTraceElement[] stackTrace = ti.getStackTrace();
         int[] stack = new int[stackTrace.length];
-        boolean match = false;
+        boolean match = frameFilter.isEmpty();
 	    for(int i = 0; i != stackTrace.length; ++i) {
-	        stack[i] = toSiteID(stackTrace[i]);
-	        if (rootElement.equals(stackTrace[i].toString())) {
+	        int siteId = toSiteID(stackTrace[i]);
+            stack[i] = siteId;
+	        if (siteFilterWhiteCache[siteId]) {
 	            match = true;	            
-	            stack = Arrays.copyOf(stack, i + 1);
-	            break;
+	        }
+	        else if (!siteFilterBlackCache[siteId]) {
+	            boolean m = false;
+	            String frame = stackTrace[i].toString();
+	            for(String fe: frameFilter) {
+	                if (frame.contains(fe)) {
+	                    m = true;
+	                    break;
+	                }
+	            }
+	            if (m) {
+	                match = true;
+	                siteFilterWhiteCache[siteId] = true;
+	            }
+	            else {
+	                siteFilterBlackCache[siteId] = true;
+	            }
 	        }
 	    }
 	    
@@ -143,6 +163,8 @@ public class ThreadStackSampler {
 	        siteIndex.put(e, i);
 	        if (sites.length <= i) {
 	            sites = Arrays.copyOf(sites, 16 + (3 * sites.length / 2));
+	            siteFilterWhiteCache = Arrays.copyOf(siteFilterWhiteCache, sites.length);
+	            siteFilterBlackCache = Arrays.copyOf(siteFilterBlackCache, sites.length);
 	        }
 	        sites[i] = e;
 	    }
