@@ -1,0 +1,63 @@
+[ROOT]
+    org.apache.catalina.connector.CoyoteAdapter.service
+
+[JDBC]
+    org.jboss.jca.adapters.jdbc.
+
+[Hibernate (autoFlush)]
+    org.hibernate.internal.SessionImpl.autoFlushIfRequired
+
+[Hibernate (rest)]
+    org.hibernate.
+
+[Facelets compile]
+    com.sun.faces.facelets.compiler.Compiler.compile
+
+[XML]
+    javax.xml.
+
+[ResourceBundle - missing resource]
+    java.util.ResourceBundle.getObject(ResourceBundle.java:395)
+
+[ResourceBundle - getObject]
+    java.util.ResourceBundle.getObject
+
+[Seam bean intercepter - inject/disinject/outject]
+    !REQUIRE
+        !LAST
+            org.jboss.seam.core.BijectionInterceptor.aroundInvoke
+            org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke
+            !NOT FOLLOWED
+                **.proceed
+        !ANY
+            org.jboss.seam.Component.inject
+            org.jboss.seam.Component.disinject
+            org.jboss.seam.Component.outject
+
+[Seam bean intercepter - lock contention]
+    !REQUIRE
+        !LAST
+            org.jboss.seam.core.BijectionInterceptor.aroundInvoke
+            org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke
+            !NOT FOLLOWED
+                **.proceed
+        java.util.concurrent.locks.ReentrantLock
+
+[Seam bean intercepter - other]
+    !REQUIRE
+        !LAST
+            org.jboss.seam.core.BijectionInterceptor.aroundInvoke
+            org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke
+            !NOT FOLLOWED
+                **.proceed
+
+[LifecycleImpl.execute]
+    com.sun.faces.lifecycle.LifecycleImpl.execute
+
+[LifecycleImpl.render]
+    com.sun.faces.lifecycle.LifecycleImpl.render
+
+[DefaultServlet.doGet]
+    org.apache.catalina.servlets.DefaultServlet.doGet
+
+[Other]

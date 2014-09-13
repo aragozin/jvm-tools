@@ -17,6 +17,8 @@ package org.gridkit.jvmtool;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,7 +50,88 @@ public class StackTraceCodec {
         if (!Arrays.equals(MAGIC, magic)) {
             throw new IOException("Unknown magic [" + new String(magic) + "]");
         }
-        return new StackTraceReader(is);
+        return new StackTraceReaderV1(is);
+    }
+
+    public static StackTraceReader newReader(String... files) throws IOException {
+        final List<String> fileList = new ArrayList<String>(Arrays.asList(files));
+        return new ChainedStackTraceReader() {
+
+            @Override
+            protected StackTraceReader next() {
+                while(!fileList.isEmpty()) {
+                    String file = fileList.remove(0);
+                    File f = new File(file);
+                    if (!f.isFile()) {
+                        continue;
+                    }
+                    try {
+                        FileInputStream fis = new FileInputStream(file);
+                        return newReader(fis);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                return null;
+            }
+        };
+    }
+
+    abstract static class ChainedStackTraceReader implements StackTraceReader {
+
+        private StackTraceReader current;
+
+        protected abstract StackTraceReader next();
+
+        @Override
+        public boolean isLoaded() {
+            if (current == null) {
+                current = next();
+            }
+            return current != null && current.isLoaded();
+        }
+
+
+        @Override
+        public long getThreadId() {
+            if (current == null) {
+                new NoSuchElementException();
+            }
+            return current.getThreadId();
+        }
+
+        @Override
+        public long getTimestamp() {
+            if (current == null) {
+                new NoSuchElementException();
+            }
+            return current.getTimestamp();
+        }
+
+        @Override
+        public StackTraceElement[] getTrace() {
+            if (current == null) {
+                new NoSuchElementException();
+            }
+            return current.getTrace();
+        }
+
+        @Override
+        public boolean loadNext() throws IOException {
+            if (current == null) {
+                current = next();
+                if (current == null) {
+                    return false;
+                }
+            }
+            if (current.loadNext()) {
+                return true;
+            }
+            else {
+                current = null;
+                return loadNext();
+            }
+        }
     }
     
     public static class StackTraceWriter {
@@ -128,7 +211,7 @@ public class StackTraceCodec {
         }
     }    
     
-    public static class StackTraceReader {
+    static class StackTraceReaderV1 implements StackTraceReader {
         
         private DataInputStream dis;
         private List<String> stringDic = new ArrayList<String>();
@@ -139,17 +222,25 @@ public class StackTraceCodec {
         private long timestamp;
         private StackTraceElement[] trace;
         
-        public StackTraceReader(InputStream is) {
+        public StackTraceReaderV1(InputStream is) {
             this.dis = new DataInputStream(new InflaterInputStream(is));
             stringDic.add(null);
             frameDic.add(null);
             loaded = false;;
         }
         
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#isLoaded()
+         */
+        @Override
         public boolean isLoaded() {
             return loaded;
         }
         
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getThreadId()
+         */
+        @Override
         public long getThreadId() {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
@@ -157,6 +248,10 @@ public class StackTraceCodec {
             return threadId;
         }
 
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getTimestamp()
+         */
+        @Override
         public long getTimestamp() {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
@@ -164,6 +259,10 @@ public class StackTraceCodec {
             return timestamp;
         }
         
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getTrace()
+         */
+        @Override
         public StackTraceElement[] getTrace() {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
@@ -171,6 +270,10 @@ public class StackTraceCodec {
             return trace;            
         }
         
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#loadNext()
+         */
+        @Override
         public boolean loadNext() throws IOException {
             loaded = false;
             while(true) {

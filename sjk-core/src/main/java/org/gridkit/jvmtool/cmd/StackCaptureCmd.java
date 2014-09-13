@@ -126,10 +126,7 @@ public class StackCaptureCmd implements CmdRef {
 				    traceCounter += n;
 				    if (sampler.getTraceCount() > 500) {
 				        System.out.println("Collected " +traceCounter);
-				        for(Trace t: sampler.getTraces()) {
-				            writer.write(t.getThreadId(), t.getTimestamp(), t.getTrace());
-				        }
-				        sampler.clearTraces();
+				        flushToWriter();
 				        checkRotate();
 				    }				    
 				    while(nextsample > System.currentTimeMillis()) {
@@ -139,6 +136,8 @@ public class StackCaptureCmd implements CmdRef {
 				        }
 				    }
 				}
+
+				flushToWriter();
 				
 				writer.close();
 				System.out.println("Trace dumped: " + traceCounter);
@@ -147,6 +146,13 @@ public class StackCaptureCmd implements CmdRef {
 				SJK.fail("Unexpected error: " + e.toString());
 			}			
 		}
+
+        protected void flushToWriter() throws IOException {
+            for(Trace t: sampler.getTraces()) {
+                writer.write(t.getThreadId(), t.getTimestamp(), t.getTrace());
+            }
+            sampler.clearTraces();
+        }
 
         private void checkRotate() throws FileNotFoundException, IOException {
             if (fileLimit > 0) {
