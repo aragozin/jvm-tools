@@ -56,12 +56,16 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		@Parameter(names={"-f", "--file"}, required = true, variableArity=true, description="Path to stack dump file")
 		private List<String> files;
 		
-		@Parameter(names={"-c", "--classifier"}, required = false, description="Path to stack trace classification definition")
+		@Parameter(names={"-c", "--classifier"}, required = false, description="Path to file with stack trace classification definition")
 		private String classifier = null;
 
         @Parameter(names = { "-b", "--buckets" }, required = false, description = "Restrict analysis to specific class")
         private String bucket = null;
 
+        @Parameter(names={"-sf", "--simple-filter"}, required = false, description="Process only traces containing this string")
+        private String simpleFilter = null;
+
+        
         private List<SsaCmd> allCommands = new ArrayList<SsaCmd>();
 
         @SuppressWarnings("unused")
@@ -111,9 +115,52 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
 		StackTraceReader getFilteredReader() throws IOException {
 		    if (classifier == null ) {
-		        return getUnclassifiedReader();
+		        if (simpleFilter == null) {
+		            return getUnclassifiedReader();
+		        }
+		        else {
+		            final StackTraceReader unclassified = getUnclassifiedReader();
+		            return new StackTraceReader() {
+                        
+                        @Override
+                        public boolean loadNext() throws IOException {
+                            while(unclassified.loadNext()) {
+                                StackTraceElement[] trace = getTrace();
+                                for(StackTraceElement e: trace) {
+                                    if (e.toString().startsWith(simpleFilter)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        }
+                        
+                        @Override
+                        public boolean isLoaded() {
+                            return unclassified.isLoaded();
+                        }
+                        
+                        @Override
+                        public StackTraceElement[] getTrace() {
+                            return unclassified.getTrace();
+                        }
+                        
+                        @Override
+                        public long getTimestamp() {
+                            return unclassified.getTimestamp();
+                        }
+                        
+                        @Override
+                        public long getThreadId() {
+                            return unclassified.getThreadId();
+                        }
+                    };
+		        }
 		    }
 		    else {
+		        if (simpleFilter != null) {
+		            SJK.fail("Simple filter cannot be used with classification");
+		        }		        
 		        if (bucket != null && !buckets.getClasses().contains(bucket)) {
 		            SJK.fail("Bucket [" + bucket + "] is not defined");
 		        }

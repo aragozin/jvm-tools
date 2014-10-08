@@ -174,9 +174,13 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_histo_with_filter() {
+	    exec("ssa", "--histo", "-sf", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
+	}
+
+	@Test
 	public void ssa_summary() {
-//	    exec("ssa", "--summary", "-c", "src/test/resources/sample-seam-jsf-profile.shp", "-f", "target/test.stp");
-	    exec("ssa", "--summary", "-c", "src/test/resources/sample-seam-jsf-profile.shp", "-f", "C:/fire_at_will/_samara/tss2.stp");
+	    exec("ssa", "--summary", "-c", "src/test/resources/sample-seam-jsf-profile.shp", "-f", "target/test.stp");
 	}
 	
 	private void exec(String... cmd) {
