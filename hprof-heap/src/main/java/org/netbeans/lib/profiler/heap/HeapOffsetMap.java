@@ -131,7 +131,7 @@ class HeapOffsetMap {
             int cslot = n % cachePageId.length;
             cachePageId[cslot] = n;
             try {
-                readPage(n * pageSize, offsetMap[n], cachePageData[cslot]);
+                readPage(((long)n) * pageSize, offsetMap[n], cachePageData[cslot]);
             }
             catch(MalformedInstanceIdException e) {
                 // this one is tricky, we have encountered an address region outside of current bounds, 
@@ -233,7 +233,7 @@ class HeapOffsetMap {
         }
         else {
             cachePageId[cslot] = page;
-            readPage((long)(page ) * pageSize, offsetMap[page], cachePageData[cslot]);
+            readPage((long)(page) * pageSize, offsetMap[page], cachePageData[cslot]);
             return cachePageData[cslot];
         }
     }
