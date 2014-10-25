@@ -1,3 +1,4 @@
+package org.gridkit.jvmtool.util;
 /**
  * Copyright 2014 Alexey Ragozin
  *
@@ -13,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gridkit.jvmtool.util;
+
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -27,7 +28,20 @@ import java.util.NoSuchElementException;
  */
 public class PagedBitMap {
 
-    private PagedLongArray array = new PagedLongArray();
+    private LongArray array;
+    
+    public PagedBitMap() {
+        this(false);
+    }
+
+    public PagedBitMap(boolean sparse) {
+        if (sparse) {
+            array = new SparsePagedLongArray();
+        }
+        else {
+            array = new PagedLongArray();
+        }
+    }
 
     public boolean get(long index) {
         long lindex = index / 64;
@@ -35,7 +49,7 @@ public class PagedBitMap {
         return (0 != (bit & array.get(lindex))); // Long.toBinaryString(array.get(lindex))
     }
 
-    public long seekNext(long start) {
+    public long seekOne(long start) {
         long n = start;
         while(true) {
             long lindex = n / 64;
@@ -89,7 +103,7 @@ public class PagedBitMap {
      * <code>this = this | that</code>
      */
     public void add(PagedBitMap that) {
-        PagedLongArray ta = that.array;
+        LongArray ta = that.array;
         long n = 0;
         while(true) {
             n = ta.seekNext(n);
@@ -109,8 +123,8 @@ public class PagedBitMap {
      * <code>this = this | that</code>
      */
     public void addWithOverflow(PagedBitMap that, PagedBitMap overflow) {
-        PagedLongArray ta = that.array;
-        PagedLongArray of = overflow.array;
+        LongArray ta = that.array;
+        LongArray of = overflow.array;
         long n = 0;
         while(true) {
             n = ta.seekNext(n);
@@ -133,7 +147,7 @@ public class PagedBitMap {
      * <code>this = this & (~that)</code>
      */
     public void sub(PagedBitMap that) {
-        PagedLongArray ta = that.array;
+        LongArray ta = that.array;
         long n = 0;
         while(true) {
             n = ta.seekNext(n);
@@ -151,7 +165,7 @@ public class PagedBitMap {
      * <code>this = this & that</code>
      */
     public void mult(PagedBitMap that) {
-        PagedLongArray ta = that.array;
+        LongArray ta = that.array;
         long n = 0;
         while(true) {
             n = ta.seekNext(n);
@@ -172,6 +186,15 @@ public class PagedBitMap {
             }
         };
     }
+    
+    @SuppressWarnings("unused")
+    public long countOnes() {
+        long n = 0;
+        for(Long l: ones()) {
+            ++n;
+        }
+        return n;
+    }
 
     protected static class SeekerIterator implements Iterator<Long> {
 
@@ -180,7 +203,7 @@ public class PagedBitMap {
 
         public SeekerIterator(PagedBitMap bitmap) {
             this.bitmap = bitmap;
-            this.next = bitmap.seekNext(0);
+            this.next = bitmap.seekOne(0);
         }
 
         @Override
@@ -194,7 +217,7 @@ public class PagedBitMap {
                 throw new NoSuchElementException();
             }
             long n = next;
-            next = bitmap.seekNext(next + 1);
+            next = bitmap.seekOne(next + 1);
             return n;
         }
 
@@ -202,5 +225,5 @@ public class PagedBitMap {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-    }
+    }    
 }

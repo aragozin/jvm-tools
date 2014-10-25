@@ -27,6 +27,14 @@ import org.gridkit.jvmtool.util.PagedBitMap;
  */
 public class RefSet extends PagedBitMap {
 
+    public RefSet() {
+        super(true);
+    }
+
+    public RefSet(boolean sparse) {
+        super(sparse);
+    }
+
     @Override
     public boolean get(long index) {
         if (index % 8 != 0) {
@@ -36,9 +44,9 @@ public class RefSet extends PagedBitMap {
     }
 
     @Override
-    public long seekNext(long index) {
+    public long seekOne(long index) {
         index = (index + 7) / 8; // alligning to 8 byte boundary
-        return 8 * super.seekNext(index);
+        return 8 * super.seekOne(index);
     }
 
     @Override

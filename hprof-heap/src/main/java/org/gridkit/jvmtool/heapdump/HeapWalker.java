@@ -22,8 +22,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.gridkit.jvmtool.heapdump.PathStep.Move;
 import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.Instance;
@@ -293,6 +295,37 @@ public class HeapWalker {
             return null;
         }
     }
+    
+    public static String explainPath(Instance root, String path) {
+        PathStep[] chain = HeapPath.parsePath(path, true);
+        StringBuilder sb = new StringBuilder();
+        Instance o = root;
+        for(int i = 0; i != chain.length; ++i) {
+            if (chain[i] instanceof TypeFilterStep) {
+                continue;
+            }
+            sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
+            try {
+                Move m = chain[i].track(o).next();
+                sb.append(m.pathSpec);
+                o = m.instance;
+            }
+            catch(NoSuchElementException e) {
+                sb.append("{failed: " + chain[i] + "}");
+            }
+        }
+        return sb.toString();
+    }
+    
+    private static final String shortName(String name) {
+        int c = name.lastIndexOf('.');
+        if (c >= 0) {
+            return "**." + name.substring(c + 1);
+        }
+        else {
+            return name;
+        }
+    }    
 
     private interface InstanceConverter {
 

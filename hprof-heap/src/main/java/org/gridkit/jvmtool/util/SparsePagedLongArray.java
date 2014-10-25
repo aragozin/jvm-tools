@@ -17,8 +17,11 @@ package org.gridkit.jvmtool.util;
 
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-class PagedLongArray implements LongArray {
+class SparsePagedLongArray implements LongArray {
 
 	private final static int PAGE_BITS = 10;
 	private final static int PAGE_MASK = ~(-1 << PAGE_BITS);
@@ -27,18 +30,18 @@ class PagedLongArray implements LongArray {
 	public final static long NULL_VALUE = 0;
 
 	protected long lastIndex = -1;
-	protected long[][] array = new long[16][];
+	protected SortedMap<Integer, long[]> pages = new TreeMap<Integer, long[]>();
 
 
     public long get(long n) {
+        if (n > lastIndex) {
+            return NULL_VALUE;
+        }
 		int bi = (int) (n >> PAGE_BITS);
-		if (bi >= array.length) {
-			return NULL_VALUE;
-		}
 		if (bi < 0) {
 		    throw new ArrayIndexOutOfBoundsException(bi);
 		}
-		long[] page = array[bi];
+		long[] page = getPageForRead(bi);
 		if (page == null) {
 			return NULL_VALUE;
 		}
@@ -46,41 +49,46 @@ class PagedLongArray implements LongArray {
 	}
 
     public long seekNext(long start) {
-        long n = start;
-        while(true) {
-            int bi = (int) (n >> PAGE_BITS);
-            if (bi >= array.length) {
-                return -1;
+        int startPage = (int) (start >> PAGE_BITS);
+        SortedMap<Integer, long[]> pages = this.pages.tailMap(startPage);
+        for(Map.Entry<Integer, long[]> entry: pages.entrySet()) {
+            int pi = entry.getKey();
+            long[] page = entry.getValue();
+            long ps = ((long)pi) << PAGE_BITS;
+            long pe = ps + PAGE_SIZE;
+            for(long i = Math.max(ps, start); i != pe; ++i) {
+                if (page[(int) (i & PAGE_MASK)] != 0) {
+                    return i;
+                }
             }
-            if (bi < 0) {
-                throw new ArrayIndexOutOfBoundsException(bi);
-            }
-            long[] page = array[bi];
-            if (page == null) {
-                n = PAGE_SIZE * (bi + 1);
-                continue;
-            }
-            if (page[(int) (n & PAGE_MASK)] != 0) {
-                return n;
-            }
-            ++n;
         }
+        return -1;
     }
 
     public void set(long n, long value) {
 		lastIndex = Math.max(lastIndex, n);
 		int bi = (int) (n >> PAGE_BITS);
-		if (bi >= array.length) {
-			array = Arrays.copyOf(array, bi + 1);
-		}
-		long[] page = array[bi];
-		if (page == null) {
+		long[] page = value == NULL_VALUE ? getPageForRead(bi) : getPageForWrite(bi);
+		if (page == null && value == NULL_VALUE) {
 		    if (value == NULL_VALUE) {
 		        return;
 		    }
-			array[bi] = page = new long[PAGE_SIZE];
-			Arrays.fill(page, NULL_VALUE);
 		}
 		page[(int) (n & PAGE_MASK)] = value;
 	}
+
+    protected long[] getPageForRead(int bi) {
+        long[] page = pages.get(bi);
+        return page;
+    }
+
+    protected long[] getPageForWrite(int bi) {
+        long[] page = pages.get(bi);
+        if (page == null) {
+            page = new long[PAGE_SIZE];
+            pages.put(bi, page);
+            Arrays.fill(page, NULL_VALUE);
+        }        
+        return page;
+    }
 }

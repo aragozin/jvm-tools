@@ -47,7 +47,7 @@ public class BitMapTest {
             if (n == 31) {
                 new String();
             }
-            long m = pbm.seekNext(n);
+            long m = pbm.seekOne(n);
             if (m < 0) {
                 Assert.assertTrue(n == 3 * len - 2);
                 break;
@@ -92,12 +92,12 @@ public class BitMapTest {
         assertThat(pbm.get(80)).isTrue();
         assertThat(pbm.get(100)).isTrue();
 
-        assertThat(pbm.seekNext(0)).isEqualTo(20);
-        assertThat(pbm.seekNext(21)).isEqualTo(60);
-        assertThat(pbm.seekNext(41)).isEqualTo(60);
-        assertThat(pbm.seekNext(61)).isEqualTo(80);
-        assertThat(pbm.seekNext(81)).isEqualTo(100);
-        assertThat(pbm.seekNext(101)).isEqualTo(-1);
+        assertThat(pbm.seekOne(0)).isEqualTo(20);
+        assertThat(pbm.seekOne(21)).isEqualTo(60);
+        assertThat(pbm.seekOne(41)).isEqualTo(60);
+        assertThat(pbm.seekOne(61)).isEqualTo(80);
+        assertThat(pbm.seekOne(81)).isEqualTo(100);
+        assertThat(pbm.seekOne(101)).isEqualTo(-1);
 
         assertThat(pbm.getAndSet(60, false)).isTrue();
         assertThat(pbm.getAndSet(40, true)).isFalse();

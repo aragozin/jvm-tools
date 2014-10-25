@@ -17,6 +17,7 @@ package org.gridkit.jvmtool.heapdump;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -56,6 +57,7 @@ public class HeapClusterAnalyzer {
     private RefSet sharedRefs = new RefSet();
 
     private List<Cluster> clusters = new ArrayList<Cluster>();
+    private Cluster last;
 
     private HeapHistogram sharedSummary = new HeapHistogram();
     private long sharedErrorMargin = 0;
@@ -74,6 +76,10 @@ public class HeapClusterAnalyzer {
 
     public long getSharedErrorMargin() {
         return sharedErrorMargin;
+    }
+    
+    public void setSharedPathListener(PathListener listener) {
+        this.sharedPathListener = listener;
     }
 
     public void setGraphDepthThreshold(int threshold) {
@@ -167,6 +173,12 @@ public class HeapClusterAnalyzer {
     }
 
     public ClusterDetails feed(Instance i) {
+        if (last != null) {
+            if (!keepClusterMembership) {
+                last.objects = null;
+            }
+            last = null; 
+        }
         if (rootClasses.isEmpty()) {
             throw new IllegalStateException("Interesting types are not defined");
         }
@@ -184,9 +196,7 @@ public class HeapClusterAnalyzer {
             clusters.add(cluster);
             }
 
-            if (!keepClusterMembership) {
-                cluster.objects = null;
-            }
+            last = cluster;
             return cluster;
         }
         return null;
@@ -283,7 +293,7 @@ public class HeapClusterAnalyzer {
 
             if (sharedRefs.get(i.getInstanceId())) {
                 if (sharedPathListener != null) {
-                    tooDeepListener.onPath(details.root, path.toString(), i);
+                    sharedPathListener.onPath(details.root, path.toString(), i);
                 }
                 return;
             }
@@ -338,12 +348,12 @@ public class HeapClusterAnalyzer {
         @SuppressWarnings("unused")
         long count = 0;
         while(true) {
-            long n = queue.seekNext(1); // 0 is null, so ignore it
+            long n = queue.seekOne(1); // 0 is null, so ignore it
             if (n < 0) {
                 break;
             }
             while(true) {
-                long id = queue.seekNext(n);
+                long id = queue.seekOne(n);
                 if (id < 0) {
                     break;
                 }
@@ -482,6 +492,12 @@ public class HeapClusterAnalyzer {
 
     }
 
+    public interface PathExpander {
+
+        public Iterator<Instance> onPath(Instance root, String path, Instance shared);
+        
+    }
+    
     private static class Cluster implements ClusterDetails {
 
         Instance root;

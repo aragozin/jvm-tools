@@ -25,6 +25,7 @@ import org.netbeans.lib.profiler.heap.ObjectFieldValue;
 public class StringCollector {
 
     private RefSet strings = new RefSet();
+    private RefSet arrays = new RefSet();
     private long count;
     private long totalSize;
 
@@ -37,7 +38,6 @@ public class StringCollector {
 
     public void collect(Heap heap, InstanceCallback callback) {
         JavaClass string = heap.getJavaClassByName("java.lang.String");
-        RefSet arrays = new RefSet();
         for(Instance i : heap.getAllInstances()) {
             if (i.getJavaClass() == string) {
                 strings.set(i.getInstanceId(), true);
@@ -79,5 +79,9 @@ public class StringCollector {
 
     public String toString() {
         return "strings: " + totalSize + " (" + count + ")";
+    }
+
+    public boolean containsInstance(Instance i) {
+        return strings.get(i.getInstanceId()) || arrays.get(i.getInstanceId()); 
     }
 }
