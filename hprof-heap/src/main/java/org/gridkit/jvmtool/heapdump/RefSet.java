@@ -40,13 +40,19 @@ public class RefSet extends PagedBitMap {
         if (index % 8 != 0) {
             throw new IllegalArgumentException("" + index);
         }
-        return super.get(index / 8);
+        return super.get(index >>> 3);
     }
 
     @Override
     public long seekOne(long index) {
-        index = (index + 7) / 8; // alligning to 8 byte boundary
-        return 8 * super.seekOne(index);
+        index = (index + 7) >>> 3; // aligning to 8 byte boundary
+        long result = super.seekOne(index);
+        if (result == -1) {
+            return -1;
+        }
+        else {
+            return 8 * result;
+        }
     }
 
     @Override
@@ -54,7 +60,7 @@ public class RefSet extends PagedBitMap {
         if (index % 8 != 0) {
             throw new IllegalArgumentException("" + index);
         }
-        return super.getAndSet(index / 8, value);
+        return super.getAndSet(index >>> 3, value);
     }
 
     @Override
@@ -62,7 +68,7 @@ public class RefSet extends PagedBitMap {
         if (index % 8 != 0) {
             throw new IllegalArgumentException("" + index);
         }
-        super.set(index / 8, value);
+        super.set(index >>> 3, value);
     }
 
     @Override

@@ -78,8 +78,8 @@ public class PagedBitMap {
         long lindex = index / 64;
         long bit = 1l << (index % 64);
         if (value) {
-        array.set(lindex, bit | array.get(lindex));
-    }
+            array.set(lindex, bit | array.get(lindex));
+        }
         else {
             array.set(lindex, (~bit) & array.get(lindex));
         }
@@ -208,12 +208,12 @@ public class PagedBitMap {
 
         @Override
         public boolean hasNext() {
-            return next >= 0;
+            return next != -1;
         }
 
         @Override
         public Long next() {
-            if (next < 0) {
+            if (next == -1) {
                 throw new NoSuchElementException();
             }
             long n = next;

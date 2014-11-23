@@ -55,6 +55,10 @@ public class SJK {
 		throw new CommandAbortedError(false, messages);
 	}
 
+	public static void fail(String message, Exception e) {
+	    throw new CommandAbortedError(false, new String[]{message}, e);
+	}
+
 	public static void failAndPrintUsage(String... messages) {
 		throw new CommandAbortedError(true, messages);
 	}
@@ -62,12 +66,19 @@ public class SJK {
 	@Parameter(names = "--help", help = true)
 	private boolean help = false;
 
+	@Parameter(names = {"-X", "--verbose"}, description = "Enable detailed diagnostics")
+	private boolean verbose = false;
+
 	private boolean suppressSystemExit;
 
 	private Map<String, Runnable> commands = new HashMap<String, Runnable>();
 
 	public void logError(String line) {
 		System.err.println(line);
+	}
+
+	public void logTrace(Throwable e) {
+	    e.printStackTrace(System.err);
 	}
 
 	public void suppressSystemExit() {
@@ -120,6 +131,9 @@ public class SJK {
 		catch(CommandAbortedError error) {
 			for(String m: error.messages) {
 				logError(m);
+			}
+			if (verbose && error.getCause() != null) {
+			    logTrace(error.getCause());
 			}
 			if (error.printUsage && parser != null) {
 				if (parser.getParsedCommand() != null) {
@@ -250,6 +264,12 @@ public class SJK {
 			super();
 			this.printUsage = printUsage;
 			this.messages = messages;
+		}
+
+		public CommandAbortedError(boolean printUsage, String[] messages, Exception e) {
+		    super(e);
+		    this.printUsage = printUsage;
+		    this.messages = messages;
 		}
 	}
 }

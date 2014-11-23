@@ -143,7 +143,7 @@ public class StackCaptureCmd implements CmdRef {
 				System.out.println("Trace dumped: " + traceCounter);
 				
 			} catch (Exception e) {
-				SJK.fail("Unexpected error: " + e.toString());
+				SJK.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 

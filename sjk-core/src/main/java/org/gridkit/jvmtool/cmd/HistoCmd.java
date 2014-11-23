@@ -83,10 +83,10 @@ public class HistoCmd implements CmdRef {
 				}
 				
 				System.out.println(histo.print(n));
-				
+
 			} catch (Exception e) {
-				SJK.fail(e.toString());
-			}			
+				SJK.fail(e.toString(), e);
+			}
 		}
 	}
 }

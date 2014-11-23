@@ -62,7 +62,11 @@ public class JmxConnectionInfo {
 		}
 
 		if (pid != null) {
-			return AttachManager.getDetails(pid).getMBeans();
+			MBeanServerConnection mserver = AttachManager.getDetails(pid).getMBeans();
+			if (mserver == null) {
+			    SJK.fail("Failed to access MBean server: " + pid);
+			}
+            return mserver;
 		}
 		else if (sockAddr != null) {
 			String host = host(sockAddr);
@@ -74,7 +78,11 @@ public class JmxConnectionInfo {
 				}
 				env = Collections.singletonMap(JMXConnector.CREDENTIALS, (Object)new String[]{user, password});
 			}
-			return connectJmx(host, port, env);
+			MBeanServerConnection mserver = connectJmx(host, port, env);
+            if (mserver == null) {
+                SJK.fail("Failed to access MBean server: " + host + ":" + port);
+            }
+            return mserver;
 		}
 		else {
 			throw new UnsupportedOperationException();
@@ -90,9 +98,9 @@ public class JmxConnectionInfo {
 			MBeanServerConnection mserver = conn.getMBeanServerConnection();
 			return mserver;
 		} catch (MalformedURLException e) {
-			SJK.fail(e.toString());
+			SJK.fail("JMX Connection failed: " + e.toString(), e);
 		} catch (IOException e) {
-			SJK.fail(e.toString());
+			SJK.fail("JMX Connection failed: " + e.toString(), e);
 		}
 		return null;
 	}

@@ -99,7 +99,7 @@ public class MxCmd implements CmdRef {
 				}
 				action.get(0).run();
 			} catch (Exception e) {
-				SJK.fail(e.toString());
+				SJK.fail(e.toString(), e);
 			}
 		}
 
@@ -144,8 +144,7 @@ public class MxCmd implements CmdRef {
                         System.out.println(helper.invoke(name, operation, arguments.toArray(new String[arguments.size()])));
                     }
 				} catch (Exception e) {
-					e.printStackTrace();
-					SJK.fail();
+					SJK.fail(e.toString(), e);
 				}
 			}
 		}
@@ -169,7 +168,7 @@ public class MxCmd implements CmdRef {
 					    System.out.println(helper.get(name, attrib));
                     }
 				} catch (Exception e) {
-					SJK.fail(e.toString());
+					SJK.fail(e.toString(), e);
 				}
 			}
 		}
@@ -199,7 +198,7 @@ public class MxCmd implements CmdRef {
                         helper.set(name, attrib, value);
                     }
 				} catch (Exception e) {
-					SJK.fail(e.toString());
+					SJK.fail(e.toString(), e);
 				}
 			}
 		}
@@ -219,7 +218,7 @@ public class MxCmd implements CmdRef {
                         System.out.println(helper.describe(name));
                     }
 				} catch (Exception e) {
-					SJK.fail(e.toString());
+					SJK.fail(e.toString(), e);
 				}
 			}
 		}

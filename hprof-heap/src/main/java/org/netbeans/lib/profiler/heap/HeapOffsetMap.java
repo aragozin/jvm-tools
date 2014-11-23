@@ -57,10 +57,11 @@ class HeapOffsetMap {
 //    private final int pageSizeBits = 12;
     private final int pageSizeBits = 10;
     private final int pageSize = 1 << pageSizeBits;
-    private final int allignment = 8;
+    private final int allignmentBits = 3;
+    private final int allignment = 1 << allignmentBits;
     private final int pageAddessSpan = pageSize * allignment;
 
-    private long idOffset;
+    private long cidOffset;
     private long[] offsetMap; // maps IDs to offsets
     private final int[] cachePageId;
     private final int[][] cachePageData;
@@ -78,7 +79,13 @@ class HeapOffsetMap {
         TagBounds bounds = heap.getAllInstanceDumpBounds();
 
         pointer[0] = bounds.startOffset;
-        idOffset = readID();
+        cidOffset = readID();
+        if (cidOffset % allignment != 0) {
+            throw new IllegalArgumentException("Allignment violated for " + cidOffset);
+        }
+        // avoid signed arithmetic
+        cidOffset = cidOffset >>> allignmentBits;
+
         long span = bounds.endOffset - bounds.startOffset; // rough estimate
         offsetMap = new long[(int)((span) / (pageAddessSpan)) + 1];
         offsetMap[0] = bounds.startOffset;
@@ -88,35 +95,49 @@ class HeapOffsetMap {
         Arrays.fill(cachePageId, -1);
     }
 
-    public long offset(long id) {
-        if (id < idOffset ) {
+    public long offset(long origId) {
+        try {
+            if (origId % allignment != 0) {
+                throw new IllegalArgumentException("ID is not alligned: " + origId);
+            }
+            return offsetForCompressed(origId >>> allignmentBits);
+        }
+        catch(IllegalArgumentException e) {
+            IllegalArgumentException ee = new IllegalArgumentException(e.getMessage() + " ID: " + origId);
+            ee.setStackTrace(e.getStackTrace());
+            throw ee;
+        }
+    }
+
+    long offsetForCompressed(long cid) {
+        if (cid < cidOffset ) {
             // this map happen if sub regions of heap are not orderer 
             // by physical memory addresses
             while(!scanComplete) {
-                // try to scan forward until mathich sub region is mapped
+                // try to scan forward until matching sub region is mapped
                 scanPage(maxPage + 1); 
-                if (id >= idOffset) {
+                if (cid >= cidOffset) {
                     break;
                 }
             }            
         }
-        long ref = compressID(id);
+        long ref = compressID(cid << allignmentBits); // restore original value
         int page = (int) (ref / pageSize);
         if (page >= maxPage) {
             if (page != scanPage(page)) {
                 // address span has been extended
-                ref = compressID(id);
+                ref = compressID(cid << allignmentBits); // restore original value
                 page = (int) (ref / pageSize);
             }
         }
         int[] shiftMap = getPage(page);
         long baseOffs = offsetMap[page];
         if (baseOffs < 0) {
-            throw new IllegalArgumentException("ID is not valid: " + id);
+            throw new IllegalArgumentException("ID is not valid: " + cid);
         }
         int shift = shiftMap[(int) (ref % pageSize)];
         if (shift < 0) {
-            throw new IllegalArgumentException("ID is not valid: " + id);
+            throw new IllegalArgumentException("ID is not valid: " + cid);
         }
         long offs = baseOffs + shift;
         return offs;
@@ -139,11 +160,12 @@ class HeapOffsetMap {
                 
                 long ptr = pointer[0];
                 long iid = dumpBuffer.getID(ptr + 1);
+                long ciid = iid >>> allignmentBits;
                 
                 // number of pages to be added up front
-                int ps = (int) (((idOffset - iid + pageAddessSpan - 1) / (pageAddessSpan)));
-                long oldIdBase = idOffset;
-                idOffset -= ps * pageAddessSpan;
+                int ps = (int) (((cidOffset - ciid + pageSize - 1) / (pageSize)));
+                long oldIdBase = cidOffset;
+                cidOffset -= ps * pageSize;
                 long[] noffsetMap = new long[offsetMap.length + ps];
                 Arrays.fill(noffsetMap, 0, ps, 0); // explicitly nullify array to avoid possible JIT bug
                 System.arraycopy(offsetMap, 0, noffsetMap, ps, offsetMap.length);
@@ -168,7 +190,7 @@ class HeapOffsetMap {
                 scanComplete = true;
             }
             long rid = readID();
-            if (rid >= 0) {
+            if (rid != -1) {
                 long nid = compressID(rid);
                 int nn = (int) (nid / pageSize);
                 if (offsetMap.length <= nn) {
@@ -314,13 +336,13 @@ class HeapOffsetMap {
     }
 
     private long compressID(long origId) {
-        if (idOffset > origId) {
-            throw new MalformedInstanceIdException("ID is below threshold (" + idOffset + "): " + origId);
-        }
-        if ((origId - idOffset) % allignment != 0) {
+        if (origId % allignment != 0) {
             throw new IllegalArgumentException("ID is not alligned: " + origId);
         }
-        return (origId - idOffset) / allignment;
+        if (cidOffset > (origId >>> allignmentBits)) {
+            throw new MalformedInstanceIdException("ID is below threshold (" + (cidOffset << allignmentBits) + "): " + origId);
+        }
+        return (origId >>> allignmentBits) - cidOffset;
     }
     
     public static class MalformedInstanceIdException extends IllegalArgumentException {

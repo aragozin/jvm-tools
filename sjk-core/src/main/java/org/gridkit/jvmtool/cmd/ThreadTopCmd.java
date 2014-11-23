@@ -143,7 +143,7 @@ public class ThreadTopCmd implements CmdRef {
 					}
 				}
 			} catch (Exception e) {
-				SJK.fail("Unexpected error: " + e.toString());
+				SJK.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 	}

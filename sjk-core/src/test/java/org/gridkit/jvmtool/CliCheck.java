@@ -90,7 +90,7 @@ public class CliCheck {
 
 	@Test
 	public void gc_self() {
-		exec("gc", "-p", PID);
+		exec("gc", "-p", "8084");
 	}
 
 	@Test

@@ -109,7 +109,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				}
 				action.get(0).run();
 			} catch (Exception e) {
-				SJK.fail(e.toString());
+				SJK.fail(e.toString(), e);
 			}
 		}
 
@@ -250,8 +250,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			        }
 				    
 				} catch (Exception e) {
-					e.printStackTrace();
-					SJK.fail();
+					SJK.fail(e.toString(), e);
 				}
 			}
             
@@ -285,8 +284,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     System.out.println(histo.formatHisto());
                     
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    SJK.fail();
+                    SJK.fail(e.toString(), e);
                 }
             }
             
@@ -335,8 +333,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    SJK.fail();
+                    SJK.fail(e.toString(), e);
                 }
             }
 

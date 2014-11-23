@@ -30,16 +30,17 @@ class SparsePagedLongArray implements LongArray {
 	public final static long NULL_VALUE = 0;
 
 	protected long lastIndex = -1;
-	protected SortedMap<Integer, long[]> pages = new TreeMap<Integer, long[]>();
+	// should use long page indexes, some OSes tend to use high memory regions
+	protected SortedMap<Long, long[]> pages = new TreeMap<Long, long[]>();
 
 
     public long get(long n) {
         if (n > lastIndex) {
             return NULL_VALUE;
         }
-		int bi = (int) (n >> PAGE_BITS);
+		long bi = n >>> PAGE_BITS;
 		if (bi < 0) {
-		    throw new ArrayIndexOutOfBoundsException(bi);
+		    throw new ArrayIndexOutOfBoundsException("" + bi);
 		}
 		long[] page = getPageForRead(bi);
 		if (page == null) {
@@ -49,10 +50,10 @@ class SparsePagedLongArray implements LongArray {
 	}
 
     public long seekNext(long start) {
-        int startPage = (int) (start >> PAGE_BITS);
-        SortedMap<Integer, long[]> pages = this.pages.tailMap(startPage);
-        for(Map.Entry<Integer, long[]> entry: pages.entrySet()) {
-            int pi = entry.getKey();
+        long startPage = start >> PAGE_BITS;
+        SortedMap<Long, long[]> pages = this.pages.tailMap(startPage);
+        for(Map.Entry<Long, long[]> entry: pages.entrySet()) {
+            long pi = entry.getKey();
             long[] page = entry.getValue();
             long ps = ((long)pi) << PAGE_BITS;
             long pe = ps + PAGE_SIZE;
@@ -67,7 +68,7 @@ class SparsePagedLongArray implements LongArray {
 
     public void set(long n, long value) {
 		lastIndex = Math.max(lastIndex, n);
-		int bi = (int) (n >> PAGE_BITS);
+		long bi = n >>> PAGE_BITS;
 		long[] page = value == NULL_VALUE ? getPageForRead(bi) : getPageForWrite(bi);
 		if (page == null && value == NULL_VALUE) {
 		    if (value == NULL_VALUE) {
@@ -77,12 +78,12 @@ class SparsePagedLongArray implements LongArray {
 		page[(int) (n & PAGE_MASK)] = value;
 	}
 
-    protected long[] getPageForRead(int bi) {
+    protected long[] getPageForRead(long bi) {
         long[] page = pages.get(bi);
         return page;
     }
 
-    protected long[] getPageForWrite(int bi) {
+    protected long[] getPageForWrite(long bi) {
         long[] page = pages.get(bi);
         if (page == null) {
             page = new long[PAGE_SIZE];
