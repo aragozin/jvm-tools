@@ -49,9 +49,20 @@ public class HeapPathParserTest {
         addCase(result, "inputsByName.*.*.table[*].value(**.String)", true, "[inputsByName, *, *, table, [*], value, (**.String)]");
         addCase(result, "inputsByName.**.*.table[*].value(**.String)", false, "[inputsByName, **, *, table, [*], value, (**.String)]");
         addCase(result, "inputsByName.table?entrySet[key=123].value(**.String)", true, "[inputsByName, table, ?entrySet, [key=123], value, (**.String)]");
+        addCase(result, "inputsByName.table?entrySet[key=abc].value(**.String)", true, "[inputsByName, table, ?entrySet, [key=abc], value, (**.String)]");
         addCase(result, "inputsByName.table[*][key=null].value(**.String)", true, "[inputsByName, table, [*], [key=null], value, (**.String)]");
         addCase(result, "(**.String)", true, "[(**.String)]");
         addCase(result, "(**.String)", false, "[(**.String)]");
+        addCase(result, "[*][0]", true, "[[*], [0]]");
+        addCase(result, "[*][0]", false, "[[*], [0]]");
+        addCase(result, "field[*][0]", true, "[field, [*], [0]]");
+        addCase(result, "field[*][0]", false, "[field, [*], [0]]");
+        addCase(result, "*.size", true, "[*, size]");
+        addCase(result, "*.size", false, "[*, size]");
+        addCase(result, "[*](MyObject)", true, "[[*], (MyObject)]");
+        addCase(result, "[*](MyObject)", false, "[[*], (MyObject)]");
+        addCase(result, "[*](+MyObject1|+MyObject2)", true, "[[*], (+MyObject1|+MyObject2)]");
+        addCase(result, "[*](+MyObject1|+MyObject2)", false, "[[*], (+MyObject1|+MyObject2)]");
 
         return result;
     }
