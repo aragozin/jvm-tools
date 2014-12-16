@@ -79,8 +79,7 @@ abstract class HprofByteBuffer {
         long fileLen = dumpFile.length();
 
         if (fileLen < MINIMAL_SIZE) {
-            String errText = ResourceBundle.getBundle("org/netbeans/lib/profiler/heap/Bundle")
-                                           .getString("HprofByteBuffer_ShortFile"); // NOI18N
+            String errText = "File size is too small";
             throw new IOException(errText);
         }
 

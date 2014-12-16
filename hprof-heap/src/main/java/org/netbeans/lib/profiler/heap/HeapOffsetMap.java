@@ -137,7 +137,7 @@ class HeapOffsetMap {
         }
         int shift = shiftMap[(int) (ref % pageSize)];
         if (shift < 0) {
-            throw new IllegalArgumentException("ID is not valid: " + cid);
+            throw new IllegalArgumentException("Compressed ID is not valid: " + cid);
         }
         long offs = baseOffs + shift;
         return offs;
@@ -164,7 +164,7 @@ class HeapOffsetMap {
                 
                 // number of pages to be added up front
                 int ps = (int) (((cidOffset - ciid + pageSize - 1) / (pageSize)));
-                long oldIdBase = cidOffset;
+                long oldCidBase = cidOffset;
                 cidOffset -= ps * pageSize;
                 long[] noffsetMap = new long[offsetMap.length + ps];
                 Arrays.fill(noffsetMap, 0, ps, 0); // explicitly nullify array to avoid possible JIT bug
@@ -177,7 +177,7 @@ class HeapOffsetMap {
                 nestedScan = true;
                 scanPage(ps - 1);
                 // another shift may have happen
-                ps = (int) (compressID(oldIdBase) / pageSize);
+                ps = (int) (compressID(oldCidBase << allignmentBits) / pageSize);
                 maxPage = savedMaxPage + ps;
                 nestedScan = savedNestedScan;
                 page += ps;
