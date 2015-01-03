@@ -4,9 +4,10 @@ Swiss Java Knife
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
 
-Prebuild binaries (2013-09-06) are below, though I would encourge you to build jars from sources.
-- [sjk-plus.jar - all commands](https://github.com/aragozin/jvm-tools/blob/downloads/sjk-plus-0.1-2013-09-06.jar?raw=true)
-- [sjk.jar - all commands without mxdump](https://github.com/aragozin/jvm-tools/blob/downloads/sjk-0.1-2013-09-06.jar?raw=true)
+Prebuild binaries 
+[ ![Download](https://api.bintray.com/packages/aragozin/generic/sjk/images/download.svg) ](https://bintray.com/aragozin/generic/sjk/_latestVersion) are below, though I would encourge you to build jars from sources.
+- [sjk-plus.jar - all commands](https://bintray.com/artifact/download/aragozin/generic/sjk/2014-09-06/sjk-plus.jar)
+- [sjk.jar - all commands without mxdump](https://bintray.com/artifact/download/aragozin/generic/sjk/2014-09-06/sjk.jar)
 
 
 Starting sjk
