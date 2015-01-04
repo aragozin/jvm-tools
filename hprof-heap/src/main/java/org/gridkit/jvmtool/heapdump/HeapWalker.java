@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -317,6 +318,22 @@ public class HeapWalker {
         return sb.toString();
     }
     
+    public static Set<JavaClass> filterTypes(String filter, Iterable<JavaClass> types) {
+        PathStep[] steps = HeapPath.parsePath("(" + filter + ")", true);
+        if (steps.length != 1 || !(steps[0] instanceof TypeFilterStep)) {
+            throw new IllegalArgumentException("Bad type filter: " + filter);
+        }
+        TypeFilterStep f = (TypeFilterStep) steps[0];
+        Set<JavaClass> result = new LinkedHashSet<JavaClass>();
+        for(JavaClass jc: types) {
+            if (f.evaluate(jc)) {
+                result.add(jc);
+            }
+        }
+
+        return result;
+    }
+
     private static final String shortName(String name) {
         int c = name.lastIndexOf('.');
         if (c >= 0) {

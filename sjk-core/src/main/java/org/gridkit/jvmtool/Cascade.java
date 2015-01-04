@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * {@link Cascade} represent a part of document using simple identation based
+ * {@link Cascade} represent a part of document using simple indentation based
  * formating.
  *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
