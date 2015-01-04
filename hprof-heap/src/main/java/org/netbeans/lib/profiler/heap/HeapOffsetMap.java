@@ -61,7 +61,7 @@ class HeapOffsetMap {
     private final int allignment = 1 << allignmentBits;
     private final int pageAddessSpan = pageSize * allignment;
 
-    private long cidOffset;
+    private long cidOffset; // compressed "heap offset" - minimal address on heap
     private long[] offsetMap; // maps IDs to offsets
     private final int[] cachePageId;
     private final int[][] cachePageData;
@@ -115,7 +115,17 @@ class HeapOffsetMap {
             // by physical memory addresses
             while(!scanComplete) {
                 // try to scan forward until matching sub region is mapped
-                scanPage(maxPage + 1); 
+                try {
+                    scanPage(maxPage + 1); // page may not exists, we handle exception here
+                }
+                catch(PageNotFoundEndOfHeapReachedExcpetion e) {
+                    if (cid >= cidOffset) {
+                        break;
+                    }
+                    else {
+                        throw e;
+                    }
+                }
                 if (cid >= cidOffset) {
                     break;
                 }
@@ -217,7 +227,7 @@ class HeapOffsetMap {
                         return page;
                     }
                     else {
-                        throw new IllegalArgumentException("No such ID, end of heap reached");
+                        throw new PageNotFoundEndOfHeapReachedExcpetion("No such ID, end of heap reached");
                     }
                 }
                 n = nn;
@@ -362,6 +372,27 @@ class HeapOffsetMap {
         }
 
         public MalformedInstanceIdException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    public static class PageNotFoundEndOfHeapReachedExcpetion extends IllegalArgumentException {
+
+        private static final long serialVersionUID = 20140907L;
+
+        public PageNotFoundEndOfHeapReachedExcpetion() {
+            super();
+        }
+
+        public PageNotFoundEndOfHeapReachedExcpetion(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public PageNotFoundEndOfHeapReachedExcpetion(String s) {
+            super(s);
+        }
+
+        public PageNotFoundEndOfHeapReachedExcpetion(Throwable cause) {
             super(cause);
         }
     }
