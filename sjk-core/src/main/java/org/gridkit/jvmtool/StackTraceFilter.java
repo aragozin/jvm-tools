@@ -49,9 +49,9 @@ public interface StackTraceFilter {
 
     public class HasElementMatcher implements StackTraceFilter {
 
-        CachingElementMatcher matcher;
+        ElementMatcher matcher;
 
-        public HasElementMatcher(CachingElementMatcher matcher) {
+        public HasElementMatcher(ElementMatcher matcher) {
             super();
             this.matcher = matcher;
         }
@@ -67,9 +67,10 @@ public interface StackTraceFilter {
         }
     }
 
+
     public class PositionalMatcher implements StackTraceFilter {
 
-        CachingElementMatcher targetElementMatcher;
+        ElementMatcher targetElementMatcher;
         StackTraceFilter predicate;
         boolean topDown;
         boolean firstOnly;
@@ -182,11 +183,18 @@ public interface StackTraceFilter {
 //
 //    }
 
-    public abstract class CachingElementMatcher {
+    public interface ElementMatcher {
+
+        public abstract boolean evaluate(StackTraceElement ste);
+
+    }
+
+    public abstract class CachingElementMatcher implements ElementMatcher {
 
         protected Set<StackTraceElement> matched = new HashSet<StackTraceElement>();
         protected Set<StackTraceElement> unmatched = new HashSet<StackTraceElement>();
 
+        @Override
         public boolean evaluate(StackTraceElement ste) {
             if (matched.contains(ste)) {
                 return true;
