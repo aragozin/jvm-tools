@@ -31,6 +31,7 @@ import org.gridkit.jvmtool.StackTraceCodec.StackTraceWriter;
 import org.gridkit.jvmtool.ThreadStackSampler;
 import org.gridkit.jvmtool.ThreadStackSampler.Trace;
 import org.gridkit.jvmtool.TimeIntervalConverter;
+import org.gridkit.jvmtool.stacktrace.ThreadShapshot;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -56,7 +57,6 @@ public class StackCaptureCmd implements CmdRef {
 	@Parameters(commandDescription = "[Stack Capture] Dumps stack traces to file for further processing")
 	public static class StCap implements Runnable {
 
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		
@@ -148,8 +148,10 @@ public class StackCaptureCmd implements CmdRef {
 		}
 
         protected void flushToWriter() throws IOException {
+            ThreadShapshot tsnap = new ThreadShapshot();
             for(Trace t: sampler.getTraces()) {
-                writer.write(t.getThreadId(), t.getTimestamp(), t.getTrace());
+                t.copyToSnapshot(tsnap);
+                writer.write(tsnap);
             }
             sampler.clearTraces();
         }

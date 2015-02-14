@@ -49,7 +49,6 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 	@Parameters(commandDescription = "Analyzing stack trace dumps")
 	public static class SSA implements Runnable {
 		
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		
@@ -68,15 +67,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         
         private List<SsaCmd> allCommands = new ArrayList<SsaCmd>();
 
-        @SuppressWarnings("unused")
         @ParametersDelegate
 		private SsaCmd print = new PrintCmd();
 
-		@SuppressWarnings("unused")
         @ParametersDelegate
 		private SsaCmd histo = new HistoCmd();
 
-		@SuppressWarnings("unused")
         @ParametersDelegate
 		private SsaCmd csummary = new ClassSummaryCmd();
 
@@ -120,7 +116,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		        }
 		        else {
 		            final StackTraceReader unclassified = getUnclassifiedReader();
-		            return new StackTraceReader() {
+		            return new StackTraceReader.StackTraceReaderDelegate() {
+
+                        @Override
+                        protected StackTraceReader getReader() {
+                            return unclassified;
+                        }
                         
                         @Override
                         public boolean loadNext() throws IOException {
@@ -165,7 +166,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		            SJK.fail("Bucket [" + bucket + "] is not defined");
 		        }
 		        final StackTraceReader unfiltered = getUnclassifiedReader();
-		        return new StackTraceReader() {
+		        return new StackTraceReader.StackTraceReaderDelegate() {
+
+                    @Override
+                    protected StackTraceReader getReader() {
+                        return unfiltered;
+                    }
 
                     @Override
                     public boolean loadNext() throws IOException {

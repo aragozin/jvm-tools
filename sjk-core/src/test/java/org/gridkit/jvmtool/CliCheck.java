@@ -74,23 +74,23 @@ public class CliCheck {
 	@Test
 	public void ttop_top_N_cpu() {
 
-		exec("ttop", "-p", "5672", "-o", "CPU", "-n", "10");
+		exec("ttop", "-p", PID, "-o", "CPU", "-n", "10");
 	}
 
 	@Test
 	public void ttop_top_N_alloc() {
 
-		exec("ttop", "-p", "3380", "-o", "ALLOC", "-n", "10");
+		exec("ttop", "-p", PID, "-o", "ALLOC", "-n", "10");
 	}
 
 	@Test
 	public void ttop_top_N_filtered() {
-		exec("ttop", "-p", "8420", "-f", "*RMI*", "-o", "CPU", "-n", "10");
+		exec("ttop", "-p", PID, "-f", "*RMI*", "-o", "CPU", "-n", "10");
 	}
 
 	@Test
 	public void gc_self() {
-		exec("gc", "-p", "8084");
+		exec("gc", "-p", PID);
 	}
 
 	@Test

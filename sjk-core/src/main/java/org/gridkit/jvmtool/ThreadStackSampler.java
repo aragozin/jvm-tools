@@ -30,6 +30,8 @@ import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.gridkit.jvmtool.stacktrace.ThreadShapshot;
+
 /**
  * Thread stack sampler.
  *  
@@ -200,6 +202,13 @@ public class ThreadStackSampler {
                 strace[i] = traceDictionary[trace[i]];
             }
             return strace;
+        }
+
+        public void copyToSnapshot(ThreadShapshot snap) {
+            snap.reset();
+            snap.threadId = threadId;
+            snap.timestamp = timestamp;
+            snap.elements = getTrace();
         }
 	}
 }

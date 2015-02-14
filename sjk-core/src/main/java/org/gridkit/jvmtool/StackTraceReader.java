@@ -31,4 +31,48 @@ public interface StackTraceReader {
 
     public boolean loadNext() throws IOException;
 
+    public static abstract class StackTraceReaderDelegate implements StackTraceReader {
+
+        protected abstract StackTraceReader getReader();
+
+        public boolean isLoaded() {
+            return getReader().isLoaded();
+        }
+
+        public long getThreadId() {
+            return getReader().getThreadId();
+        }
+
+        public long getTimestamp() {
+            return getReader().getTimestamp();
+        }
+
+        public String getThreadName() {
+            return getReader().getThreadName();
+        }
+
+        public State getThreadState() {
+            return getReader().getThreadState();
+        }
+
+        public long getCounter(ThreadCounter counter) {
+            return getReader().getCounter(counter);
+        }
+
+        public long getCounter(int counterId) {
+            return getReader().getCounter(counterId);
+        }
+
+        public StackTraceElement[] getTrace() {
+            return getReader().getTrace();
+        }
+
+        public StackFrame[] getStackTrace() {
+            return getReader().getStackTrace();
+        }
+
+        public boolean loadNext() throws IOException {
+            return getReader().loadNext();
+        }
+    }
 }
