@@ -24,7 +24,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -34,10 +36,12 @@ import java.util.zip.InflaterInputStream;
 public class StackTraceCodec {
 
     static final byte[] MAGIC = "TRACEDUMP_1 ".getBytes();
+    static final byte[] MAGIC2 = "TRACEDUMP_2 ".getBytes();
     
     static final byte TAG_STRING = 1;  
     static final byte TAG_FRAME = 2;  
     static final byte TAG_TRACE = 3;  
+    static final byte TAG_DYN_STRING = 4;
     
     public static StackTraceWriter newWriter(OutputStream os) throws IOException {
         return new StackTraceWriter(os);
@@ -139,6 +143,7 @@ public class StackTraceCodec {
         private DataOutputStream dos;
         private Map<String, Integer> stringDic = new HashMap<String, Integer>();
         private Map<StackTraceElement, Integer> frameDic = new HashMap<StackTraceElement, Integer>();
+        private RotatingStringDictionary dynDic = new RotatingStringDictionary(512);
 
         public StackTraceWriter(OutputStream os) throws IOException {
             os.write(MAGIC);
@@ -146,9 +151,13 @@ public class StackTraceCodec {
             this.dos = new DataOutputStream(def);
         }
         
-        public void write(long threadId, long timestamp, StackTraceElement[] trace) throws IOException {
-            for(StackTraceElement ste: trace) {
+        public void write(ThreadShap snap) throws IOException {
+            for(StackTraceElement ste: snap.elements) {
                 intern(ste);
+            }
+            int threadNameRef = -1;
+            if (snap.threadName != null) {
+                threadNameRef = internDyn(snap.threadName);
             }
             dos.writeByte(TAG_TRACE);
             dos.writeLong(threadId);
@@ -324,9 +333,125 @@ public class StackTraceCodec {
             String file = stringDic.get(nfile);
             StackTraceElement e = new StackTraceElement(cn, mtd, file, line);
             return e;
-        }        
+        }
     }
-    
+
+    static class StackTraceReaderV2 implements StackTraceReader {
+
+        private DataInputStream dis;
+        private List<String> stringDic = new ArrayList<String>();
+        private List<StackTraceElement> frameDic = new ArrayList<StackTraceElement>();
+
+        private boolean loaded;
+        private long threadId;
+        private long timestamp;
+        private StackTraceElement[] trace;
+
+        public StackTraceReaderV2(InputStream is) {
+            this.dis = new DataInputStream(new InflaterInputStream(is));
+            stringDic.add(null);
+            frameDic.add(null);
+            loaded = false;;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#isLoaded()
+         */
+        @Override
+        public boolean isLoaded() {
+            return loaded;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getThreadId()
+         */
+        @Override
+        public long getThreadId() {
+            if (!isLoaded()) {
+                throw new NoSuchElementException();
+            }
+            return threadId;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getTimestamp()
+         */
+        @Override
+        public long getTimestamp() {
+            if (!isLoaded()) {
+                throw new NoSuchElementException();
+            }
+            return timestamp;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#getTrace()
+         */
+        @Override
+        public StackTraceElement[] getTrace() {
+            if (!isLoaded()) {
+                throw new NoSuchElementException();
+            }
+            return trace;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gridkit.jvmtool.StackTraceReader#loadNext()
+         */
+        @Override
+        public boolean loadNext() throws IOException {
+            loaded = false;
+            while(true) {
+                int tag = dis.read();
+                if (tag < 0) {
+                    dis.close();
+                    break;
+                }
+                else if (tag == TAG_STRING) {
+                    String str = dis.readUTF();
+                    stringDic.add(str);
+                }
+                else if (tag == TAG_FRAME) {
+                    StackTraceElement ste = readStackTraceElement();
+                    frameDic.add(ste);
+                }
+                else if (tag == TAG_TRACE) {
+                    threadId = dis.readLong();
+                    timestamp = dis.readLong();
+                    int len = readVarInt(dis);
+                    trace = new StackTraceElement[len];
+                    for(int i = 0; i != len; ++i) {
+                        int ref = readVarInt(dis);
+                        trace[i] = frameDic.get(ref);
+                    }
+                    loaded = true;
+                    break;
+                }
+                else {
+                    throw new IOException("Data format error");
+                }
+            }
+            return loaded;
+        }
+
+        private StackTraceElement readStackTraceElement() throws IOException {
+            int npkg = readVarInt(dis);
+            int ncn = readVarInt(dis);
+            int nmtd = readVarInt(dis);
+            int nfile = readVarInt(dis);
+            int line = readVarInt(dis) - 2;
+            String cn = stringDic.get(npkg);
+            if (cn.length() > 0) {
+                cn += ".";
+            }
+            cn += stringDic.get(ncn);
+            String mtd = stringDic.get(nmtd);
+            String file = stringDic.get(nfile);
+            StackTraceElement e = new StackTraceElement(cn, mtd, file, line);
+            return e;
+        }
+    }
+
     static int readVarInt(DataInputStream dis) throws IOException {
         int b = dis.readByte();
         if ((b & 0x80) == 0) {
