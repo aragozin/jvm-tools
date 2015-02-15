@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 
-import org.gridkit.jvmtool.StackTraceCodec;
-import org.gridkit.jvmtool.StackTraceCodec.StackTraceWriter;
-import org.gridkit.jvmtool.StackTraceReader;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -106,7 +102,7 @@ public class StateTraceReaderTest {
     }
 
     private void copyTrace(StackTraceReader reader, StackTraceWriter writer) throws IOException {
-        ThreadShapshot snap = new ThreadShapshot();
+        ThreadSnapshot snap = new ThreadSnapshot();
         snap.threadId = reader.getThreadId();
         snap.threadName = reader.getThreadName();
         snap.state = reader.getThreadState();

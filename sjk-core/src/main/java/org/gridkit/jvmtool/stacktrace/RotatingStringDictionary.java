@@ -1,10 +1,15 @@
-package org.gridkit.jvmtool;
+package org.gridkit.jvmtool.stacktrace;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class RotatingStringDictionary {
+/**
+ * Utility class used for dictionary with expiring entries.
+ *
+ * @author Alexey Ragozin (alexey.ragozin@gmail.com)
+ */
+class RotatingStringDictionary {
 
     private Map<String, Integer> dic = new LinkedHashMap<String, Integer>();
     private int limit;

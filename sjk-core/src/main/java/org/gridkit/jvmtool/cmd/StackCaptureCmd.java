@@ -19,19 +19,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.management.ThreadMXBean;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.JMX;
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
-import org.gridkit.jvmtool.StackTraceCodec.StackTraceWriter;
-import org.gridkit.jvmtool.ThreadStackSampler;
-import org.gridkit.jvmtool.ThreadStackSampler.Trace;
 import org.gridkit.jvmtool.TimeIntervalConverter;
-import org.gridkit.jvmtool.stacktrace.ThreadShapshot;
+import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
+import org.gridkit.jvmtool.stacktrace.StackTraceWriter;
+import org.gridkit.jvmtool.stacktrace.ThreadDumpSampler;
+import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -56,6 +60,16 @@ public class StackCaptureCmd implements CmdRef {
 
 	@Parameters(commandDescription = "[Stack Capture] Dumps stack traces to file for further processing")
 	public static class StCap implements Runnable {
+
+	  private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
+	  private static ObjectName name(String name) {
+	      try {
+	          return new ObjectName(name);
+	      } catch (MalformedObjectNameException e) {
+	          throw new RuntimeException(e);
+	      }
+	  }
+
 
 		@ParametersDelegate
 		private SJK host;
@@ -85,7 +99,7 @@ public class StackCaptureCmd implements CmdRef {
 		@ParametersDelegate
 		private JmxConnectionInfo connInfo = new JmxConnectionInfo();
 
-		private ThreadStackSampler sampler;
+		private ThreadDumpSampler sampler;
 		private long traceCounter = 0;
 		private long lastRotate = 0;
 		private int rotSeg = 0;
@@ -101,34 +115,39 @@ public class StackCaptureCmd implements CmdRef {
 			
 			try {
 				MBeanServerConnection mserver = connInfo.getMServer();
+				ThreadMXBean bean = connectThreadMXBean(mserver);
 
-				sampler = new ThreadStackSampler(mserver);
+				sampler = new ThreadDumpSampler();
 				sampler.setThreadFilter(threadFilter);
 				if (frameFilter != null) {
     				for(String f: frameFilter) {
-    				    sampler.addFrame(f);
+				    SJK.fail("Frame filter is not implemented yet");
+//    				    sampler.addFrame(f);
     				}
 				}
 				
+				sampler.connect(bean);
+
 				if (limit == 0) {
 				    limit = Long.MAX_VALUE;
 				}
 				
-				sampler.prime();
+				StackTraceWriter proxy = new StackWriterProxy();
 				
 				openWriter();
 				long deadline = System.currentTimeMillis() + timeoutMS;
+				long nextReport = 500;
 				while(System.currentTimeMillis() < deadline && traceCounter < limit) {
 				    long nextsample = System.currentTimeMillis() + samplerIntervalMS;
-				    long n = sampler.getTraceCount();
-				    sampler.collect();
-				    n = sampler.getTraceCount() - n;
-				    traceCounter += n;
-				    if (sampler.getTraceCount() > 500) {
+				    sampler.collect(proxy);
+				    if (traceCounter >= nextReport) {
 				        System.out.println("Collected " +traceCounter);
-				        flushToWriter();
+				        while(traceCounter >= nextReport) {
+				            nextReport += 500;
+				        }
 				        checkRotate();
 				    }				    
+				    // delay
 				    while(nextsample > System.currentTimeMillis()) {
 				        long st = nextsample - System.currentTimeMillis();
 				        if (st > 0) {
@@ -137,8 +156,6 @@ public class StackCaptureCmd implements CmdRef {
 				    }
 				}
 
-				flushToWriter();
-				
 				writer.close();
 				System.out.println("Trace dumped: " + traceCounter);
 				
@@ -147,13 +164,16 @@ public class StackCaptureCmd implements CmdRef {
 			}			
 		}
 
-        protected void flushToWriter() throws IOException {
-            ThreadShapshot tsnap = new ThreadShapshot();
-            for(Trace t: sampler.getTraces()) {
-                t.copyToSnapshot(tsnap);
-                writer.write(tsnap);
+        @SuppressWarnings("restriction")
+        protected ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
+            ThreadMXBean bean;
+            try {
+                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, com.sun.management.ThreadMXBean.class);
             }
-            sampler.clearTraces();
+            catch(Exception e) {
+                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
+            }
+            return bean;
         }
 
         private void checkRotate() throws FileNotFoundException, IOException {
@@ -167,13 +187,28 @@ public class StackCaptureCmd implements CmdRef {
             }
         }
 
+        private class StackWriterProxy implements StackTraceWriter {
+
+            @Override
+            public void write(ThreadSnapshot snap) throws IOException {
+                ++traceCounter;
+                writer.write(snap);
+
+            }
+
+            @Override
+            public void close() {
+                writer.close();
+            }
+        }
+
         private void openWriter() throws FileNotFoundException, IOException {
             if (fileLimit < 1) {
                 File file = new File(outputFile);
                 if (file.getParentFile() != null) {
                     file.getParentFile().mkdirs();
                 }
-                writer = new StackTraceWriter(new FileOutputStream(file));
+                writer = StackTraceCodec.newWriter(new FileOutputStream(file));
                 System.out.println("Writing to " + file.getAbsolutePath());
             }
             else {
@@ -185,7 +220,7 @@ public class StackCaptureCmd implements CmdRef {
                 if (file.getParentFile() != null) {
                     file.getParentFile().mkdirs();
                 }
-                writer = new StackTraceWriter(new FileOutputStream(file));
+                writer = StackTraceCodec.newWriter(new FileOutputStream(file));
                 System.out.println("Writing to " + file.getAbsolutePath());
             }
         }

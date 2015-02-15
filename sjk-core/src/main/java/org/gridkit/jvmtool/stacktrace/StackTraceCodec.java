@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gridkit.jvmtool;
+package org.gridkit.jvmtool.stacktrace;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -33,10 +33,6 @@ import java.util.NoSuchElementException;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import org.gridkit.jvmtool.stacktrace.StackFrame;
-import org.gridkit.jvmtool.stacktrace.ThreadCounter;
-import org.gridkit.jvmtool.stacktrace.ThreadShapshot;
-
 public class StackTraceCodec {
 
     static final byte[] MAGIC =  toBytes("TRACEDUMP_1 ");
@@ -49,16 +45,16 @@ public class StackTraceCodec {
             throw new RuntimeException(e);
         }
     }
-    
-    static final byte TAG_STRING = 1;  
-    static final byte TAG_FRAME = 2;  
-    static final byte TAG_TRACE = 3;  
+
+    static final byte TAG_STRING = 1;
+    static final byte TAG_FRAME = 2;
+    static final byte TAG_TRACE = 3;
     static final byte TAG_DYN_STRING = 4;
-    
+
     static final long TIME_ANCHOR = 1391255854894l;
 
     public static StackTraceWriter newWriter(OutputStream os) throws IOException {
-        return new StackTraceWriter(os);
+        return new StackTraceWriterV2(os);
     }
 
     public static StackTraceReader newReader(InputStream is) throws IOException {
@@ -196,21 +192,22 @@ public class StackTraceCodec {
             }
         }
     }
-    
-    public static class StackTraceWriter {
-        
+
+    static class StackTraceWriterV2 implements StackTraceWriter {
+
         private DataOutputStream dos;
         private Map<String, Integer> stringDic = new HashMap<String, Integer>();
         private Map<StackTraceElement, Integer> frameDic = new HashMap<StackTraceElement, Integer>();
         private RotatingStringDictionary dynDic = new RotatingStringDictionary(512);
 
-        public StackTraceWriter(OutputStream os) throws IOException {
+        public StackTraceWriterV2(OutputStream os) throws IOException {
             os.write(MAGIC2);
             DeflaterOutputStream def = new DeflaterOutputStream(os);
             this.dos = new DataOutputStream(def);
         }
-        
-        public void write(ThreadShapshot snap) throws IOException {
+
+        @Override
+        public void write(ThreadSnapshot snap) throws IOException {
             for(StackTraceElement ste: snap.elements) {
                 intern(ste);
             }
@@ -285,7 +282,7 @@ public class StackTraceCodec {
                 int n = frameDic.size() + 1;
                 frameDic.put(ste, n);
             }
-            return frameDic.get(ste);            
+            return frameDic.get(ste);
         }
 
         private int intern(String str) throws IOException {
@@ -298,9 +295,9 @@ public class StackTraceCodec {
                 int n = stringDic.size() + 1;
                 stringDic.put(str, n);
             }
-            return stringDic.get(str);            
-        }        
-        
+            return stringDic.get(str);
+        }
+
         private int internDyn(String str) throws IOException {
             if (str == null) {
                 return 0;
@@ -316,6 +313,7 @@ public class StackTraceCodec {
             return n;
         }
 
+        @Override
         public void close() {
             try {
                 dos.close();
@@ -325,32 +323,32 @@ public class StackTraceCodec {
             stringDic.clear();
             frameDic.clear();
         }
-    }    
-    
+    }
+
     static class StackTraceReaderV1 implements StackTraceReader {
-        
+
         private DataInputStream dis;
         private List<String> stringDic = new ArrayList<String>();
         private List<StackFrame> frameDic = new ArrayList<StackFrame>();
         private Map<StackFrame, StackTraceElement> frameCache = new HashMap<StackFrame, StackTraceElement>();
-        
+
         private boolean loaded;
         private long threadId;
         private long timestamp;
         private StackFrame[] trace;
-        
+
         public StackTraceReaderV1(InputStream is) {
             this.dis = new DataInputStream(new InflaterInputStream(is));
             stringDic.add(null);
             frameDic.add(null);
             loaded = false;;
         }
-        
+
         @Override
         public boolean isLoaded() {
             return loaded;
         }
-        
+
         @Override
         public long getThreadId() {
             if (!isLoaded()) {
@@ -366,7 +364,7 @@ public class StackTraceCodec {
             }
             return timestamp;
         }
-        
+
         @Override
         public StackTraceElement[] getTrace() {
             if (!isLoaded()) {
@@ -389,9 +387,9 @@ public class StackTraceCodec {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
             }
-            return trace;            
+            return trace;
         }
-        
+
         @Override
         public String getThreadName() {
             return null;
@@ -426,7 +424,7 @@ public class StackTraceCodec {
                 }
                 else if (tag == TAG_STRING) {
                     String str = dis.readUTF();
-                    stringDic.add(str);                    
+                    stringDic.add(str);
                 }
                 else if (tag == TAG_FRAME) {
                     StackFrame ste = readStackTraceElement();
@@ -673,7 +671,7 @@ public class StackTraceCodec {
             return v;
         }
     }
-    
+
     static long readVarLong(DataInputStream dis) throws IOException {
         byte b = dis.readByte();
         if ((b & 0x80) == 0) {
@@ -816,7 +814,7 @@ public class StackTraceCodec {
         else {
             throw new IllegalArgumentException("Out of bounds: " + v);
         }
-        }
+    }
 
     static void writeTimestamp(DataOutputStream dos, long epoch) throws IOException {
         writeVarLong(dos, epoch - TIME_ANCHOR);

@@ -26,8 +26,8 @@ import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.StackHisto;
 import org.gridkit.jvmtool.StackTraceClassifier;
 import org.gridkit.jvmtool.StackTraceClassifier.Config;
-import org.gridkit.jvmtool.StackTraceCodec;
-import org.gridkit.jvmtool.StackTraceReader;
+import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
+import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.util.formating.Formats;
 
 import com.beust.jcommander.Parameter;
@@ -247,7 +247,19 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			        StackTraceReader reader = getFilteredReader();
 			        while(reader.loadNext()) {
 			            String timestamp = Formats.toDatestamp(reader.getTimestamp());
-			            System.out.println(String.format("Thread [%d] at %s", reader.getThreadId(), timestamp));
+			            StringBuilder threadHeader = new StringBuilder();
+			            threadHeader
+			                .append("Thread [")
+			                .append(reader.getThreadId())
+			                .append("] ");
+			            if (reader.getThreadState() != null) {
+			                threadHeader.append(reader.getThreadState()).append(' ');
+			            }
+			            threadHeader.append("at ").append(timestamp);
+			            if (reader.getThreadName() != null) {
+			                threadHeader.append(" - ").append(reader.getThreadName());
+			            }
+			            System.out.println(threadHeader);
 			            StackTraceElement[] trace = reader.getTrace();
 			            for(int i = 0; i != trace.length; ++i) {
 			                System.out.println(trace[i]);

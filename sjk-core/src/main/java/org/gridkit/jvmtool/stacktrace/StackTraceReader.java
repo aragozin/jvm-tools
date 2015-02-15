@@ -1,10 +1,7 @@
-package org.gridkit.jvmtool;
+package org.gridkit.jvmtool.stacktrace;
 
 import java.io.IOException;
 import java.lang.Thread.State;
-
-import org.gridkit.jvmtool.stacktrace.StackFrame;
-import org.gridkit.jvmtool.stacktrace.ThreadCounter;
 
 /**
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)

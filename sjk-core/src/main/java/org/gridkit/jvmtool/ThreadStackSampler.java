@@ -30,7 +30,7 @@ import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.gridkit.jvmtool.stacktrace.ThreadShapshot;
+import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 /**
  * Thread stack sampler.
@@ -204,7 +204,7 @@ public class ThreadStackSampler {
             return strace;
         }
 
-        public void copyToSnapshot(ThreadShapshot snap) {
+        public void copyToSnapshot(ThreadSnapshot snap) {
             snap.reset();
             snap.threadId = threadId;
             snap.timestamp = timestamp;
