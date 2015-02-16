@@ -266,9 +266,9 @@ public class ThreadDumpSampler {
         public GenericMBeanThreadCounter(ThreadMXBean bean, CounterType counter) {
             this.slowBean = bean;
             try {
-            if (bean instanceof com.sun.management.ThreadMXBean) {
-                fastBean = (com.sun.management.ThreadMXBean) bean;
-            }
+                if (bean instanceof com.sun.management.ThreadMXBean) {
+                    fastBean = (com.sun.management.ThreadMXBean) bean;
+                }
             }
             catch(NoClassDefFoundError e) {
                 // ignore

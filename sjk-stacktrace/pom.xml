@@ -19,7 +19,7 @@
 -->
 
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>jvmtool-umbrella-pom</artifactId>
@@ -27,26 +27,11 @@
       <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>sjk-core</artifactId>
+    <artifactId>sjk-stacktrace</artifactId>
     <name>${project.groupId}::${project.artifactId}</name>
-    <description>Core classes for Swiss Java Knife tool</description>
-   
+    <description>Thread dumps: capture and encoding</description>
+
     <dependencies>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-stacktrace</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.lab</groupId>
-            <artifactId>jvm-attach-api</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>1.30</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

@@ -34,6 +34,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>sjk-stacktrace</module>
     <module>sjk-core</module>
     <module>mxdump</module>
     <module>gcflow</module>

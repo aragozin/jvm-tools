@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gridkit.jvmtool.GlobHelper;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 
+@Ignore("Benchmark")
 public class RegExMicrobenchmark {
 
     private static StackFrame[] FRAMES;

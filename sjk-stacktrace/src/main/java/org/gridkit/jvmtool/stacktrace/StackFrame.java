@@ -162,7 +162,7 @@ public class StackFrame implements CharSequence {
                 return fileName.charAt(index - mn);
             case NO_SOURCE:
                 try {
-                return UNKNOWN_SOURCE.charAt(index - mn);
+                    return UNKNOWN_SOURCE.charAt(index - mn);
                 }
                 catch ( StringIndexOutOfBoundsException e) {
                     throw e;
