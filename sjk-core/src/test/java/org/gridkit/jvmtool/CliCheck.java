@@ -154,6 +154,11 @@ public class CliCheck {
 	}
 
 	@Test
+    public void stcap_filter() {
+        exec("stcap", "-p", PID, "-m", "javax.*", "-o", "target/test_javax.stp");
+    }
+
+	@Test
 	public void stcap_rotate() {
 	    exec("stcap", "-p", PID, "-r", "5000", "-o", "target/test.stp");
 	}
@@ -170,7 +175,12 @@ public class CliCheck {
 
 	@Test
 	public void ssa_histo() {
-	    exec("ssa", "--histo", "-f", "target/test.stp");
+	    exec("ssa", "--histo", "-f", "target/test.stp", "-X");
+	}
+
+	@Test
+	public void ssa_histo2() {
+	    exec("ssa", "--histo", "-f", "target/test_javax.stp", "-X");
 	}
 
 	@Test

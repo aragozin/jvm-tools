@@ -27,7 +27,7 @@ public class StackFrame implements CharSequence {
     }
 
     public StackFrame(String classPrefix, String className, String methodName, String fileName, int lineNumber) {
-        this.classPrefix = classPrefix;
+        this.classPrefix = "".equals(classPrefix) ? null : classPrefix;
         if (className == null) {
             throw new NullPointerException("Class name cannot be null");
         }
@@ -161,7 +161,12 @@ public class StackFrame implements CharSequence {
             case NO_LINE_NUMBER:
                 return fileName.charAt(index - mn);
             case NO_SOURCE:
+                try {
                 return UNKNOWN_SOURCE.charAt(index - mn);
+                }
+                catch ( StringIndexOutOfBoundsException e) {
+                    throw e;
+                }
             case NATIVE:
                 return NATIVE_METHOD.charAt(index - mn);
             default:

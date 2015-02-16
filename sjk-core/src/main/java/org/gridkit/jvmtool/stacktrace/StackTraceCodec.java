@@ -262,7 +262,7 @@ public class StackTraceCodec {
                 String pkg = ste.getClassName();
                 int c = pkg.lastIndexOf('.');
                 String cn = c < 0 ? pkg : pkg.substring(c + 1);
-                pkg = c < 0 ? "" : pkg.substring(0, c);
+                pkg = c < 0 ? null : pkg.substring(0, c);
                 String mtd = ste.getMethodName();
                 String file = ste.getFileName();
                 int line = ste.getLineNumber() + 2;

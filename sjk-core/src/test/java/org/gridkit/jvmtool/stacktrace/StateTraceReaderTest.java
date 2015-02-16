@@ -35,6 +35,24 @@ public class StateTraceReaderTest {
     }
 
     @Test
+    public void read_dump_v2() throws FileNotFoundException, IOException {
+
+        StackTraceReader reader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v2.std"));
+
+        if (!reader.isLoaded()) {
+            reader.loadNext();
+        }
+
+        int n = 0;
+        while(reader.isLoaded()) {
+            reader.loadNext();
+            ++n;
+        }
+
+        System.out.println("Read " + n + " traces from file");
+    }
+
+    @Test
     public void read_dump_v1_rewrite_and_compare() throws FileNotFoundException, IOException {
 
         File file = new File("target/tmp/" + testName.getMethodName() + "-" + System.currentTimeMillis() + ".std");
@@ -51,6 +69,27 @@ public class StateTraceReaderTest {
 
         reader = StackTraceCodec.newReader(new FileInputStream(file));
         StackTraceReader origReader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v1.std"));
+
+        assertEqual(origReader, reader);
+    }
+
+    @Test
+    public void read_dump_v2_rewrite_and_compare() throws FileNotFoundException, IOException {
+
+        File file = new File("target/tmp/" + testName.getMethodName() + "-" + System.currentTimeMillis() + ".std");
+        file.getParentFile().mkdirs();
+        file.delete();
+
+        FileOutputStream fow = new FileOutputStream(file);
+        StackTraceWriter writer = StackTraceCodec.newWriter(fow);
+
+        StackTraceReader reader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v2.std"));
+
+        copyAllTraces(reader, writer);
+        writer.close();
+
+        reader = StackTraceCodec.newReader(new FileInputStream(file));
+        StackTraceReader origReader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v2.std"));
 
         assertEqual(origReader, reader);
     }

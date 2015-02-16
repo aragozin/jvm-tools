@@ -46,7 +46,6 @@ public class MxCmd implements CmdRef {
 	@Parameters(commandDescription = "MBean query and invokation")
 	public static class MX implements Runnable {
 		
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		

@@ -43,7 +43,6 @@ public class GcRepCmd implements CmdRef {
 	
 	public static class GcRep implements Runnable {
 
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		

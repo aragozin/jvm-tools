@@ -20,14 +20,18 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.management.ThreadMXBean;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 
 import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.gridkit.jvmtool.GlobHelper;
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
@@ -80,6 +84,9 @@ public class StackCaptureCmd implements CmdRef {
 		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter thread by name")
 		private String threadFilter = ".*";
 
+		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
+		private boolean retainEmptyTraces = false;
+
 		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only trace conatining this string would be included to dump")
 		private List<String> frameFilter;
 
@@ -95,7 +102,6 @@ public class StackCaptureCmd implements CmdRef {
         @Parameter(names = {"-r", "--rotate"}, description = "If specified output file would be rotate every N traces (0 - do not rotate)")
         private long fileLimit = 0;
 
-		
 		@ParametersDelegate
 		private JmxConnectionInfo connInfo = new JmxConnectionInfo();
 
@@ -119,12 +125,6 @@ public class StackCaptureCmd implements CmdRef {
 
 				sampler = new ThreadDumpSampler();
 				sampler.setThreadFilter(threadFilter);
-				if (frameFilter != null) {
-    				for(String f: frameFilter) {
-				    SJK.fail("Frame filter is not implemented yet");
-//    				    sampler.addFrame(f);
-    				}
-				}
 				
 				sampler.connect(bean);
 
@@ -170,7 +170,9 @@ public class StackCaptureCmd implements CmdRef {
             try {
                 bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, com.sun.management.ThreadMXBean.class);
             }
-            catch(Exception e) {
+            catch(NoClassDefFoundError e) {
+                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
+            } catch(Exception e) {
                 bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
             }
             return bean;
@@ -189,11 +191,59 @@ public class StackCaptureCmd implements CmdRef {
 
         private class StackWriterProxy implements StackTraceWriter {
 
+            private Map<StackTraceElement, Boolean> elementCache = new HashMap<StackTraceElement, Boolean>();
+            private Matcher[] matchers;
+
+            public StackWriterProxy() {
+                if (frameFilter != null) {
+                    matchers = new Matcher[frameFilter.size()];
+                    for(int i = 0; i != frameFilter.size(); ++i) {
+                        matchers[i] = GlobHelper.translate(frameFilter.get(i), ".").matcher("");
+                    }
+                }
+            }
+
             @Override
             public void write(ThreadSnapshot snap) throws IOException {
+                if (snap.elements.length == 0 && !retainEmptyTraces) {
+                    return;
+                }
+                // test filter
+                if (frameFilter != null) {
+                    boolean match = false;
+                    for(StackTraceElement e: snap.elements) {
+                        if (match(e)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        return;
+                    }
+                }
                 ++traceCounter;
                 writer.write(snap);
 
+            }
+
+            private boolean match(StackTraceElement e) {
+                Boolean cached = elementCache.get(e);
+                if (cached == null) {
+                    if (elementCache.size() > 4 << 10) {
+                        elementCache.clear();
+                    }
+                    boolean matched = false;
+                    for(Matcher m: matchers) {
+                        m.reset(e.toString());
+                        if (m.lookingAt()) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    elementCache.put(e, matched);
+                    return matched;
+                }
+                return cached;
             }
 
             @Override

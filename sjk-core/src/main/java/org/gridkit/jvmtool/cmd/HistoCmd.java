@@ -43,7 +43,6 @@ public class HistoCmd implements CmdRef {
 	@Parameters(commandDescription = "[Heap Histo] Prints class histogram, similar to jmap -histo")
 	public static class Histo implements Runnable {
 
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		

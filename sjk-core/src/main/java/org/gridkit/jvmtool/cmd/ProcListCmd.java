@@ -45,7 +45,6 @@ public class ProcListCmd implements CmdRef {
 	
 	public static class JPS implements Runnable {
 
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private final SJK host;
 

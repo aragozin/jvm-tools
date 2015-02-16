@@ -53,7 +53,6 @@ public class ThreadTopCmd implements CmdRef {
 	@Parameters(commandDescription = "[Thread Top] Displays threads from JVM process")
 	public static class TTop implements Runnable {
 
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		

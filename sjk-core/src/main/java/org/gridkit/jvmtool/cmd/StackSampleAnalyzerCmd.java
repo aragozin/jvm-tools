@@ -294,12 +294,19 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     StackHisto histo = new StackHisto();
                     
                     StackTraceReader reader = getFilteredReader();
+                    int n = 0;
                     while(reader.loadNext()) {
                         StackTraceElement[] trace = reader.getTrace();
                         histo.feed(trace);
+                        ++n;
                     }
                     
+                    if (n > 0) {
                     System.out.println(histo.formatHisto());
+                    }
+                    else {
+                        System.out.println("No data");
+                    }
                     
                 } catch (Exception e) {
                     SJK.fail(e.toString(), e);

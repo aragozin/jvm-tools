@@ -89,6 +89,7 @@ public class JmxConnectionInfo {
 		}		
 	}
 
+	@SuppressWarnings("resource")
 	private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
 		try {
 			final String uri = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
