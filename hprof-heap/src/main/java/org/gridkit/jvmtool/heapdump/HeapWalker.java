@@ -82,7 +82,63 @@ public class HeapWalker {
         CONVERTERS.put("float[]", primitiveArrayConverter);
         CONVERTERS.put("double[]", primitiveArrayConverter);
     }
+    
+    private static PrimitiveParser BOOL_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Boolean.valueOf(x);
+        }
+    };
 
+    private static PrimitiveParser BYTE_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Byte.valueOf(x);
+        }
+    };
+
+    private static PrimitiveParser SHORT_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Short.valueOf(x);
+        }
+    };
+
+    private static PrimitiveParser CHAR_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return x.charAt(0);
+        }
+    };
+
+    private static PrimitiveParser INT_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Integer.valueOf(x);
+        }
+    };
+
+    private static PrimitiveParser LONG_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Long.valueOf(x);
+        }
+    };
+
+    private static PrimitiveParser FLOAT_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Float.valueOf(x);
+        }
+    };
+
+    private static PrimitiveParser DOUBLE_PARSER = new PrimitiveParser() {
+        @Override
+        public Object toValue(String x) {
+            return Double.valueOf(x);
+        }
+    };
+    
     /**
      * Converts instances of few well know Java classes from
      * dump to normal java objects.
@@ -172,7 +228,35 @@ public class HeapWalker {
             }
             return null;
         }
-        else {
+        else if (steps.length > 0 && steps[steps.length - 1] instanceof ArrayIndexStep) {
+            PathStep[] shortPath = Arrays.copyOf(steps, steps.length - 1);
+            ArrayIndexStep lastStep = (ArrayIndexStep) steps[steps.length - 1];
+            for(Instance i: HeapPath.collect(obj, shortPath)) {
+                if (i instanceof PrimitiveArrayInstance) {
+                    Object array = valueOf(i);
+                    if (array != null) {
+                        int len = Array.getLength(array);
+                        int n = lastStep.getIndex();
+                        if (n < 0) {
+                            n = 0;
+                        }
+                        if (n < len) {
+                            return (T) Array.get(array, n);
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                }
+                else {
+                    for(Instance x: HeapPath.collect(i, new PathStep[]{lastStep})) {
+                        return valueOf(x);                        
+                    }
+                }
+            }            
+            return null;
+            
+        } else {
             for(Instance i: HeapPath.collect(obj, steps)) {
                 return valueOf(i);
             }
@@ -237,31 +321,40 @@ public class HeapWalker {
         if (obj instanceof PrimitiveArrayInstance) {
             PrimitiveArrayInstance pa = (PrimitiveArrayInstance) obj;
             String type = pa.getJavaClass().getName();
+            PrimitiveParser parser;
             Object array;
             int len = pa.getLength();
             if ("boolean[]".equals(type)) {
                 array = new boolean[len];
+                parser = BOOL_PARSER;
             }
             else if ("byte[]".equals(type)) {
                 array = new byte[len];
+                parser = BYTE_PARSER;
             }
             else if ("char[]".equals(type)) {
                 array = new char[len];
+                parser = CHAR_PARSER;
             }
             else if ("short[]".equals(type)) {
                 array = new short[len];
+                parser = SHORT_PARSER;
             }
             else if ("int[]".equals(type)) {
                 array = new int[len];
+                parser = INT_PARSER;
             }
             else if ("long[]".equals(type)) {
                 array = new long[len];
+                parser = LONG_PARSER;
             }
             else if ("float[]".equals(type)) {
                 array = new float[len];
+                parser = FLOAT_PARSER;
             }
             else if ("double[]".equals(type)) {
                 array = new double[len];
+                parser = DOUBLE_PARSER;
             }
             else {
                 throw new IllegalArgumentException("Is not a primitive array: " + obj.getInstanceId() + " (" + obj.getJavaClass().getName() + ")");
@@ -271,7 +364,7 @@ public class HeapWalker {
             for(int i = 0; i != values.size(); ++i) {
                 Object val = values.get(i);
                 if (val instanceof String) {
-                    val = Character.valueOf(((String)val).charAt(0));
+                    val = parser.toValue((String) val);
                 }
                 Array.set(array, i, val);
             }
@@ -347,5 +440,10 @@ public class HeapWalker {
     private interface InstanceConverter {
 
         public Object convert(Instance instance);
+    }
+    
+    private interface PrimitiveParser {
+        
+        public Object toValue(String x);
     }
 }

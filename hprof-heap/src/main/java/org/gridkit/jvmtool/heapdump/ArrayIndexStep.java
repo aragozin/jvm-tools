@@ -31,6 +31,10 @@ class ArrayIndexStep extends PathStep {
         this.index = index;
     }
 
+    public int getIndex() {
+        return index;
+    }
+    
     @Override
     public Iterator<Instance> walk(Instance instance) {
         if (instance instanceof ObjectArrayInstance) {

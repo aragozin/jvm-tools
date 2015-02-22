@@ -18,7 +18,7 @@ package org.netbeans.lib.profiler.heap;
 public class DummyA {
 
     int[] values;
-
+    
     public DummyA() {
         values = new int[16];
     }

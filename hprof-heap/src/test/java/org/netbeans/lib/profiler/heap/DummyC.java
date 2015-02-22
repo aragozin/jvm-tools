@@ -23,6 +23,15 @@ public class DummyC {
         structArray[1].textField = "this is struct #1";
     }
 
+    boolean[] bool_values = {true, false};
+    byte[] byte_values = {Byte.MIN_VALUE, Byte.MAX_VALUE};
+    short[] short_values = {Short.MIN_VALUE, Short.MAX_VALUE};
+    char[] char_values = {Character.MIN_VALUE, Character.MAX_VALUE};
+    int[] int_values = {Integer.MIN_VALUE, Integer.MAX_VALUE};
+    long[] long_values = {Long.MIN_VALUE, Long.MAX_VALUE};
+    float[] float_values = {Float.MIN_VALUE, Float.NaN, Float.MAX_VALUE};
+    double[] double_values = {Double.MIN_VALUE, Double.NaN, Double.MAX_VALUE};
+    
     public static class Struct {
 
         boolean trueField = true;
