@@ -56,6 +56,144 @@ public class ThreadDumpSampler {
         }
         return bean;
     }
+
+    @SuppressWarnings("restriction")
+    private static ThreadMXBean adaptThreadMXBean(ThreadMXBean bean) {
+        try {
+            if (bean instanceof com.sun.management.ThreadMXBean) {
+                final com.sun.management.ThreadMXBean beanX = (com.sun.management.ThreadMXBean) bean;
+                bean = new ThreadMXBeanEx() {
+                    
+                    public int getPeakThreadCount() {
+                        return beanX.getPeakThreadCount();
+                    }
+
+                    public int getDaemonThreadCount() {
+                        return beanX.getDaemonThreadCount();
+                    }
+
+                    public long[] getAllThreadIds() {
+                        return beanX.getAllThreadIds();
+                    }
+
+                    public ThreadInfo[] getThreadInfo(long[] ids) {
+                        return beanX.getThreadInfo(ids);
+                    }
+
+                    public long getCurrentThreadCpuTime() {
+                        return beanX.getCurrentThreadCpuTime();
+                    }
+
+                    public long getCurrentThreadUserTime() {
+                        return beanX.getCurrentThreadUserTime();
+                    }
+
+                    public long getThreadUserTime(long id) {
+                        return beanX.getThreadUserTime(id);
+                    }
+
+                    public long[] findMonitorDeadlockedThreads() {
+                        return beanX.findMonitorDeadlockedThreads();
+                    }
+
+                    public long[] findDeadlockedThreads() {
+                        return beanX.findDeadlockedThreads();
+                    }
+
+                    public ThreadInfo[] dumpAllThreads(boolean lockedMonitors, boolean lockedSynchronizers) {
+                        return beanX.dumpAllThreads(lockedMonitors, lockedSynchronizers);
+                    }
+
+                    public long[] getThreadAllocatedBytes(long[] arg0) {
+                        return beanX.getThreadAllocatedBytes(arg0);
+                    }
+
+                    public int getThreadCount() {
+                        return beanX.getThreadCount();
+                    }
+
+                    public long getThreadCpuTime(long id) {
+                        return beanX.getThreadCpuTime(id);
+                    }
+
+                    public long[] getThreadCpuTime(long[] arg0) {
+                        return beanX.getThreadCpuTime(arg0);
+                    }
+
+                    public ThreadInfo getThreadInfo(long id) {
+                        return beanX.getThreadInfo(id);
+                    }
+
+                    public ThreadInfo getThreadInfo(long id, int maxDepth) {
+                        return beanX.getThreadInfo(id, maxDepth);
+                    }
+
+                    public ThreadInfo[] getThreadInfo(long[] ids, int maxDepth) {
+                        return beanX.getThreadInfo(ids, maxDepth);
+                    }
+
+                    public ThreadInfo[] getThreadInfo(long[] ids, boolean lockedMonitors, boolean lockedSynchronizers) {
+                        return beanX.getThreadInfo(ids, lockedMonitors, lockedSynchronizers);
+                    }
+
+                    public long[] getThreadUserTime(long[] arg0) {
+                        return beanX.getThreadUserTime(arg0);
+                    }
+
+                    public long getTotalStartedThreadCount() {
+                        return beanX.getTotalStartedThreadCount();
+                    }
+
+                    public boolean isCurrentThreadCpuTimeSupported() {
+                        return beanX.isCurrentThreadCpuTimeSupported();
+                    }
+
+                    public boolean isObjectMonitorUsageSupported() {
+                        return beanX.isObjectMonitorUsageSupported();
+                    }
+
+                    public boolean isSynchronizerUsageSupported() {
+                        return beanX.isSynchronizerUsageSupported();
+                    }
+
+                    public boolean isThreadContentionMonitoringSupported() {
+                        return beanX.isThreadContentionMonitoringSupported();
+                    }
+
+                    public boolean isThreadContentionMonitoringEnabled() {
+                        return beanX.isThreadContentionMonitoringEnabled();
+                    }
+
+                    public boolean isThreadCpuTimeSupported() {
+                        return beanX.isThreadCpuTimeSupported();
+                    }
+
+                    public boolean isThreadCpuTimeEnabled() {
+                        return beanX.isThreadCpuTimeEnabled();
+                    }
+
+                    public void resetPeakThreadCount() {
+                        beanX.resetPeakThreadCount();
+                    }
+
+                    public void setThreadContentionMonitoringEnabled(boolean enable) {
+                        beanX.setThreadContentionMonitoringEnabled(enable);
+                    }
+
+                    public void setThreadCpuTimeEnabled(boolean enable) {
+                        beanX.setThreadCpuTimeEnabled(enable);
+                    }
+                };
+            }
+        }
+        catch(NoClassDefFoundError e) {
+            // ignore
+        }
+        catch(Exception e) {
+            // ignore
+        }
+        return bean;
+    }
     
 	boolean collectCpu = true;
 	boolean collectUserCpu = true;
@@ -86,16 +224,16 @@ public class ThreadDumpSampler {
 	}
 
 	public void connect(ThreadMXBean threadingMBean) {
-	    this.threading = threadingMBean;
+	    this.threading = adaptThreadMXBean(threadingMBean);
 	    collectors.clear();
 	    if (collectCpu) {
-	        collectors.add(new GenericMBeanThreadCounter(threadingMBean, CounterType.CPU_TIME));
+	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.CPU_TIME));
 	    }
 	    if (collectUserCpu) {
-	        collectors.add(new GenericMBeanThreadCounter(threadingMBean, CounterType.USER_TIME));
+	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.USER_TIME));
 	    }
 	    if (collectAllocation) {
-	        collectors.add(new GenericMBeanThreadCounter(threadingMBean, CounterType.ALLOCATED_BYTES));
+	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.ALLOCATED_BYTES));
 	    }
 	}
 
