@@ -26,10 +26,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
-import javax.management.JMX;
 import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
 import org.gridkit.jvmtool.GlobHelper;
 import org.gridkit.jvmtool.JmxConnectionInfo;
@@ -38,8 +35,8 @@ import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.TimeIntervalConverter;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceWriter;
+import org.gridkit.jvmtool.stacktrace.ThreadCapture;
 import org.gridkit.jvmtool.stacktrace.ThreadDumpSampler;
-import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -64,16 +61,6 @@ public class StackCaptureCmd implements CmdRef {
 
 	@Parameters(commandDescription = "[Stack Capture] Dumps stack traces to file for further processing")
 	public static class StCap implements Runnable {
-
-	  private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
-	  private static ObjectName name(String name) {
-	      try {
-	          return new ObjectName(name);
-	      } catch (MalformedObjectNameException e) {
-	          throw new RuntimeException(e);
-	      }
-	  }
-
 
 		@ParametersDelegate
 		private SJK host;
@@ -121,7 +108,7 @@ public class StackCaptureCmd implements CmdRef {
 			
 			try {
 				MBeanServerConnection mserver = connInfo.getMServer();
-				ThreadMXBean bean = connectThreadMXBean(mserver);
+				ThreadMXBean bean = ThreadDumpSampler.connectThreadMXBean(mserver);
 
 				sampler = new ThreadDumpSampler();
 				sampler.setThreadFilter(threadFilter);
@@ -164,20 +151,6 @@ public class StackCaptureCmd implements CmdRef {
 			}			
 		}
 
-        @SuppressWarnings("restriction")
-        protected ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
-            ThreadMXBean bean;
-            try {
-                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, com.sun.management.ThreadMXBean.class);
-            }
-            catch(NoClassDefFoundError e) {
-                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
-            } catch(Exception e) {
-                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
-            }
-            return bean;
-        }
-
         private void checkRotate() throws FileNotFoundException, IOException {
             if (fileLimit > 0) {
                 if (traceCounter - lastRotate > fileLimit) {
@@ -204,7 +177,7 @@ public class StackCaptureCmd implements CmdRef {
             }
 
             @Override
-            public void write(ThreadSnapshot snap) throws IOException {
+            public void write(ThreadCapture snap) throws IOException {
                 if (snap.elements.length == 0 && !retainEmptyTraces) {
                     return;
                 }

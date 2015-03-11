@@ -50,6 +50,7 @@ public class StackTraceCodec {
     static final byte TAG_FRAME = 2;
     static final byte TAG_TRACE = 3;
     static final byte TAG_DYN_STRING = 4;
+    static final byte TAG_COUNTER = 5;
 
     static final long TIME_ANCHOR = 1391255854894l;
 
@@ -144,19 +145,11 @@ public class StackTraceCodec {
         }
 
         @Override
-        public long getCounter(ThreadCounter counter) {
+        public CounterCollection getCounters() {
             if (current == null) {
                 new NoSuchElementException();
             }
-            return current.getCounter(counter);
-        }
-
-        @Override
-        public long getCounter(int counterId) {
-            if (current == null) {
-                new NoSuchElementException();
-            }
-            return current.getCounter(counterId);
+            return current.getCounters();
         }
 
         @Override
@@ -168,7 +161,7 @@ public class StackTraceCodec {
         }
 
         @Override
-        public StackFrame[] getStackTrace() {
+        public StackFrameList getStackTrace() {
             if (current == null) {
                 new NoSuchElementException();
             }
@@ -199,6 +192,7 @@ public class StackTraceCodec {
         private Map<String, Integer> stringDic = new HashMap<String, Integer>();
         private Map<StackTraceElement, Integer> frameDic = new HashMap<StackTraceElement, Integer>();
         private RotatingStringDictionary dynDic = new RotatingStringDictionary(512);
+        private List<String> counterKeys = new ArrayList<String>();
 
         public StackTraceWriterV2(OutputStream os) throws IOException {
             os.write(MAGIC2);
@@ -207,9 +201,12 @@ public class StackTraceCodec {
         }
 
         @Override
-        public void write(ThreadSnapshot snap) throws IOException {
+        public void write(ThreadCapture snap) throws IOException {
             for(StackTraceElement ste: snap.elements) {
                 intern(ste);
+            }
+            for(String ckey: snap.counters) {
+                ensureCounter(ckey);
             }
             int threadNameRef = 0;
             if (snap.threadName != null) {
@@ -224,25 +221,27 @@ public class StackTraceCodec {
             writeTrace(snap.elements);
         }
 
-        private void writeCounters(long[] counters) throws IOException {
-            if (counters != null) {
-                int bits = 0;
-                for(int i = 0; i != 32; ++i) {
-                    if (counters[i] > 0) {
-                        bits |= (1 << i);
+        private void writeCounters(CounterCollection counters) throws IOException {
+            int n = 0;
+            while(n < counterKeys.size()) {
+                byte mask = 0;
+                for(int i = 0; i < 8; ++i) {
+                    if (n + i >= counterKeys.size()) {
+                        break;
+                    }
+                    long val = counters.getValue(counterKeys.get(i));
+                    if (val >= 0) {
+                        mask |= 1 << i;
                     }
                 }
-                writeVarInt(dos, (0xFFFF & bits)); // standard
-                writeVarInt(dos, bits >> 16); // custom
-                for(int i = 0; i != 32; ++i) {
-                    if (counters[i] > 0) {
-                        writeVarLong(dos, counters[i]);
-                    }
-                }
+                dos.writeByte(mask);
+                n += 8;                
             }
-            else {
-                writeVarInt(dos, 0); // standard
-                writeVarInt(dos, 0); // custom
+            for(String key: counterKeys) {
+                long val = counters.getValue(key);
+                if (val >= 0) {
+                    writeVarLong(dos, val);
+                }
             }
         }
 
@@ -313,6 +312,16 @@ public class StackTraceCodec {
             return n;
         }
 
+        private void ensureCounter(String key) throws IOException {
+            int n = counterKeys.indexOf(key);
+            if (n < 0) {
+                n = counterKeys.size();
+                counterKeys.add(key);
+                dos.write(TAG_COUNTER);
+                dos.writeUTF(key);
+            }
+        }
+        
         @Override
         public void close() {
             try {
@@ -335,7 +344,7 @@ public class StackTraceCodec {
         private boolean loaded;
         private long threadId;
         private long timestamp;
-        private StackFrame[] trace;
+        private StackFrameList trace;
 
         public StackTraceReaderV1(InputStream is) {
             this.dis = new DataInputStream(new InflaterInputStream(is));
@@ -370,9 +379,9 @@ public class StackTraceCodec {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
             }
-            StackTraceElement[] strace = new StackTraceElement[trace.length];
+            StackTraceElement[] strace = new StackTraceElement[trace.depth()];
             for(int i = 0; i != strace.length; ++i) {
-                StackFrame frame = trace[i];
+                StackFrame frame = trace.frameAt(i);
                 StackTraceElement e = frameCache.get(frame);
                 if (e == null) {
                     frameCache.put(frame, e = frame.toStackTraceElement());
@@ -383,7 +392,7 @@ public class StackTraceCodec {
         }
 
         @Override
-        public StackFrame[] getStackTrace() {
+        public StackFrameList getStackTrace() {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
             }
@@ -401,16 +410,8 @@ public class StackTraceCodec {
         }
 
         @Override
-        public long getCounter(ThreadCounter counter) {
-            if (counter == null) {
-                throw new NullPointerException("counter is null");
-            }
-            return -1;
-        }
-
-        @Override
-        public long getCounter(int counterId) {
-            return -1;
+        public CounterCollection getCounters() {
+            return CounterArray.EMPTY;
         }
 
         @Override
@@ -434,11 +435,12 @@ public class StackTraceCodec {
                     threadId = dis.readLong();
                     timestamp = dis.readLong();
                     int len = readVarInt(dis);
-                    trace = new StackFrame[len];
+                    StackFrame[] frames = new StackFrame[len];
                     for(int i = 0; i != len; ++i) {
                         int ref = readVarInt(dis);
-                        trace[i] = frameDic.get(ref);
+                        frames[i] = frameDic.get(ref);
                     }
+                    trace = new StackFrameArray(frames);
                     loaded = true;
                     break;
                 }
@@ -477,8 +479,10 @@ public class StackTraceCodec {
         private String threadName;
         private long timestamp;
         private State threadState;
-        private long[] counters = new long[32];
-        private StackFrame[] trace;
+        private String[] counterNames = new String[0];
+        private long[] counterValues = new long[0];
+        private CounterArray counters = new CounterArray(counterNames, counterValues);
+        private StackFrameList trace;
 
         public StackTraceReaderV2(InputStream is) {
             this.dis = new DataInputStream(new InflaterInputStream(is));
@@ -514,9 +518,9 @@ public class StackTraceCodec {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
             }
-            StackTraceElement[] strace = new StackTraceElement[trace.length];
+            StackTraceElement[] strace = new StackTraceElement[trace.depth()];
             for(int i = 0; i != strace.length; ++i) {
-                StackFrame frame = trace[i];
+                StackFrame frame = trace.frameAt(i);
                 StackTraceElement e = frameCache.get(frame);
                 if (e == null) {
                     frameCache.put(frame, e = frame.toStackTraceElement());
@@ -527,7 +531,7 @@ public class StackTraceCodec {
         }
 
         @Override
-        public StackFrame[] getStackTrace() {
+        public StackFrameList getStackTrace() {
             if (!isLoaded()) {
                 throw new NoSuchElementException();
             }
@@ -545,19 +549,8 @@ public class StackTraceCodec {
         }
 
         @Override
-        public long getCounter(ThreadCounter counter) {
-            if (counter == null) {
-                throw new NullPointerException("counter is null");
-            }
-            return counters[counter.ordinal()];
-        }
-
-        @Override
-        public long getCounter(int counterId) {
-            if (counterId < 0 || counterId > 31) {
-                throw new IndexOutOfBoundsException("counterId " + counterId + " is out of [0, 31]");
-            }
-            return counters[counterId];
+        public CounterCollection getCounters() {
+            return counters;
         }
 
         @Override
@@ -590,6 +583,14 @@ public class StackTraceCodec {
                     }
                     dynStringDic.set(id, str);
                 }
+                else if (tag == TAG_COUNTER) {
+                    String str = dis.readUTF();
+                    int n = counterNames.length;
+                    counterNames = Arrays.copyOf(counterNames, n + 1);
+                    counterValues = Arrays.copyOf(counterValues, n + 1);
+                    counterNames[n] = str;
+                    counters = new CounterArray(counterNames, counterValues);
+                }
                 else {
                     throw new IOException("Data format error");
                 }
@@ -612,26 +613,33 @@ public class StackTraceCodec {
         }
 
         protected void readCounters() throws IOException {
-            int std = readVarInt(dis);
-            int cust = readVarInt(dis);
-            int mask = std | (cust << 16);
-            for(int i = 0; i != counters.length; ++i) {
-                if ((mask & (1 << i)) != 0) {
-                    counters[i] = readVarLong(dis);
+            Arrays.fill(counterValues, Long.MIN_VALUE);
+            boolean[] mask = new boolean[counterNames.length];
+            int n = 0;
+            while(n < mask.length) {
+                byte b = dis.readByte();
+                for(int i = 0; i != 8; ++i) {
+                    if (n + i < mask.length) {
+                        mask[n + i] = (b & 1 << i) != 0;
+                    }
                 }
-                else {
-                    counters[i] = -1;
+                n += 8;
+            }
+            for(int i = 0; i != mask.length; ++i) {
+                if (mask[i]) {
+                    counterValues[i] = readVarLong(dis);
                 }
             }
         }
 
         protected void readStackTrace() throws IOException {
             int len = readVarInt(dis);
-            trace = new StackFrame[len];
+            StackFrame[] frames = new StackFrame[len];
             for(int i = 0; i != len; ++i) {
                 int ref = readVarInt(dis);
-                trace[i] = frameDic.get(ref);
+                frames[i] = frameDic.get(ref);
             }
+            trace = new StackFrameArray(frames);
         }
 
         private StackFrame readStackTraceElement() throws IOException {

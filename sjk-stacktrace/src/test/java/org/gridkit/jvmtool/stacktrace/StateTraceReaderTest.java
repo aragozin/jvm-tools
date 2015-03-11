@@ -40,11 +40,12 @@ public class StateTraceReaderTest {
         StackTraceReader reader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v2.std"));
 
         if (!reader.isLoaded()) {
-            reader.loadNext();
+            reader.loadNext();            
         }
 
         int n = 0;
         while(reader.isLoaded()) {
+//            System.out.println(reader.getCounters() + " - " + reader.getThreadName());
             reader.loadNext();
             ++n;
         }
@@ -124,8 +125,13 @@ public class StateTraceReaderTest {
         Assert.assertEquals("ThreadName", r1.getThreadName(), r2.getThreadName());
         Assert.assertEquals("Timestamp", r1.getTimestamp(), r2.getTimestamp());
         Assert.assertEquals("State", r1.getThreadState(), r2.getThreadState());
-        for(int i = 0; i != 32; ++i) {
-            Assert.assertEquals("Counter #" + i, r1.getCounter(i), r2.getCounter(i));
+        CounterCollection c1 = r1.getCounters();
+        CounterCollection c2 = r2.getCounters();
+        for(String key: c1) {
+            Assert.assertEquals("Counter #" + key, c1.getValue(key), c2.getValue(key));
+        }
+        for(String key: c2) {
+            Assert.assertEquals("Counter #" + key, c1.getValue(key), c2.getValue(key));
         }
         assertEqualTraces(r1.getStackTrace(), r2.getStackTrace());
     }
@@ -141,19 +147,17 @@ public class StateTraceReaderTest {
     }
 
     private void copyTrace(StackTraceReader reader, StackTraceWriter writer) throws IOException {
-        ThreadSnapshot snap = new ThreadSnapshot();
+        ThreadCapture snap = new ThreadCapture();
         snap.threadId = reader.getThreadId();
         snap.threadName = reader.getThreadName();
         snap.state = reader.getThreadState();
         snap.timestamp = reader.getTimestamp();
-        for(int i = 0; i != 32; ++i) {
-            snap.counters[i] = reader.getCounter(i);
-        }
+        snap.counters.copyFrom(reader.getCounters());
         snap.elements = reader.getTrace();
         writer.write(snap);
     }
 
-    private void assertEqualTraces(StackFrame[] s1, StackFrame[] s2) {
+    private void assertEqualTraces(StackFrameList s1, StackFrameList s2) {
         StringBuilder sb1 = new StringBuilder();
         for(StackFrame f: s1) {
             sb1.append(f.toString());

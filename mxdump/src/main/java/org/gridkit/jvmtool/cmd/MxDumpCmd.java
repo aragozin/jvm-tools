@@ -59,7 +59,6 @@ public class MxDumpCmd implements CmdRef {
 	
 	public static class MxDump implements Runnable {
 		
-		@SuppressWarnings("unused")
 		@ParametersDelegate
 		private SJK host;
 		

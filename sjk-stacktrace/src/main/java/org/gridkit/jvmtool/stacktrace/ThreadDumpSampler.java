@@ -22,8 +22,14 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.management.JMX;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 /**
  * Thread stack sampler.
@@ -32,15 +38,25 @@ import java.util.regex.Pattern;
  */
 public class ThreadDumpSampler {
 
-//	private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
-//	private static ObjectName name(String name) {
-//		try {
-//			return new ObjectName(name);
-//		} catch (MalformedObjectNameException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
+	private static ObjectName name(String name) {
+		try {
+			return new ObjectName(name);
+		} catch (MalformedObjectNameException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
+    public static ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
+        ThreadMXBean bean;
+        try {
+            bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBeanEx.class);
+        } catch(Exception e) {
+            bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
+        }
+        return bean;
+    }
+    
 	boolean collectCpu = true;
 	boolean collectUserCpu = true;
 	boolean collectAllocation = true;
@@ -125,7 +141,7 @@ public class ThreadDumpSampler {
 	            // ignore
 	        }
 	    }
-	    ThreadSnapshot ts = new ThreadSnapshot();
+	    ThreadCapture ts = new ThreadCapture();
 	    for(ThreadInfo ti: dump) {
 	        ts.reset();
 	        ts.timestamp = timestamp;
@@ -229,7 +245,7 @@ public class ThreadDumpSampler {
             return strace;
         }
 
-        public void copyToSnapshot(ThreadSnapshot snap) {
+        public void copyToSnapshot(ThreadCapture snap) {
             snap.reset();
             snap.threadId = threadId;
             snap.timestamp = timestamp;
@@ -241,7 +257,7 @@ public class ThreadDumpSampler {
 
         public void collect(long[] threadID);
 
-        public void fillIntoSnapshot(ThreadSnapshot snap);
+        public void fillIntoSnapshot(ThreadCapture snap);
 
     }
 
@@ -254,20 +270,18 @@ public class ThreadDumpSampler {
     private static class GenericMBeanThreadCounter implements CounterCollector {
 
         private ThreadMXBean slowBean;
-        @SuppressWarnings("restriction")
-        private com.sun.management.ThreadMXBean fastBean;
+        private ThreadMXBeanEx fastBean;
         private CounterType counter;
 
         private long[] threads;
         private long[] counters;
         private int n = 0;
 
-        @SuppressWarnings("restriction")
         public GenericMBeanThreadCounter(ThreadMXBean bean, CounterType counter) {
             this.slowBean = bean;
             try {
-                if (bean instanceof com.sun.management.ThreadMXBean) {
-                    fastBean = (com.sun.management.ThreadMXBean) bean;
+                if (bean instanceof ThreadMXBeanEx) {
+                    fastBean = (ThreadMXBeanEx) bean;
                 }
             }
             catch(NoClassDefFoundError e) {
@@ -284,16 +298,23 @@ public class ThreadDumpSampler {
             n = 0;
             threads = threadID;
             if (fastBean != null) {
-                counters = callFast(threads);
+                try {
+                    counters = callFast(threads);
+                }
+                catch(Exception e) {
+                    // fallback to slow mode
+                    fastBean = null;
+                    collect(threadID);
+                }
             }
             else {
+                counters = new long[threads.length];
                 for(int i = 0; i != threads.length; ++i) {
                     counters[i] = callSlow(threads[i]);
                 }
             }
         }
 
-        @SuppressWarnings("restriction")
         private long[] callFast(long[] threads) {
             switch(counter) {
                 case CPU_TIME: return fastBean.getThreadCpuTime(threads);
@@ -313,16 +334,20 @@ public class ThreadDumpSampler {
         }
 
         @Override
-        public void fillIntoSnapshot(ThreadSnapshot snap) {
+        public void fillIntoSnapshot(ThreadCapture snap) {
             int n = indexOf(snap.threadId);
-            ThreadCounter counterKey;
+            String counterKey;            
             switch(counter) {
-                case CPU_TIME: counterKey = ThreadCounter.CPU_TIME; break;
-                case USER_TIME: counterKey = ThreadCounter.USER_TIME; break;
-                case ALLOCATED_BYTES: counterKey = ThreadCounter.ALLOCATED_BYTES; break;
+                case CPU_TIME: counterKey = ThreadCounters.CPU_TIME_MS; break;
+                case USER_TIME: counterKey = ThreadCounters.USER_TIME_MS; break;
+                case ALLOCATED_BYTES: counterKey = ThreadCounters.ALLOCATED_BYTES; break;
                 default: throw new RuntimeException("Unknown counter: " + counter);
             }
-            snap.setCounter(counterKey, counters[n]);
+            long v = counters[n];
+            if (v >= 0 && counter != CounterType.ALLOCATED_BYTES) {
+                v = TimeUnit.NANOSECONDS.toMillis(v);
+            }
+            snap.counters.set(counterKey, v);
         }
 
         private int indexOf(long threadId) {

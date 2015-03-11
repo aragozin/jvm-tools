@@ -18,13 +18,11 @@ public interface StackTraceReader {
 
     public State getThreadState();
 
-    public long getCounter(ThreadCounter counter);
-
-    public long getCounter(int counterId);
+    public CounterCollection getCounters();
 
     public StackTraceElement[] getTrace();
 
-    public StackFrame[] getStackTrace();
+    public StackFrameList getStackTrace();
 
     public boolean loadNext() throws IOException;
 
@@ -52,19 +50,16 @@ public interface StackTraceReader {
             return getReader().getThreadState();
         }
 
-        public long getCounter(ThreadCounter counter) {
-            return getReader().getCounter(counter);
-        }
-
-        public long getCounter(int counterId) {
-            return getReader().getCounter(counterId);
+        @Override
+        public CounterCollection getCounters() {
+            return getReader().getCounters();
         }
 
         public StackTraceElement[] getTrace() {
             return getReader().getTrace();
         }
 
-        public StackFrame[] getStackTrace() {
+        public StackFrameList getStackTrace() {
             return getReader().getStackTrace();
         }
 
