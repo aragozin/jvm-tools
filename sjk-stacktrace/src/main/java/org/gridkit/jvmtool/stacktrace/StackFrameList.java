@@ -8,4 +8,6 @@ public interface StackFrameList extends Iterable<StackFrame> {
     
     public StackFrameList fragment(int from, int to);
     
+    public StackFrame[] toArray();
+    
 }
