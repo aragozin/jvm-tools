@@ -252,3 +252,56 @@ Example
     0           |0          |false   |{className=org.eclipse.jface.text.rec...|org.eclipse.jface.text.reconciler.Dir...|-1         |null         |              |                   |{className=java.lang.Object,fileName=...|false    |84797   |org.eclipse.jdt.internal.ui.text.Java...|TIMED_WAITING|23241      |632649    
     86          |2          |false   |{className=org.eclipse.jface.text.rec...|org.eclipse.jface.text.reconciler.Dir...|-1         |null         |              |                   |{className=java.lang.Object,fileName=...|false    |84712   |org.eclipse.jdt.internal.ui.text.Java...|TIMED_WAITING|23460      |631606    
     ...
+
+`stcap` command
+----
+stcap commands dumps thread from target process with configure period (or non-stop) to a file
+
+    > java -jar sjk.jar mx -p 6344 -mg -b java.lang:type=Memory -f HeapMemoryUsage
+
+ 	[Stack Capture] Dumps stack traces to file for further processing
+	Usage: stcap [options]
+	  Options:
+		-e, --empty
+		   Retain threads without stack trace in dump (ignored by default)
+		   Default: false
+		-f, --filter
+		   Wild card expression to filter thread by name
+		   Default: .*
+			--help
+		   
+		   Default: false
+		-l, --limit
+		   Target number of traces to collect, once reached command will terminate
+		   (0 - unlimited)
+		   Default: 0
+		-m, --match-frame
+		   Frame filter, only trace conatining this string would be included to dump
+	  * -o, --output
+		   Name of file to write thread dump
+			--password
+		   Password for JMX authentication (only for socket connection)
+		-p, --pid
+		   JVM process PID
+		-r, --rotate
+		   If specified output file would be rotate every N traces (0 - do not
+		   rotate)
+		   Default: 0
+		-i, --sampler-interval
+		   Interval between polling MBeans
+		   Default: 0
+		-s, --socket
+		   Socket address for JMX port (host:port)
+		-t, --timeout
+		   Time untill command will terminate even if not enough traces collected
+		   Default: 30000
+			--user
+		   User for JMX authentication (only for socket connection)
+		-X, --verbose
+		   Enable detailed diagnostics
+		   Default: false
+
+`ssa` command
+----
+ssa commands used to analyze thread dump produced by stcap command
+
