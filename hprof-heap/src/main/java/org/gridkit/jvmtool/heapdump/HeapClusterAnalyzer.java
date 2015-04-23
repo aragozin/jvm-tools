@@ -272,6 +272,7 @@ public class HeapClusterAnalyzer {
                 return;
             }
             if (blacklist.contains(i.getJavaClass().getName())) {
+                ignoreRefs.set(i.getInstanceId(), true);
                 return;
             }
             if (details.objects.getAndSet(i.getInstanceId(), true)) {
@@ -366,12 +367,13 @@ public class HeapClusterAnalyzer {
                     continue;
                 }
 
-                if (details.objects.getAndSet(id, true)) {
+                Instance i = heap.getInstanceByID(id);
+                if (blacklist.contains(i.getJavaClass().getName())) {
+                    ignoreRefs.set(id, true);
                     continue;
                 }
 
-                Instance i = heap.getInstanceByID(id);
-                if (blacklist.contains(i.getJavaClass().getName())) {
+                if (details.objects.getAndSet(id, true)) {
                     continue;
                 }
 
