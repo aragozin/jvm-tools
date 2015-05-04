@@ -33,10 +33,11 @@ import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.TimeIntervalConverter;
+import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceWriter;
-import org.gridkit.jvmtool.stacktrace.ThreadCapture;
 import org.gridkit.jvmtool.stacktrace.ThreadDumpSampler;
+import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -164,7 +165,7 @@ public class StackCaptureCmd implements CmdRef {
 
         private class StackWriterProxy implements StackTraceWriter {
 
-            private Map<StackTraceElement, Boolean> elementCache = new HashMap<StackTraceElement, Boolean>();
+            private Map<StackFrame, Boolean> elementCache = new HashMap<StackFrame, Boolean>();
             private Matcher[] matchers;
 
             public StackWriterProxy() {
@@ -177,14 +178,14 @@ public class StackCaptureCmd implements CmdRef {
             }
 
             @Override
-            public void write(ThreadCapture snap) throws IOException {
-                if (snap.elements.length == 0 && !retainEmptyTraces) {
+            public void write(ThreadSnapshot snap) throws IOException {
+                if (snap.stackTrace().isEmpty() && !retainEmptyTraces) {
                     return;
                 }
                 // test filter
                 if (frameFilter != null) {
                     boolean match = false;
-                    for(StackTraceElement e: snap.elements) {
+                    for(StackFrame e: snap.stackTrace()) {
                         if (match(e)) {
                             match = true;
                             break;
@@ -199,7 +200,7 @@ public class StackCaptureCmd implements CmdRef {
 
             }
 
-            private boolean match(StackTraceElement e) {
+            private boolean match(StackFrame e) {
                 Boolean cached = elementCache.get(e);
                 if (cached == null) {
                     if (elementCache.size() > 4 << 10) {

@@ -10,4 +10,6 @@ public interface StackFrameList extends Iterable<StackFrame> {
     
     public StackFrame[] toArray();
     
+    public boolean isEmpty();
+    
 }

@@ -13,6 +13,7 @@ public class StackFrame implements CharSequence {
 
     private final String classPrefix;
     private final String className;
+    private String fqcn = null; // fully qualified name
     private final String methodName;
     private final String fileName;
     private final int lineNumber;
@@ -77,7 +78,10 @@ public class StackFrame implements CharSequence {
     }
 
     public String getClassName() {
-        return classPrefix == null ? className : (classPrefix + "." + className);
+        if (fqcn == null) {
+            fqcn = classPrefix == null ? className : (classPrefix + "." + className);
+        }
+        return fqcn;
     }
 
     String getClassPrefix() {

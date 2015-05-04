@@ -69,6 +69,9 @@ public class SJK {
 	@Parameter(names = {"-X", "--verbose"}, description = "Enable detailed diagnostics")
 	private boolean verbose = false;
 
+	@Parameter(names = "--commands", help = true)
+	private boolean listCommands = false;
+	
 	private boolean suppressSystemExit;
 
 	private Map<String, Runnable> commands = new HashMap<String, Runnable>();
@@ -108,6 +111,11 @@ public class SJK {
 				else {
 					parser.usage(cmd);
 				}							
+			}
+			else if (listCommands) {
+			    for(String cmd: commands.keySet()) {
+			        System.out.println(String.format("%8s - %s", cmd, parser.getCommandDescription(cmd)));
+			    }
 			}
 			else {
 				

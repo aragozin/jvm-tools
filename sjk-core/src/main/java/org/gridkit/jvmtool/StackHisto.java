@@ -58,18 +58,12 @@ public class StackHisto {
     }
     
     public String formatHisto() {
-        TextTable tt = new TextTable();
-        List<SiteInfo> h = new ArrayList<SiteInfo>(histo.values());
-        Collections.sort(h, BY_OCCURENCE);
-        for(SiteInfo si: h) {
-            int pc = (100 * si.getOccurences()) / traceCount;
-            tt.addRow("" + si.getOccurences(), " " + pc + "%", " " + si.getHitCount(), " " + si.getSite());
-        }
-        return tt.formatTextTableUnbordered(200);
+        return formatHisto(Integer.MAX_VALUE);
     }
 
     public String formatHisto(int limit) {
         TextTable tt = new TextTable();
+        tt.addRow("Trc N ", "", "Frm N", " Frame");
         List<SiteInfo> h = new ArrayList<SiteInfo>(histo.values());
         Collections.sort(h, BY_OCCURENCE);
         int n = 0;

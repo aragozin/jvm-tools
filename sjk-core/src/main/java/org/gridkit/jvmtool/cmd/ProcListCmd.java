@@ -24,6 +24,7 @@ import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.lab.jvm.attach.AttachManager;
 import org.gridkit.lab.jvm.attach.JavaProcessId;
 
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
@@ -43,6 +44,7 @@ public class ProcListCmd implements CmdRef {
 		return new JPS(host);
 	}
 	
+    @Parameters(commandDescription = "[JPS] Enhanced version of JDK's jps tool")
 	public static class JPS implements Runnable {
 
 		@ParametersDelegate

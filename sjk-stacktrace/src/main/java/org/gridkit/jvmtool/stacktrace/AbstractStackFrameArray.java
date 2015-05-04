@@ -55,6 +55,11 @@ public abstract class AbstractStackFrameArray implements StackFrameList {
     }
 
     @Override
+    public boolean isEmpty() {
+        return depth() == 0;
+    }
+
+    @Override
     public StackFrameList fragment(int from, int to) {
         if (from > to) {
             throw new IllegalArgumentException();

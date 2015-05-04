@@ -15,8 +15,8 @@ public class InProcessSamplerCheck {
         sampler.collect(new StackTraceWriter() {
             
             @Override
-            public void write(ThreadCapture snap) throws IOException {
-                Assert.assertTrue(snap.counters.getValue(ThreadCounters.ALLOCATED_BYTES) >= 0);
+            public void write(ThreadSnapshot snap) throws IOException {
+                Assert.assertTrue(snap.counters().getValue(ThreadCounters.ALLOCATED_BYTES) >= 0);
             }
             
             @Override

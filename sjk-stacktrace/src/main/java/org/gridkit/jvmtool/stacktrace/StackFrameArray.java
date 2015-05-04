@@ -27,4 +27,9 @@ public class StackFrameArray extends AbstractStackFrameArray {
     protected int to() {
         return to;
     }
+
+    @Override
+    public boolean isEmpty() {
+        return from == to;
+    }
 }

@@ -46,7 +46,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		return new SSA(host);
 	}
 
-	@Parameters(commandDescription = "Analyzing stack trace dumps")
+	@Parameters(commandDescription = "[Stack Sample Analyzer] Analyzing stack trace dumps")
 	public static class SSA implements Runnable {
 		
 		@ParametersDelegate

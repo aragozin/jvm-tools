@@ -201,24 +201,24 @@ public class StackTraceCodec {
         }
 
         @Override
-        public void write(ThreadCapture snap) throws IOException {
-            for(StackTraceElement ste: snap.elements) {
-                intern(ste);
+        public void write(ThreadSnapshot snap) throws IOException {
+            for(StackFrame ste: snap.stackTrace()) {
+                intern(ste.toStackTraceElement());
             }
-            for(String ckey: snap.counters) {
+            for(String ckey: snap.counters()) {
                 ensureCounter(ckey);
             }
             int threadNameRef = 0;
-            if (snap.threadName != null) {
-                threadNameRef = internDyn(snap.threadName);
+            if (snap.threadName() != null) {
+                threadNameRef = internDyn(snap.threadName());
             }
             dos.writeByte(TAG_TRACE);
-            writeVarLong(dos, snap.threadId);
+            writeVarLong(dos, snap.threadId());
             writeVarInt(dos, threadNameRef);
-            writeTimestamp(dos, snap.timestamp);
-            writeState(snap.state);
-            writeCounters(snap.counters);
-            writeTrace(snap.elements);
+            writeTimestamp(dos, snap.timestamp());
+            writeState(snap.threadState());
+            writeCounters(snap.counters());
+            writeTrace(snap.stackTrace());
         }
 
         private void writeCounters(CounterCollection counters) throws IOException {
@@ -249,10 +249,14 @@ public class StackTraceCodec {
             writeVarInt(dos, state == null ? 0 : (state.ordinal() + 1));
         }
 
-        private void writeTrace(StackTraceElement[] trace) throws IOException {
-            writeVarInt(dos, trace.length);
-            for(StackTraceElement ste: trace) {
-                writeVarInt(dos, intern(ste));
+        private void writeTrace(StackFrameList trace) throws IOException {
+            int n = 0;
+            for(@SuppressWarnings("unused") StackFrame sf: trace) {
+                ++n;
+            }
+            writeVarInt(dos, n);
+            for(StackFrame ste: trace) {
+                writeVarInt(dos, intern(ste.toStackTraceElement()));
             }
         }
 

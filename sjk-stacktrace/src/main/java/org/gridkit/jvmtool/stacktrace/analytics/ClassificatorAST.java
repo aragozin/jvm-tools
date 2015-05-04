@@ -78,7 +78,7 @@ public class ClassificatorAST {
         }
 
         public OrCombinatorFilter(Collection<Filter> subfilters) {
-            subfilters.addAll(subfilters);
+            this.subfilters.addAll(subfilters);
         }
     }
 
@@ -90,7 +90,7 @@ public class ClassificatorAST {
         }
 
         public AndCombinatorFilter(Collection<Filter> subfilters) {
-            subfilters.addAll(subfilters);
+            this.subfilters.addAll(subfilters);
         }
     }
 

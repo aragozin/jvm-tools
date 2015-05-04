@@ -43,7 +43,7 @@ public class MxCmd implements CmdRef {
 		return new MX(host);
 	}
 
-	@Parameters(commandDescription = "MBean query and invokation")
+	@Parameters(commandDescription = "[MBean] MBean query and invokation")
 	public static class MX implements Runnable {
 		
 		@ParametersDelegate

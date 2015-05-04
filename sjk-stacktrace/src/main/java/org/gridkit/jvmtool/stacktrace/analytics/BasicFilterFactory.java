@@ -273,6 +273,7 @@ public class BasicFilterFactory {
                 if (m < 0) {
                     break;
                 }
+                n = m;
             }
             if (n >= 0) {
                 StackFrameList remained = snapshot.stackTrace();
@@ -315,7 +316,7 @@ public class BasicFilterFactory {
         @Override
         public boolean evaluate(ThreadSnapshot snapshot) {
             for(ThreadSnapshotFilter f: filters) {
-                if (!f.evaluate(snapshot)) {
+                if (f.evaluate(snapshot)) {
                     return true;
                 }
             }
@@ -334,7 +335,7 @@ public class BasicFilterFactory {
         @Override
         public boolean evaluate(StackFrame frame) {
             for(StackFrameMatcher f: matchers) {
-                if (!f.evaluate(frame)) {
+                if (f.evaluate(frame)) {
                     return true;
                 }
             }

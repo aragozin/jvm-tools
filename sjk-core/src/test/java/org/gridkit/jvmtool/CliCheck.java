@@ -15,6 +15,7 @@
  */
 package org.gridkit.jvmtool;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
 
 import junit.framework.Assert;
@@ -39,6 +40,11 @@ public class CliCheck {
 		exec("--help");
 	}
 
+    @Test
+    public void list_commands() {
+        exec("--commands");
+    }
+	
 	@Test
 	public void jps() {
 		exec("jps");
@@ -169,6 +175,21 @@ public class CliCheck {
 	}
 
 	@Test
+	public void stcpy() {
+	    exec("stcpy", "-X", "-i", "target/*.stp", "-o", "target/test.all-stp");
+	}
+
+	@Test
+    public void stcpy_abs() {
+        exec("stcpy", "-X", "-i", new File("target").getAbsolutePath().replace('\\', '/') + "/*.stp", "-o", "target/test.all-stp");
+    }
+
+    @Test
+    public void stcpy_mask() {
+        exec("stcpy", "-X", "--mask", "org.gridkit:com.acme", "-i", "target/test.all-stp", "-o", "target/test-masked.all-stp");
+    }
+
+	@Test
 	public void ssa_print() {
 	    exec("ssa", "--print", "-f", "target/test.stp");
 	}
@@ -178,6 +199,11 @@ public class CliCheck {
 	    exec("ssa", "--histo", "-f", "target/test.stp", "-X");
 	}
 
+    @Test
+    public void ssa_histo_masked() {
+        exec("ssa", "--histo", "-f", "target/test-masked.all-stp", "-X");
+    }
+	
 	@Test
 	public void ssa_histo2() {
 	    exec("ssa", "--histo", "-f", "target/test_javax.stp", "-X");

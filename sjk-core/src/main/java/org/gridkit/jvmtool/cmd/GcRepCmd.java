@@ -22,6 +22,7 @@ import org.gridkit.jvmtool.MBeanGCMonitor;
 import org.gridkit.jvmtool.SJK;
 import org.gridkit.jvmtool.SJK.CmdRef;
 
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 /**
@@ -41,6 +42,7 @@ public class GcRepCmd implements CmdRef {
 		return new GcRep(host);
 	}
 	
+	@Parameters(commandDescription = "[Print GC] Print GC log like information for remote process")
 	public static class GcRep implements Runnable {
 
 		@ParametersDelegate

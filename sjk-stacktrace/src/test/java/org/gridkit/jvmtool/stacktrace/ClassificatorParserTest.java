@@ -28,7 +28,7 @@ public class ClassificatorParserTest {
                 if (line != null) {
                     System.out.println("[" + n + "] " + line);                    
                     System.out.flush();
-                    if (n == 66) {
+                    if (n == 27) {
                         new String();
                     }
                     parser.push(line);
