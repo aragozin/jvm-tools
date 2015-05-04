@@ -64,6 +64,11 @@ public class ThreadDumpSampler {
                 final com.sun.management.ThreadMXBean beanX = (com.sun.management.ThreadMXBean) bean;
                 bean = new ThreadMXBeanEx() {
                     
+                    /* Method added in Java 7 */
+                    public ObjectName getObjectName() {
+                        return THREADING_MBEAN;
+                    }
+
                     public int getPeakThreadCount() {
                         return beanX.getPeakThreadCount();
                     }
