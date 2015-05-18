@@ -64,7 +64,8 @@ public class ThreadDumpSampler {
                 final com.sun.management.ThreadMXBean beanX = (com.sun.management.ThreadMXBean) bean;
                 bean = new ThreadMXBeanEx() {
                     
-                    /* Method added in Java 7 */
+                    @SuppressWarnings("unused")
+                    /* Method added in Java 7, required for compilation */
                     public ObjectName getObjectName() {
                         return THREADING_MBEAN;
                     }
