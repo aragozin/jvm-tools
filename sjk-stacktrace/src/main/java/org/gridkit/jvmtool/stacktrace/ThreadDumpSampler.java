@@ -26,9 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 /**
@@ -38,27 +35,8 @@ import javax.management.ObjectName;
  */
 public class ThreadDumpSampler {
 
-	private static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
-	private static ObjectName name(String name) {
-		try {
-			return new ObjectName(name);
-		} catch (MalformedObjectNameException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-    public static ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
-        ThreadMXBean bean;
-        try {
-            bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBeanEx.class);
-        } catch(Exception e) {
-            bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
-        }
-        return bean;
-    }
-
     @SuppressWarnings("restriction")
-    private static ThreadMXBean adaptThreadMXBean(ThreadMXBean bean) {
+    public static ThreadMXBean adaptThreadMXBean(ThreadMXBean bean) {
         try {
             if (bean instanceof com.sun.management.ThreadMXBean) {
                 final com.sun.management.ThreadMXBean beanX = (com.sun.management.ThreadMXBean) bean;
@@ -67,7 +45,7 @@ public class ThreadDumpSampler {
                     @SuppressWarnings("unused")
                     /* Method added in Java 7, required for compilation */
                     public ObjectName getObjectName() {
-                        return THREADING_MBEAN;
+                        return ThreadMXBeanEx.BeanHelper.THREADING_MBEAN;
                     }
 
                     public int getPeakThreadCount() {

@@ -15,12 +15,15 @@
  */
 package org.gridkit.jvmtool;
 
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -30,8 +33,8 @@ import java.util.regex.Pattern;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
 
+import org.gridkit.jvmtool.stacktrace.ThreadMXBeanEx;
 import org.gridkit.util.formating.Formats;
 
 /**
@@ -51,17 +54,18 @@ public class MBeanCpuUsageReporter {
 	}
 
 	private MBeanServerConnection mserver;
+	private ThreadMXBean mbean;
 
 	private long lastTimestamp;
 	private long lastProcessCpuTime;
 	private long lastYougGcCpuTime;
 	private long lastOldGcCpuTime;
-	private BigInteger lastCummulativeCpuTime;
-	private BigInteger lastCummulativeUserTime;
-	private BigInteger lastCummulativeAllocatedAmount;
+	private BigInteger lastCummulativeCpuTime = BigInteger.valueOf(0);
+	private BigInteger lastCummulativeUserTime  = BigInteger.valueOf(0);
+	private BigInteger lastCummulativeAllocatedAmount = BigInteger.valueOf(0);
 	
-	private Map<Long, CompositeData> threadDump = new HashMap<Long, CompositeData>();
-	private Map<Long, ThreadNote> notes = new HashMap<Long, MBeanCpuUsageReporter.ThreadNote>();
+	private Map<Long, ThreadTrac> threadDump = new HashMap<Long, ThreadTrac>();
+	private Map<Long, ThreadNote> notes = new HashMap<Long, ThreadNote>();
 	
 	private List<Comparator<ThreadLine>> comparators = new ArrayList<Comparator<ThreadLine>>();
 	
@@ -69,14 +73,17 @@ public class MBeanCpuUsageReporter {
 	
 	private Pattern filter;
 	
+	private boolean bulkCpuEnabled;
 	private boolean threadAllocatedMemoryEnabled;
 	
 	private GcCpuUsageMonitor gcMon;
 	
 	public MBeanCpuUsageReporter(MBeanServerConnection mserver) {
 		this.mserver = mserver;
+		this.mbean = ThreadMXBeanEx.BeanHelper.connectThreadMXBean(mserver);
 		
 		threadAllocatedMemoryEnabled = getThreadingMBeanCapability("ThreadAllocatedMemoryEnabled");
+		bulkCpuEnabled = verifyBulkCpu();
 		
 		lastTimestamp = System.nanoTime();
 		lastProcessCpuTime = getProcessCpuTime();
@@ -94,6 +101,17 @@ public class MBeanCpuUsageReporter {
 		catch(Exception e) {
 			return false;
 		}
+	}
+	
+	private boolean verifyBulkCpu() {
+	    try {
+            long[] ids = mbean.getAllThreadIds();
+            ((ThreadMXBeanEx)mbean).getThreadCpuTime(ids);
+            ((ThreadMXBeanEx)mbean).getThreadUserTime(ids);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
 	}
 
 	public void sortByThreadName() {
@@ -124,9 +142,78 @@ public class MBeanCpuUsageReporter {
 		filter = regEx;
 	}
 	
-	public String report() {
+	public void probe() {
+    	try {
+    	    long[] ids = mbean.getAllThreadIds();
+    	    ThreadInfo[] ti = mbean.getThreadInfo(ids);
+    
+    	    Map<Long, ThreadInfo> buf = new HashMap<Long, ThreadInfo>();
+    	    for(ThreadInfo t: ti) {
+    	        if (t != null) {
+    	            buf.put(t.getThreadId(), t);
+    	        }
+    	    }
+    	    
+    	    for(Long key: threadDump.keySet()) {
+    	        ThreadTrac tt = threadDump.get(key);
+    	        ThreadInfo t = buf.remove(key);
+    	        if (t != null) {
+        	        tt.name = t.getThreadName();
+        	        tt.lastThreadInfo = t;
+    	        }
+    	        else {
+    	            tt.dead = true;
+    	        }
+    	    }
+    	    
+    	    for(ThreadInfo t: buf.values()) {
+    	        ThreadTrac tt = new ThreadTrac();
+    	        tt.name = t.getThreadName();
+    	        tt.lastThreadInfo = t;
+    	        threadDump.put(t.getThreadId(), tt);
+    	    }
+    	    
+    	    if (threadAllocatedMemoryEnabled) {
+    	        long[] alloc = ((ThreadMXBeanEx)mbean).getThreadAllocatedBytes(ids);
+    	        for (int i = 0 ; i != ids.length; ++i) {
+    	            threadDump.get(ids[i]).lastAllocatedBytes = alloc[i];
+    	        }
+    	    }
+    	    
+    	    if (bulkCpuEnabled) {
+    	        long[] cpu = ((ThreadMXBeanEx)mbean).getThreadCpuTime(ids);
+    	        long[] usr = ((ThreadMXBeanEx)mbean).getThreadUserTime(ids);
+                for (int i = 0 ; i != ids.length; ++i) {
+                    threadDump.get(ids[i]).lastCpuTime = cpu[i];
+                    threadDump.get(ids[i]).lastUserTime = usr[i];
+                }
+    	    }
+    	    else {
+    	        for(long id: ids) {
+    	            ThreadTrac tt = threadDump.get(id);
+    	            tt.lastCpuTime = mbean.getThreadCpuTime(id);
+    	            tt.lastUserTime = mbean.getThreadCpuTime(id);
+    	        }
+    	    }
+    	    
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    }
 
-		dumpThreads();
+	private void cleanDead() {
+	    Iterator<ThreadTrac> it = threadDump.values().iterator();
+	    while(it.hasNext()) {
+	        ThreadTrac tt = it.next();
+	        if (tt.dead) {
+	            it.remove();
+	        }
+	    }
+	}
+	
+    public String report() {
+
+		probe();
 		
 		StringBuilder sb = new StringBuilder();
 		
@@ -138,18 +225,15 @@ public class MBeanCpuUsageReporter {
 		
 		Map<Long,ThreadNote> newNotes = new HashMap<Long, ThreadNote>();
 		
-		BigInteger totalCpu = BigInteger.valueOf(0);
-		BigInteger totalUser = BigInteger.valueOf(0);
-		BigInteger totalAlloc = BigInteger.valueOf(0);
+		BigInteger deltaCpu = BigInteger.valueOf(0);
+		BigInteger deltaUser = BigInteger.valueOf(0);
+		BigInteger deltaAlloc = BigInteger.valueOf(0);
 		
 		List<ThreadLine> table = new ArrayList<ThreadLine>();
 		
 		for(long tid: getAllThreadIds()) {
 			
 			String threadName = getThreadName(tid);
-			if (filter != null && !filter.matcher(threadName).matches()) {
-				continue;
-			}
 			
 			ThreadNote lastNote = notes.get(tid);
 			ThreadNote newNote = new ThreadNote();
@@ -159,12 +243,20 @@ public class MBeanCpuUsageReporter {
 			
 			newNotes.put(tid, newNote);
 			
-			totalCpu = totalCpu.add(BigInteger.valueOf(newNote.lastCpuTime));
-			totalUser = totalUser.add(BigInteger.valueOf(newNote.lastUserTime));
-			totalAlloc = totalAlloc.add(BigInteger.valueOf(newNote.lastAllocatedBytes));
+			long lastCpu = lastNote == null ? 0 : lastNote.lastCpuTime;
+			long lastUser = lastNote == null ? 0 : lastNote.lastUserTime;
+			long lastAlloc = lastNote == null ? 0 : lastNote.lastAllocatedBytes;
+			
+			deltaCpu = deltaCpu.add(BigInteger.valueOf(newNote.lastCpuTime - lastCpu));
+			deltaUser = deltaUser.add(BigInteger.valueOf(newNote.lastUserTime - lastUser));
+			deltaAlloc = deltaAlloc.add(BigInteger.valueOf(newNote.lastAllocatedBytes - lastAlloc));
 			
 			if (lastNote != null) {
 
+			    if (filter != null && !filter.matcher(threadName).matches()) {
+			        continue;
+			    }
+			    
 				double cpuT = ((double)(newNote.lastCpuTime - lastNote.lastCpuTime)) / timeSplit;
 				double userT = ((double)(newNote.lastUserTime - lastNote.lastUserTime)) / timeSplit;
 				double allocRate = ((double)(newNote.lastAllocatedBytes - lastNote.lastAllocatedBytes)) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
@@ -184,9 +276,9 @@ public class MBeanCpuUsageReporter {
 			}
 			
 			double processT = ((double)(currentCpuTime - lastProcessCpuTime)) / timeSplit;
-			double cpuT = ((double)(totalCpu.subtract(lastCummulativeCpuTime).longValue())) / timeSplit;
-			double userT = ((double)(totalUser.subtract(lastCummulativeUserTime).longValue())) / timeSplit;
-			double allocRate = ((double)(totalAlloc.subtract(lastCummulativeAllocatedAmount).longValue())) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
+			double cpuT = ((double)(deltaCpu.longValue())) / timeSplit;
+			double userT = ((double)(deltaUser.longValue())) / timeSplit;
+			double allocRate = ((double)(deltaAlloc.longValue())) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
 
 			double youngGcT = ((double)currentYoungGcCpuTime - lastYougGcCpuTime) / timeSplit;
 			double oldGcT = ((double)currentOldGcCpuTime - lastOldGcCpuTime) / timeSplit;
@@ -207,12 +299,14 @@ public class MBeanCpuUsageReporter {
 		
 		lastTimestamp = currentTime;
 		notes = newNotes;
-		lastCummulativeCpuTime = totalCpu;
-		lastCummulativeUserTime = totalUser;
-		lastCummulativeAllocatedAmount = totalAlloc;
+		lastCummulativeCpuTime = lastCummulativeCpuTime.add(deltaCpu);
+		lastCummulativeUserTime = lastCummulativeUserTime.add(deltaUser);
+		lastCummulativeAllocatedAmount = lastCummulativeAllocatedAmount.add(deltaAlloc);
 		lastProcessCpuTime = currentCpuTime;
 		lastYougGcCpuTime = currentYoungGcCpuTime;
 		lastOldGcCpuTime = currentOldGcCpuTime;
+	
+		cleanDead();
 		
 		return sb.toString();
 	}
@@ -226,26 +320,8 @@ public class MBeanCpuUsageReporter {
 		}
 	}
 
-	private void dumpThreads() {
-		try {
-			ObjectName bean = THREADING_MBEAN;
-			CompositeData[] ti = (CompositeData[]) mserver.invoke(bean, "dumpAllThreads", new Object[]{Boolean.TRUE, Boolean.TRUE}, new String[]{"boolean", "boolean"});
-			threadDump.clear();
-			for(CompositeData t:ti) {
-				threadDump.put((Long) t.get("threadId"), t);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	private String getThreadName(long tid) {
-		try {
-			CompositeData info = threadDump.get(tid);
-			return (String) info.get("threadName");
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	    return threadDump.get(tid).name;
 	}
 
 	private Collection<Long> getAllThreadIds() {
@@ -253,38 +329,15 @@ public class MBeanCpuUsageReporter {
 	}
 
 	private long getThreadCpuTime(long tid) {
-		try {
-			ObjectName bean = THREADING_MBEAN;
-			long time = (Long) mserver.invoke(bean, "getThreadCpuTime", new Object[]{tid}, new String[]{"long"});
-			return time;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	    return threadDump.get(tid).lastCpuTime;
 	}
 
 	private long getThreadUserTime(long tid) {
-		try {
-			ObjectName bean = THREADING_MBEAN;
-			long time = (Long) mserver.invoke(bean, "getThreadUserTime", new Object[]{tid}, new String[]{"long"});
-			return time;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	    return threadDump.get(tid).lastUserTime;
 	}
 	
 	private long getThreadAllocatedBytes(long tid) {
-		if (threadAllocatedMemoryEnabled) {
-			try {
-				ObjectName bean = THREADING_MBEAN;
-				long bytes = (Long) mserver.invoke(bean, "getThreadAllocatedBytes", new Object[]{tid}, new String[]{"long"});
-				return bytes;
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		else {
-			return -1;
-		}
+	    return threadDump.get(tid).lastAllocatedBytes;
 	}
 
 	private long getProcessCpuTime() {
@@ -296,12 +349,24 @@ public class MBeanCpuUsageReporter {
 		}
 	}
 	
+	private static class ThreadTrac {
+	    
+	    private String name;
+	    private long lastCpuTime;
+	    private long lastUserTime;
+	    private long lastAllocatedBytes;
+	    @SuppressWarnings("unused")
+        private ThreadInfo lastThreadInfo;
+	    
+	    private boolean dead;
+	    
+	}
+	
 	private static class ThreadNote {
 		
 		private long lastCpuTime;
 		private long lastUserTime;
 		private long lastAllocatedBytes;
-		
 	}
 	
 	private static class ThreadLine {

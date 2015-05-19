@@ -37,6 +37,7 @@ import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceWriter;
 import org.gridkit.jvmtool.stacktrace.ThreadDumpSampler;
+import org.gridkit.jvmtool.stacktrace.ThreadMXBeanEx;
 import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 import com.beust.jcommander.Parameter;
@@ -109,7 +110,7 @@ public class StackCaptureCmd implements CmdRef {
 			
 			try {
 				MBeanServerConnection mserver = connInfo.getMServer();
-				ThreadMXBean bean = ThreadDumpSampler.connectThreadMXBean(mserver);
+				ThreadMXBean bean = ThreadMXBeanEx.BeanHelper.connectThreadMXBean(mserver);
 
 				sampler = new ThreadDumpSampler();
 				sampler.setThreadFilter(threadFilter);

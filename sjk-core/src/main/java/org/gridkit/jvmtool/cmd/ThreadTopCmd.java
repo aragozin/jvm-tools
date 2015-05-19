@@ -60,7 +60,7 @@ public class ThreadTopCmd implements CmdRef {
 		private long reportIntervalMS = TimeUnit.SECONDS.toMillis(10);
 
 		@Parameter(names = {"-si", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
-		private long samplerIntervalMS = 50;
+		private long samplerIntervalMS = 500;
 		
 		@Parameter(names = {"-n", "--top-number"}, description = "Number of threads to show")
 		private int topNumber = Integer.MAX_VALUE;
@@ -132,6 +132,7 @@ public class ThreadTopCmd implements CmdRef {
 				while(true) {
 					while(System.currentTimeMillis() < deadline) {
 						Thread.sleep(samplerIntervalMS);
+						tmon.probe();
 					}
 					deadline += reportIntervalMS;
 					System.out.println();

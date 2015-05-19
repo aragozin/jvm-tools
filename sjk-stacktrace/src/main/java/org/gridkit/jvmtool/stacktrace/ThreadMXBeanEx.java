@@ -1,5 +1,12 @@
 package org.gridkit.jvmtool.stacktrace;
 
+import java.lang.management.ThreadMXBean;
+
+import javax.management.JMX;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 /**
  * Additional methods available in modern JVMs.
  * 
@@ -12,5 +19,27 @@ public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
     public long[] getThreadUserTime(long[] ids);
 
     public long[] getThreadAllocatedBytes(long[] ids);
+    
+    public static class BeanHelper {
 
+        public static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
+        
+        private static ObjectName name(String name) {
+            try {
+                return new ObjectName(name);
+            } catch (MalformedObjectNameException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        public static ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
+            ThreadMXBean bean;
+            try {
+                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBeanEx.class);
+            } catch(Exception e) {
+                bean = JMX.newMXBeanProxy(mserver, THREADING_MBEAN, ThreadMXBean.class);
+            }
+            return bean;
+        }
+    }
 }

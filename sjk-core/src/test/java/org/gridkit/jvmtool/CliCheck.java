@@ -74,7 +74,7 @@ public class CliCheck {
 	@Test
 	public void ttop_self() {
 
-		exec("ttop", "-p", PID);
+		exec("ttop", "-p", PID, "-X");
 	}
 
 	@Test
