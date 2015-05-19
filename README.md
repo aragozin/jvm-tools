@@ -6,8 +6,8 @@ SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
 Direct links to prebuild binaries 
 [ ![Download](https://api.bintray.com/packages/aragozin/generic/sjk/images/download.svg) ](https://bintray.com/aragozin/generic/sjk/_latestVersion) are below. I would encourge you to build jars from sources, though.
-- [sjk-plus.jar - all commands](https://bintray.com/artifact/download/aragozin/generic/sjk/2014-09-06/sjk-plus.jar)
-- [sjk.jar - all commands without mxdump](https://bintray.com/artifact/download/aragozin/generic/sjk/2014-09-06/sjk.jar)
+- [sjk-plus.jar - all commands](https://bintray.com/artifact/download/aragozin/generic/sjk/sjk-plus-0.3.6.jar)
+- [sjk.jar - all commands without mxdump](https://bintray.com/artifact/download/aragozin/generic/sjk/sjk-0.3.6.jar)
 
 
 Starting sjk
