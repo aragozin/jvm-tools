@@ -134,7 +134,26 @@ public class StackDumpCopyCmd implements CmdRef {
 			    
 			    openWriter();
 			    
-			    StackTraceReader reader = StackTraceCodec.newReader(inputs.toArray(new String[0]));
+			    final StackTraceReader rawReader = StackTraceCodec.newReader(inputs.toArray(new String[0]));
+			    
+			    StackTraceReader reader = new StackTraceReader.StackTraceReaderDelegate() {
+
+                    @Override
+                    protected StackTraceReader getReader() {
+                        return rawReader;
+                    }
+
+                    @Override
+                    public boolean loadNext() throws IOException {
+                        try {
+                            return super.loadNext();
+                        }
+                        catch(IOException e) {
+                            System.err.println("Dump file read error: " + e.toString());
+                            return false;
+                        }
+                    }
+			    };
 			    
 			    if (!reader.isLoaded()) {
 			        reader.loadNext();

@@ -218,7 +218,25 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		}
 
 		StackTraceReader getUnclassifiedReader() throws IOException {
-		    return StackTraceCodec.newReader(files.toArray(new String[0]));
+		    final StackTraceReader reader = StackTraceCodec.newReader(files.toArray(new String[0]));
+		    return new StackTraceReader.StackTraceReaderDelegate() {
+                
+                @Override
+                protected StackTraceReader getReader() {
+                    return reader;
+                }
+
+                @Override
+                public boolean loadNext() throws IOException {
+                    try {
+                        return super.loadNext();
+                    }
+                    catch(IOException e) {
+                        System.err.println("Dump file read error: " + e.toString());
+                        return false;
+                    }
+                }
+            };
 		}
 
 		abstract class SsaCmd implements Runnable {
@@ -363,7 +381,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
 
             public String toString() {
-                return "--his";
+                return "--summary";
             }
         }
 	}	
