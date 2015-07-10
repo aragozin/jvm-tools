@@ -54,7 +54,7 @@ public class JmxConnectionInfo {
 	
 	public MBeanServerConnection getMServer() {
 		if (pid == null && sockAddr == null) {
-			SJK.failAndPrintUsage("JVM porcess is not specified");
+			SJK.failAndPrintUsage("JVM process is not specified");
 		}
 		
 		if (pid != null && sockAddr != null) {
