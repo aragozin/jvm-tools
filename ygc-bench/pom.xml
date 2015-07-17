@@ -23,7 +23,7 @@
     <parent>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>jvmtool-umbrella-pom</artifactId>
-      <version>0.3.7</version>
+      <version>0.3.8-SNAPSHOT</version>
       <relativePath>../pom.xml</relativePath>
     </parent>
     
