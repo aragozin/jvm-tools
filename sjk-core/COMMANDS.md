@@ -1,5 +1,15 @@
 Command of sjk-core module
 =========
+- [ttop](#ttop-command) - show thread CPU usage for JVM
+- [jps](#jps-command) - list JVM processes
+- [hh](#hh-command) - head histogram
+- [gc](#gc-command) - GC tracker 
+- [mx](#mx-command) - generic JMX invocation
+- [stcap](#stcap-command) - thread dump sampler
+- [ssa](#ssa-command) - thread dump file analyzer
+- [stcpy](#stcpy-command) - copy tool for "dense" thread dump files
+
+Use `java -jar sjk.jar --commands` for full list of command available.
 
 `ttop` command
 ----
@@ -87,16 +97,22 @@ List local JVM processes in greater details.
 
 `hh` command
 ----
-Extended version of `jmap -histo` command.
+Extended version of `jmap -histo` command. 
+
+*Warning:* Heap histogram requires stop the world pause and some options require full GC for target process.
 
     > java -jar sjk.jar --help hh
     Usage: hh [options]
       Options:
+           Default: false
             --dead
            Dead objects histogram
            Default: false
+            --dead-young
+           Histogram for sample of dead young objects
+           Default: false
             --help
-    
+
            Default: false
             --live
            Live objects histogram
@@ -104,9 +120,24 @@ Extended version of `jmap -histo` command.
         -p, --pid
            Process ID
            Default: 0
+        -d, --sample-depth
+           Used with --dead-young option. Specific time duration to collect young
+           population.
+           Default: 10000
         -n, --top-number
            Show only N top buckets
            Default: 2147483647
+        -X, --verbose
+           Enable detailed diagnostics
+           Default: false
+
+`--dead` option make two subsequent histograms (first for all objects then live only) and calculates difference.
+
+`--dead-young` options forces full GC then wait for specified period of time (default 10 seconds) then produce `--dead` histogram. 
+Idea is following: after full GC there are no garbage in heap. So `--dead` histogram is showing only objects recenctly allocated (young garbage).
+There are two problems with that aprouch though. Firts, finalizer may prevent some objects to be collected in firts full GC. 
+Second, if young GC is performed between full GC and `--dead` histogram samplig, garbage population can be skewed.
+Command tracks young GC counter and warns if youg GC was detected.
 
 `gc` command
 ----
@@ -182,34 +213,11 @@ Example:
      (A) ThreadAllocatedMemoryEnabled : boolean - WRITEABLE
      (A) ThreadAllocatedMemorySupported : boolean
      (A) ThreadCount : int
-     (A) CurrentThreadCpuTime : long
-     (A) CurrentThreadCpuTimeSupported : boolean
-     (A) ThreadContentionMonitoringEnabled : boolean - WRITEABLE
-     (A) DaemonThreadCount : int
-     (A) PeakThreadCount : int
-     (A) ObjectMonitorUsageSupported : boolean
-     (A) SynchronizerUsageSupported : boolean
-     (A) ThreadContentionMonitoringSupported : boolean
-     (A) ThreadCpuTimeEnabled : boolean - WRITEABLE
-     (A) AllThreadIds : long[]
-     (A) CurrentThreadUserTime : long
-     (A) TotalStartedThreadCount : long
-     (A) ThreadCpuTimeSupported : boolean
+     ...
      (O) getThreadAllocatedBytes(long p0) : long
      (O) getThreadAllocatedBytes(long[] p0) : long[]
      (O) getThreadCpuTime(long[] p0) : long[]
-     (O) getThreadCpuTime(long p0) : long
-     (O) getThreadUserTime(long[] p0) : long[]
-     (O) getThreadUserTime(long p0) : long
-     (O) getThreadInfo(long[] p0, int p1) : CompositeData[]
-     (O) getThreadInfo(long[] p0, boolean p1, boolean p2) : CompositeData[]
-     (O) getThreadInfo(long p0, int p1) : CompositeData
-     (O) getThreadInfo(long[] p0) : CompositeData[]
-     (O) getThreadInfo(long p0) : CompositeData
-     (O) dumpAllThreads(boolean p0, boolean p1) : CompositeData[]
-     (O) findDeadlockedThreads() : long[]
-     (O) findMonitorDeadlockedThreads() : long[]
-     (O) resetPeakThreadCount() : void
+     ...
 
 #### Retrive MBean attribute `-mg`
 
@@ -259,49 +267,104 @@ stcap commands dumps thread from target process with configure period (or non-st
 
     > java -jar sjk.jar mx -p 6344 -mg -b java.lang:type=Memory -f HeapMemoryUsage
 
- 	[Stack Capture] Dumps stack traces to file for further processing
-	Usage: stcap [options]
-	  Options:
-		-e, --empty
-		   Retain threads without stack trace in dump (ignored by default)
-		   Default: false
-		-f, --filter
-		   Wild card expression to filter thread by name
-		   Default: .*
-			--help
-		   
-		   Default: false
-		-l, --limit
-		   Target number of traces to collect, once reached command will terminate
-		   (0 - unlimited)
-		   Default: 0
-		-m, --match-frame
-		   Frame filter, only trace conatining this string would be included to dump
-	  * -o, --output
-		   Name of file to write thread dump
-			--password
-		   Password for JMX authentication (only for socket connection)
-		-p, --pid
-		   JVM process PID
-		-r, --rotate
-		   If specified output file would be rotate every N traces (0 - do not
-		   rotate)
-		   Default: 0
-		-i, --sampler-interval
-		   Interval between polling MBeans
-		   Default: 0
-		-s, --socket
-		   Socket address for JMX port (host:port)
-		-t, --timeout
-		   Time untill command will terminate even if not enough traces collected
-		   Default: 30000
-			--user
-		   User for JMX authentication (only for socket connection)
-		-X, --verbose
-		   Enable detailed diagnostics
-		   Default: false
+    [Stack Capture] Dumps stack traces to file for further processing
+    Usage: stcap [options]
+      Options:
+        -e, --empty
+           Retain threads without stack trace in dump (ignored by default)
+           Default: false
+        -f, --filter
+           Wild card expression to filter thread by name
+           Default: .*
+            --help
+           
+           Default: false
+        -l, --limit
+           Target number of traces to collect, once reached command will terminate
+           (0 - unlimited)
+           Default: 0
+        -m, --match-frame
+           Frame filter, only trace conatining this string would be included to dump
+      * -o, --output
+           Name of file to write thread dump
+            --password
+           Password for JMX authentication (only for socket connection)
+        -p, --pid
+           JVM process PID
+        -r, --rotate
+           If specified output file would be rotate every N traces (0 - do not
+           rotate)
+           Default: 0
+        -i, --sampler-interval
+           Interval between polling MBeans
+           Default: 0
+        -s, --socket
+           Socket address for JMX port (host:port)
+        -t, --timeout
+           Time untill command will terminate even if not enough traces collected
+           Default: 30000
+            --user
+           User for JMX authentication (only for socket connection)
+        -X, --verbose
+           Enable detailed diagnostics
+           Default: false
 
 `ssa` command
 ----
-ssa commands used to analyze thread dump produced by stcap command
+ssa commands used to analyze thread dump produced by stcap command.
 
+    > java -jar sjk.jar ssa --help
+    
+    [Stack Sample Analyzer] Analyzing stack trace dumps
+    Usage: ssa [options]
+      Options:
+        -b, --buckets
+           Restrict analysis to specific class
+        -c, --classifier
+           Path to file with stack trace classification definition
+      * -f, --file
+           Path to stack dump file
+            --help
+
+           Default: false
+            --histo
+           Print frame histogram
+           Default: false
+            --print
+           Print traces from file
+           Default: false
+        -sf, --simple-filter
+           Process only traces containing this string
+            --summary
+           Print summary for provided classification
+           Default: false
+        -X, --verbose
+           Enable detailed diagnostics
+           Default: false
+
+Following reports are available:
+
+`--print` print stack trace in text format.
+
+`--histo` produces frame histogram from dump file. Below is example of histogram.
+
+	Trc N     Frm N Term N     Frame                                                                                                                 
+	21727 57% 21727 0      0%  java.lang.Thread.run(Thread.java:662)                                                                                 
+	16002 42% 16002 16002  42% java.lang.Object.wait(Native Method)                                                                                  
+	8923  23% 8923  8923   23% java.net.SocketInputStream.socketRead0(Native Method)                                                                 
+	8923  23% 8923  0      0%  java.net.SocketInputStream.read(SocketInputStream.java:129)                                                           
+	6402  16% 9603  0      0%  java.lang.reflect.Method.invoke(Method.java:597)                                                                      
+	6402  16% 9603  0      0%  sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)                                 
+	6399  16% 6399  0      0%  java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:118)                                                          
+	5722  15% 5722  0      0%  java.io.BufferedInputStream.fill(BufferedInputStream.java:218)                                                        
+	5722  15% 5722  0      0%  java.io.BufferedInputStream.read(BufferedInputStream.java:237)                                                        
+
+- Trc N - number of traces containing frame (percentage from total trace count)
+- Frm N - number of occurrences for this frame in all traces (same frame may be on stack for multiple times)
+- Term N - number of traces terminating with that frame
+
+`--summary` calculate hit count for each category in provided classification file.
+
+`stcpy` command
+----
+This command allow manipulation of thread dump file content. E.g. lumping multiple files to one or filtering content.
