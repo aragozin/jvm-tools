@@ -42,19 +42,29 @@ public class StackHisto {
     
     public void feed(StackTraceElement[] trace) {
         ++traceCount;
+        if (trace.length == 0) {
+            return;
+        }
         Set<StackTraceElement> seen = new HashSet<StackTraceElement>();
         for(StackTraceElement e: trace) {
-            SiteInfo si = histo.get(e);
-            if (si == null) {
-                si = new SiteInfo();
-                si.site = e;
-                histo.put(e, si);
-            }
+            SiteInfo si = getSiteInfo(e);
             si.hitCount += 1;
             if (seen.add(si.site)) {
                 si.occurences += 1;
             }
         }
+        StackTraceElement last = trace[0];
+        getSiteInfo(last).terminalCount++;
+    }
+
+    protected SiteInfo getSiteInfo(StackTraceElement e) {
+        SiteInfo si = histo.get(e);
+        if (si == null) {
+            si = new SiteInfo();
+            si.site = e;
+            histo.put(e, si);
+        }
+        return si;
     }
     
     public String formatHisto() {
@@ -63,13 +73,17 @@ public class StackHisto {
 
     public String formatHisto(int limit) {
         TextTable tt = new TextTable();
-        tt.addRow("Trc N ", "", "Frm N", " Frame");
+        tt.addRow("Trc N ", "", " Frm N", " Term N ", "", " Frame");
         List<SiteInfo> h = new ArrayList<SiteInfo>(histo.values());
         Collections.sort(h, BY_OCCURENCE);
         int n = 0;
         for(SiteInfo si: h) {            
-            int pc = (100 * si.getOccurences()) / traceCount;
-            tt.addRow("" + si.getOccurences(), " " + pc + "%", " " + si.getHitCount(), " " + si.getSite());
+            String traceN = si.getOccurences() + " ";
+            String tracePtc = ((100 * si.getOccurences()) / traceCount) + "%";
+            String frameN = " " + si.getHitCount();
+            String termN = " " + si.getTerminalCount() + " ";
+            String termPtc = ((100 * si.getTerminalCount()) / traceCount) + "%";
+            tt.addRow(traceN, tracePtc, frameN, termN, termPtc, " " + si.getSite());
             if (limit <= ++n) {
                 break;
             }
@@ -82,6 +96,7 @@ public class StackHisto {
         StackTraceElement site;
         int hitCount;
         int occurences;
+        int terminalCount;
         
         public StackTraceElement getSite() {
             return site;
@@ -89,6 +104,10 @@ public class StackHisto {
 
         public int getHitCount() {
             return hitCount;
+        }
+        
+        public int getTerminalCount() {
+            return terminalCount;
         }
 
         public int getOccurences() {

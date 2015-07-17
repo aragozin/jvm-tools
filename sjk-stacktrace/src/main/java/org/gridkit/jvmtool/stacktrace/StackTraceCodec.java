@@ -97,7 +97,7 @@ public class StackTraceCodec {
         };
     }
 
-    abstract static class ChainedStackTraceReader implements StackTraceReader {
+    public abstract static class ChainedStackTraceReader implements StackTraceReader {
 
         private StackTraceReader current;
 
@@ -110,7 +110,6 @@ public class StackTraceCodec {
             }
             return current != null && current.isLoaded();
         }
-
 
         @Override
         public long getThreadId() {

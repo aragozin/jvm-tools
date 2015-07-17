@@ -110,6 +110,11 @@ public class CliCheck {
 	}
 
 	@Test
+	public void hh_dead_young_N_self() {
+	    exec("hh", "-p", PID, "--dead-young", "-n", "20", "-d", "1s");
+	}
+	
+	@Test
 	public void mx_info() {
 		exec("mx", "-p", PID, "--info", "--bean", "*:type=HotSpotDiagnostic");
 	}
