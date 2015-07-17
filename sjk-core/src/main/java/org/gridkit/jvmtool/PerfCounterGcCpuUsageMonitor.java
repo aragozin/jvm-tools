@@ -29,6 +29,9 @@ public class PerfCounterGcCpuUsageMonitor implements GcCpuUsageMonitor {
         gc1 = (TickCounter) jd.getAllCounters().get("sun.gc.collector.1.time");
     }
     
+    public boolean isAvailable() {
+        return gc0 != null && gc1 != null;
+    }
     
     @Override
     public long getYoungGcCpu() {

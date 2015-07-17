@@ -60,6 +60,9 @@ public class MBeanCpuUsageReporter {
 	private long lastProcessCpuTime;
 	private long lastYougGcCpuTime;
 	private long lastOldGcCpuTime;
+	private long lastSafePointCount;
+	private long lastSafePointTime;
+	private long lastSafePointSyncTime;
 	private BigInteger lastCummulativeCpuTime = BigInteger.valueOf(0);
 	private BigInteger lastCummulativeUserTime  = BigInteger.valueOf(0);
 	private BigInteger lastCummulativeAllocatedAmount = BigInteger.valueOf(0);
@@ -77,6 +80,7 @@ public class MBeanCpuUsageReporter {
 	private boolean threadAllocatedMemoryEnabled;
 	
 	private GcCpuUsageMonitor gcMon;
+	private SafePointMonitor spMon;
 	
 	public MBeanCpuUsageReporter(MBeanServerConnection mserver) {
 		this.mserver = mserver;
@@ -91,6 +95,10 @@ public class MBeanCpuUsageReporter {
 	
 	public void setGcCpuUsageMonitor(GcCpuUsageMonitor gcMon) {
 	    this.gcMon = gcMon;
+	}
+
+	public void setSafePointMonitor(SafePointMonitor spMon) {
+	    this.spMon = spMon;
 	}
 	
 	private boolean getThreadingMBeanCapability(String attrName) {
@@ -222,6 +230,9 @@ public class MBeanCpuUsageReporter {
 		long currentCpuTime = getProcessCpuTime();
 		long currentYoungGcCpuTime = gcMon == null ? 0 : gcMon.getYoungGcCpu();
 		long currentOldGcCpuTime = gcMon == null ? 0 : gcMon.getOldGcCpu();
+		long currentSafePointCount = spMon == null ? 0 : spMon.getSafePointCount();
+		long currentSafePointTime = spMon == null ? 0 : spMon.getSafePointTime();
+		long currentSafePointSyncTime = spMon == null ? 0 : spMon.getSafePointSyncTime();
 		
 		Map<Long,ThreadNote> newNotes = new HashMap<Long, ThreadNote>();
 		
@@ -287,9 +298,17 @@ public class MBeanCpuUsageReporter {
 			sb.append(String.format(" Process summary \n  process cpu=%.2f%%\n  application cpu=%.2f%% (user=%.2f%% sys=%.2f%%)\n  other: cpu=%.2f%% \n", 100 * processT, 100 * cpuT, 100 * userT, 100 * (cpuT - userT), 100 * (processT - cpuT)));
 			if (currentYoungGcCpuTime > 0) {
 			    sb.append(String.format("  GC cpu=%.2f%% (young=%.2f%%, old=%.2f%%)\n", 100 * (youngGcT + oldGcT), 100 * youngGcT, 100 * oldGcT));
-			}
+			}			
 			if (threadAllocatedMemoryEnabled) {
 				sb.append(String.format("  heap allocation rate %sb/s\n", Formats.toMemorySize((long) allocRate)));
+			}
+			if (currentSafePointCount > 0) {
+			    double spRate = (TimeUnit.SECONDS.toNanos(1) * (double)(currentSafePointCount - lastSafePointCount)) / timeSplit;
+			    double spCpuUsage = ((double)(currentSafePointTime - lastSafePointTime)) / timeSplit;
+			    double spSyncCpuUsage = ((double)(currentSafePointSyncTime - lastSafePointSyncTime)) / timeSplit;
+			    double spAvg = ((double)(currentSafePointTime + currentSafePointSyncTime - lastSafePointTime - lastSafePointSyncTime)) / (currentSafePointCount - lastSafePointCount) / TimeUnit.MILLISECONDS.toNanos(1);
+			    sb.append(String.format("  safe point rate: %.1f (events/s) avg. safe point pause: %.2fms\n", spRate, spAvg));			    
+			    sb.append(String.format("  safe point sync time: %.2f%% processing time: %.2f%% (wallclock time)\n", 100 * spSyncCpuUsage, 100 * spCpuUsage));			    
 			}
 			for(ThreadLine line: table) {
 				sb.append(format(line)).append('\n');
@@ -305,6 +324,9 @@ public class MBeanCpuUsageReporter {
 		lastProcessCpuTime = currentCpuTime;
 		lastYougGcCpuTime = currentYoungGcCpuTime;
 		lastOldGcCpuTime = currentOldGcCpuTime;
+		lastSafePointCount = currentSafePointCount;
+		lastSafePointTime = currentSafePointTime;
+		lastSafePointSyncTime = currentSafePointSyncTime;
 	
 		cleanDead();
 		
