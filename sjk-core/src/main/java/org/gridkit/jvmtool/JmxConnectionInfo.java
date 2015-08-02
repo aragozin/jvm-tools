@@ -25,6 +25,7 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.lab.jvm.attach.AttachManager;
 
 import com.beust.jcommander.Parameter;
@@ -54,17 +55,17 @@ public class JmxConnectionInfo {
 	
 	public MBeanServerConnection getMServer() {
 		if (pid == null && sockAddr == null) {
-			SJK.failAndPrintUsage("JVM process is not specified");
+			CommandLauncher.failAndPrintUsage("JVM process is not specified");
 		}
 		
 		if (pid != null && sockAddr != null) {
-			SJK.failAndPrintUsage("You can specify eigther PID or JMX socket connection");
+			CommandLauncher.failAndPrintUsage("You can specify eigther PID or JMX socket connection");
 		}
 
 		if (pid != null) {
 			MBeanServerConnection mserver = AttachManager.getDetails(pid).getMBeans();
 			if (mserver == null) {
-			    SJK.fail("Failed to access MBean server: " + pid);
+			    CommandLauncher.fail("Failed to access MBean server: " + pid);
 			}
             return mserver;
 		}
@@ -74,13 +75,13 @@ public class JmxConnectionInfo {
 			Map<String, Object> env = null;
 			if (user != null || password != null) {
 				if (user == null || password == null) {
-					SJK.failAndPrintUsage("Both user and password required for authentication");
+					CommandLauncher.failAndPrintUsage("Both user and password required for authentication");
 				}
 				env = Collections.singletonMap(JMXConnector.CREDENTIALS, (Object)new String[]{user, password});
 			}
 			MBeanServerConnection mserver = connectJmx(host, port, env);
             if (mserver == null) {
-                SJK.fail("Failed to access MBean server: " + host + ":" + port);
+                CommandLauncher.fail("Failed to access MBean server: " + host + ":" + port);
             }
             return mserver;
 		}
@@ -99,9 +100,9 @@ public class JmxConnectionInfo {
 			MBeanServerConnection mserver = conn.getMBeanServerConnection();
 			return mserver;
 		} catch (MalformedURLException e) {
-			SJK.fail("JMX Connection failed: " + e.toString(), e);
+			CommandLauncher.fail("JMX Connection failed: " + e.toString(), e);
 		} catch (IOException e) {
-			SJK.fail("JMX Connection failed: " + e.toString(), e);
+			CommandLauncher.fail("JMX Connection failed: " + e.toString(), e);
 		}
 		return null;
 	}
@@ -109,7 +110,7 @@ public class JmxConnectionInfo {
 	private String host(String sockAddr) {
 		int c = sockAddr.indexOf(':');
 		if (c <= 0) {
-			SJK.fail("Invalid socket address: " + sockAddr);
+			CommandLauncher.fail("Invalid socket address: " + sockAddr);
 		}
 		return sockAddr.substring(0, c);
 	}
@@ -117,12 +118,12 @@ public class JmxConnectionInfo {
 	private int port(String sockAddr) {
 		int c = sockAddr.indexOf(':');
 		if (c <= 0) {
-			SJK.fail("Invalid socket address: " + sockAddr);
+			CommandLauncher.fail("Invalid socket address: " + sockAddr);
 		}
 		try {
 			return Integer.valueOf(sockAddr.substring(c + 1));
 		} catch (NumberFormatException e) {
-			SJK.fail("Invalid socket address: " + sockAddr);
+			CommandLauncher.fail("Invalid socket address: " + sockAddr);
 			return 0;
 		}
 	}

@@ -17,9 +17,9 @@ package org.gridkit.jvmtool.cmd;
 
 import java.util.concurrent.TimeUnit;
 
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
-import org.gridkit.jvmtool.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.lab.jvm.attach.HeapHisto;
 import org.gridkit.lab.jvm.perfdata.JStatData;
 import org.gridkit.lab.jvm.perfdata.JStatData.LongCounter;
@@ -41,7 +41,7 @@ public class HeapHistoCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new Histo(host);
 	}
 	
@@ -49,7 +49,7 @@ public class HeapHistoCmd implements CmdRef {
 	public static class Histo implements Runnable {
 
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names = {"-p", "--pid"}, description = "Process ID")
 		private int pid;
@@ -69,7 +69,7 @@ public class HeapHistoCmd implements CmdRef {
 		@Parameter(names = {"-n", "--top-number"}, description = "Show only N top buckets")
 		private int n = Integer.MAX_VALUE;
 
-		public Histo(SJK host) {
+		public Histo(CommandLauncher host) {
 			this.host = host;
 		}
 
@@ -77,7 +77,7 @@ public class HeapHistoCmd implements CmdRef {
 		public void run() {
 			try {
 				if (live && dead || live && deadYoung || dead && deadYoung) {
-					SJK.failAndPrintUsage("--live, --dead and --deadYoung are mutually exclusive");
+					CommandLauncher.failAndPrintUsage("--live, --dead and --deadYoung are mutually exclusive");
 				}
 				
 				HeapHisto histo;
@@ -99,7 +99,7 @@ public class HeapHistoCmd implements CmdRef {
 				System.out.println(histo.print(n));
 
 			} catch (Exception e) {
-				SJK.fail(e.toString(), e);
+				CommandLauncher.fail(e.toString(), e);
 			}
 		}
 

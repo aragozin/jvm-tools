@@ -36,8 +36,8 @@ import javax.management.openmbean.TabularData;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.gridkit.jvmtool.JmxConnectionInfo;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -53,14 +53,14 @@ public class MxDumpCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new MxDump(host);
 	}
 	
 	public static class MxDump implements Runnable {
 		
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names = {"-q", "--query"}, description = "Query to filter MBeans")
 		private String query;
@@ -68,7 +68,7 @@ public class MxDumpCmd implements CmdRef {
 		@ParametersDelegate
 		private JmxConnectionInfo conn = new JmxConnectionInfo();
 
-		public MxDump(SJK host) {
+		public MxDump(CommandLauncher host) {
 			super();
 			this.host = host;
 		}
@@ -92,7 +92,7 @@ public class MxDumpCmd implements CmdRef {
 				System.out.println();
 				System.out.flush();
 			} catch (Exception e) {
-				SJK.fail(e.toString());
+				CommandLauncher.fail(e.toString());
 			}			
 		}
 		

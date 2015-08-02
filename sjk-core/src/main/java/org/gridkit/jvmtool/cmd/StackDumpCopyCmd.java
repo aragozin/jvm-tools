@@ -28,8 +28,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gridkit.jvmtool.GlobHelper;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.jvmtool.stacktrace.ReaderProxy;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameArray;
@@ -56,7 +56,7 @@ public class StackDumpCopyCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new StCpy(host);
 	}
 
@@ -64,7 +64,7 @@ public class StackDumpCopyCmd implements CmdRef {
 	public static class StCpy implements Runnable {
 
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
 		private List<String> inputFiles = new ArrayList<String>();
@@ -93,7 +93,7 @@ public class StackDumpCopyCmd implements CmdRef {
         private List<MaskRule> masking = new ArrayList<MaskRule>();
         private Random rnd = new Random(1);
 		
-		public StCpy(SJK host) {
+		public StCpy(CommandLauncher host) {
 			this.host = host;
 		}
 		
@@ -105,7 +105,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    for(String rule: maskingRules) {
 			        String[] parts = rule.split("[:]");
 			        if (parts.length != 2) {
-			            SJK.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
+			            CommandLauncher.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
 			        }
 			        masking.add(new MaskRule(parts[0], parts[1]));
 			    }
@@ -129,7 +129,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    System.out.println();
 			    
 			    if (inputs.isEmpty()) {
-			        SJK.fail("Input file list is empty");
+			        CommandLauncher.fail("Input file list is empty");
 			    }
 			    
 			    openWriter();
@@ -179,7 +179,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    writer.close();
 				
 			} catch (Exception e) {
-				SJK.fail("Unexpected error: " + e.toString(), e);
+				CommandLauncher.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 

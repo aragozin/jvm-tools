@@ -19,8 +19,8 @@ import javax.management.MBeanServerConnection;
 
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.MBeanGCMonitor;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
@@ -38,7 +38,7 @@ public class GcRepCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new GcRep(host);
 	}
 	
@@ -46,12 +46,12 @@ public class GcRepCmd implements CmdRef {
 	public static class GcRep implements Runnable {
 
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@ParametersDelegate
 		private JmxConnectionInfo conn = new JmxConnectionInfo();
 
-		public GcRep(SJK host) {
+		public GcRep(CommandLauncher host) {
 			this.host = host;
 		}
 
@@ -98,7 +98,7 @@ public class GcRepCmd implements CmdRef {
 					}
 				}
 			} catch (Exception e) {
-				SJK.fail(e.toString());
+				CommandLauncher.fail(e.toString());
 			}			
 		}
 	}

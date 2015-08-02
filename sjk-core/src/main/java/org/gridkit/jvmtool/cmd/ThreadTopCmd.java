@@ -26,9 +26,9 @@ import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.MBeanCpuUsageReporter;
 import org.gridkit.jvmtool.PerfCounterGcCpuUsageMonitor;
 import org.gridkit.jvmtool.PerfCounterSafePointMonitor;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
-import org.gridkit.jvmtool.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -47,7 +47,7 @@ public class ThreadTopCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new TTop(host);
 	}
 
@@ -55,7 +55,7 @@ public class ThreadTopCmd implements CmdRef {
 	public static class TTop implements Runnable {
 
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names = {"-ri", "--report-interval"}, converter = TimeIntervalConverter.class, description = "Interval between CPU usage reports")
 		private long reportIntervalMS = TimeUnit.SECONDS.toMillis(10);
@@ -75,7 +75,7 @@ public class ThreadTopCmd implements CmdRef {
 		@ParametersDelegate
 		private JmxConnectionInfo connInfo = new JmxConnectionInfo();
 		
-		public TTop(SJK host) {
+		public TTop(CommandLauncher host) {
 			this.host = host;
 		}
 
@@ -128,7 +128,7 @@ public class ThreadTopCmd implements CmdRef {
 							tmon.sortByThreadName();
 						}
 						else {
-							SJK.failAndPrintUsage("Invalid order option '" + tag + "'");
+							CommandLauncher.failAndPrintUsage("Invalid order option '" + tag + "'");
 						}
 					}
 				}
@@ -150,7 +150,7 @@ public class ThreadTopCmd implements CmdRef {
 					}
 				}
 			} catch (Exception e) {
-				SJK.fail("Unexpected error: " + e.toString(), e);
+				CommandLauncher.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 	}
