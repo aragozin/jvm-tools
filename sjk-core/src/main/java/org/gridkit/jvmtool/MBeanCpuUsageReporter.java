@@ -303,12 +303,17 @@ public class MBeanCpuUsageReporter {
 				sb.append(String.format("  heap allocation rate %sb/s\n", Formats.toMemorySize((long) allocRate)));
 			}
 			if (currentSafePointCount > 0) {
-			    double spRate = (TimeUnit.SECONDS.toNanos(1) * (double)(currentSafePointCount - lastSafePointCount)) / timeSplit;
-			    double spCpuUsage = ((double)(currentSafePointTime - lastSafePointTime)) / timeSplit;
-			    double spSyncCpuUsage = ((double)(currentSafePointSyncTime - lastSafePointSyncTime)) / timeSplit;
-			    double spAvg = ((double)(currentSafePointTime + currentSafePointSyncTime - lastSafePointTime - lastSafePointSyncTime)) / (currentSafePointCount - lastSafePointCount) / TimeUnit.MILLISECONDS.toNanos(1);
-			    sb.append(String.format("  safe point rate: %.1f (events/s) avg. safe point pause: %.2fms\n", spRate, spAvg));			    
-			    sb.append(String.format("  safe point sync time: %.2f%% processing time: %.2f%% (wallclock time)\n", 100 * spSyncCpuUsage, 100 * spCpuUsage));			    
+			    if (currentSafePointCount == lastSafePointCount) {
+			        sb.append(String.format("  no safe points"));			    
+			    }
+			    else {
+    			    double spRate = (TimeUnit.SECONDS.toNanos(1) * (double)(currentSafePointCount - lastSafePointCount)) / timeSplit;
+    			    double spCpuUsage = ((double)(currentSafePointTime - lastSafePointTime)) / timeSplit;
+    			    double spSyncCpuUsage = ((double)(currentSafePointSyncTime - lastSafePointSyncTime)) / timeSplit;
+    			    double spAvg = ((double)(currentSafePointTime + currentSafePointSyncTime - lastSafePointTime - lastSafePointSyncTime)) / (currentSafePointCount - lastSafePointCount) / TimeUnit.MILLISECONDS.toNanos(1);
+    			    sb.append(String.format("  safe point rate: %.1f (events/s) avg. safe point pause: %.2fms\n", spRate, spAvg));			    
+    			    sb.append(String.format("  safe point sync time: %.2f%% processing time: %.2f%% (wallclock time)\n", 100 * spSyncCpuUsage, 100 * spCpuUsage));
+			    }
 			}
 			for(ThreadLine line: table) {
 				sb.append(format(line)).append('\n');
