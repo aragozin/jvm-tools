@@ -30,9 +30,9 @@ import javax.management.MBeanServerConnection;
 
 import org.gridkit.jvmtool.GlobHelper;
 import org.gridkit.jvmtool.JmxConnectionInfo;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
-import org.gridkit.jvmtool.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.TimeIntervalConverter;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceWriter;
@@ -57,7 +57,7 @@ public class StackCaptureCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new StCap(host);
 	}
 
@@ -65,7 +65,7 @@ public class StackCaptureCmd implements CmdRef {
 	public static class StCap implements Runnable {
 
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names = {"-i", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
 		private long samplerIntervalMS = 0;
@@ -101,7 +101,7 @@ public class StackCaptureCmd implements CmdRef {
 
         private StackTraceWriter writer;
 		
-		public StCap(SJK host) {
+		public StCap(CommandLauncher host) {
 			this.host = host;
 		}
 		
@@ -149,7 +149,7 @@ public class StackCaptureCmd implements CmdRef {
 				System.out.println("Trace dumped: " + traceCounter);
 				
 			} catch (Exception e) {
-				SJK.fail("Unexpected error: " + e.toString(), e);
+				CommandLauncher.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 

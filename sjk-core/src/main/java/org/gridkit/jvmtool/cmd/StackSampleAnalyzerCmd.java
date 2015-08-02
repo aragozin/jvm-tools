@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gridkit.jvmtool.Cascade;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
 import org.gridkit.jvmtool.StackHisto;
 import org.gridkit.jvmtool.StackTraceClassifier;
 import org.gridkit.jvmtool.StackTraceClassifier.Config;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.util.formating.Formats;
@@ -42,7 +42,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new SSA(host);
 	}
 
@@ -50,7 +50,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 	public static class SSA implements Runnable {
 		
 		@ParametersDelegate
-		private SJK host;
+		private CommandLauncher host;
 		
 		@Parameter(names={"-f", "--file"}, required = true, variableArity=true, description="Path to stack dump file")
 		private List<String> files;
@@ -79,7 +79,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		StackTraceClassifier buckets;
 
 
-		public SSA(SJK host) {
+		public SSA(CommandLauncher host) {
 			this.host = host;
 		}
 
@@ -93,7 +93,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				    }
 				}
 				if (action.isEmpty() || action.size() > 1) {
-					SJK.failAndPrintUsage("You should choose one of " + allCommands);
+					CommandLauncher.failAndPrintUsage("You should choose one of " + allCommands);
 				}
 				if (classifier != null) {
 				    Config cfg = new Config();
@@ -101,11 +101,11 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				    buckets = cfg.create();
 				}
 				if (classifier == null  && bucket != null) {
-				    SJK.failAndPrintUsage("--bucket option requires --classifer");
+				    CommandLauncher.failAndPrintUsage("--bucket option requires --classifer");
 				}
 				action.get(0).run();
 			} catch (Exception e) {
-				SJK.fail(e.toString(), e);
+				CommandLauncher.fail(e.toString(), e);
 			}
 		}
 
@@ -160,10 +160,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		    }
 		    else {
 		        if (simpleFilter != null) {
-		            SJK.fail("Simple filter cannot be used with classification");
+		            CommandLauncher.fail("Simple filter cannot be used with classification");
 		        }		        
 		        if (bucket != null && !buckets.getClasses().contains(bucket)) {
-		            SJK.fail("Bucket [" + bucket + "] is not defined");
+		            CommandLauncher.fail("Bucket [" + bucket + "] is not defined");
 		        }
 		        final StackTraceReader unfiltered = getUnclassifiedReader();
 		        return new StackTraceReader.StackTraceReaderDelegate() {
@@ -286,7 +286,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			        }
 				    
 				} catch (Exception e) {
-					SJK.fail(e.toString(), e);
+					CommandLauncher.fail(e.toString(), e);
 				}
 			}
             
@@ -327,7 +327,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
                     
                 } catch (Exception e) {
-                    SJK.fail(e.toString(), e);
+                    CommandLauncher.fail(e.toString(), e);
                 }
             }
             
@@ -351,10 +351,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 try {
 
                     if (classifier == null) {
-                        SJK.failAndPrintUsage("Classification is required");
+                        CommandLauncher.failAndPrintUsage("Classification is required");
                     }
                     if (bucket != null) {
-                        SJK.failAndPrintUsage("--summary cannot be used with --bucket option");
+                        CommandLauncher.failAndPrintUsage("--summary cannot be used with --bucket option");
                     }
                     List<String> bucketNames = new ArrayList<String>(buckets.getClasses());
                     long[] counters = new long[bucketNames.size()];
@@ -376,7 +376,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
 
                 } catch (Exception e) {
-                    SJK.fail(e.toString(), e);
+                    CommandLauncher.fail(e.toString(), e);
                 }
             }
 

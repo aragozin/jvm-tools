@@ -19,8 +19,8 @@ import java.util.List;
 
 import org.gridkit.jvmtool.JvmProcessFilter;
 import org.gridkit.jvmtool.JvmProcessPrinter;
-import org.gridkit.jvmtool.SJK;
-import org.gridkit.jvmtool.SJK.CmdRef;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.lab.jvm.attach.AttachManager;
 import org.gridkit.lab.jvm.attach.JavaProcessId;
 
@@ -40,7 +40,7 @@ public class ProcListCmd implements CmdRef {
 	}
 
 	@Override
-	public Runnable newCommand(SJK host) {
+	public Runnable newCommand(CommandLauncher host) {
 		return new JPS(host);
 	}
 	
@@ -48,7 +48,7 @@ public class ProcListCmd implements CmdRef {
 	public static class JPS implements Runnable {
 
 		@ParametersDelegate
-		private final SJK host;
+		private final CommandLauncher host;
 
 		@ParametersDelegate
 		private JvmProcessFilter filter = new JvmProcessFilter();
@@ -56,7 +56,7 @@ public class ProcListCmd implements CmdRef {
 		@ParametersDelegate
 		private JvmProcessPrinter printer = new JvmProcessPrinter();
 		
-		public JPS(SJK host) {
+		public JPS(CommandLauncher host) {
 			this.host = host;
 		}
 

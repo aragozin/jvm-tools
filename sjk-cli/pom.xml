@@ -2,7 +2,7 @@
 
 <!--
 
-    Copyright 2012 Alexey Ragozin
+    Copyright 2015 Alexey Ragozin
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,36 +27,20 @@
       <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>sjk-core</artifactId>
+    <artifactId>sjk-cli</artifactId>
     <name>${project.groupId}::${project.artifactId}</name>
-    <description>Core classes for Swiss Java Knife tool</description>
+    <description>Command line parsing stuff</description>
    
     <dependencies>
         <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-cli</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-stacktrace</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.lab</groupId>
-            <artifactId>jvm-attach-api</artifactId>
-            <version>1.2</version>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.30</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.carrotsearch</groupId>
-            <artifactId>junit-benchmarks</artifactId>
-            <version>0.7.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

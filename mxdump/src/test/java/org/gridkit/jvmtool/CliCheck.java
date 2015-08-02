@@ -19,6 +19,7 @@ import java.lang.management.ManagementFactory;
 
 import junit.framework.Assert;
 
+import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.junit.Test;
 
 /**
@@ -45,7 +46,7 @@ public class CliCheck {
 	}
 
 	private void exec(String... cmd) {
-		SJK sjk = new SJK();
+		CommandLauncher sjk = new CommandLauncher();
 		sjk.suppressSystemExit();
 		StringBuilder sb = new StringBuilder();
 		sb.append("SJK");
