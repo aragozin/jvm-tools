@@ -1,6 +1,10 @@
 Next
 ----
+
+0.3.8 - 2015 Sep 10
+----
 - Added safe point information for [ttop] command.
+- Fixed NPE in heap cluster analyzer.
 
 0.3.7 - 2015 July 17
 ----
