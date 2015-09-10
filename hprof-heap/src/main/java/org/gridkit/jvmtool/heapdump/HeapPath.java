@@ -288,7 +288,7 @@ class HeapPath {
                 Iterator<Move> it = step.track(i.instance);
                 while(it.hasNext()) {
                     Move sub = it.next();
-                    if (sub != null) {
+                    if (sub.instance != null) {
                         next.add(new Move(i.pathSpec + sub.pathSpec, sub.instance));
                     }
                 }
@@ -301,7 +301,7 @@ class HeapPath {
             if (active.isEmpty()) {
                 return active;
             }
-    }
+        }
 
         return active;
     }

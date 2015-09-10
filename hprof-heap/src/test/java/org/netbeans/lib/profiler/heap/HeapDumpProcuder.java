@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gridkit.lab.jvm.attach.HeapDumper;
+import org.junit.Test;
 
 public class HeapDumpProcuder {
 
@@ -41,10 +42,22 @@ public class HeapDumpProcuder {
         }
         return file;
     }
+    
+    // Called manually from IDE to clean cached dump
+    @Test
+    public void cleanDump() {
+        new File(HEAP_DUMP_PATH).delete();
+    }
 
     static List<DummyA> dummyA = new ArrayList<DummyA>();
     static List<DummyB> dummyB = new ArrayList<DummyB>();
     static DummyC dummyC = new DummyC();
+    static DummyD dummyD = new DummyD();
+    static {
+        dummyD.nestedArray = new DummyD.Sub[2];
+        dummyD.nestedArray[1] = new DummyD.Sub();
+        dummyD.nestedArray[1].value = "somevalue";
+    }
 
     public static void initTestHeap() {
 

@@ -218,16 +218,16 @@ public class HeapClusterAnalyzer {
 
     private void analyze(Cluster details) {
         if (!useBreadthSearch) {
-        StringBuilder path = new StringBuilder();
-        for(EntryPoint ep: entryPoints) {
-            path.setLength(0);
-            path.append("(" + shortName(details.root.getJavaClass().getName()) + ")");
-            for(Move i: HeapPath.track(details.root, ep.locator)) {
-                path.append(i.pathSpec);
-                walk(details, i.instance, path, 0, false, false);
+            StringBuilder path = new StringBuilder();
+            for(EntryPoint ep: entryPoints) {
+                path.setLength(0);
+                path.append("(" + shortName(details.root.getJavaClass().getName()) + ")");
+                for(Move i: HeapPath.track(details.root, ep.locator)) {
+                    path.append(i.pathSpec);
+                    walk(details, i.instance, path, 0, false, false);
+                }
             }
         }
-    }
         else {
             for(EntryPoint ep: entryPoints) {
                 for(Instance i: HeapPath.collect(details.root, ep.locator)) {
