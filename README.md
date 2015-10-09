@@ -49,7 +49,7 @@ Similar to jps.
 
 Similar to jmap -histo.
 
-- Plus can show histogram of dead objects (histograms of all and live requested, then difference is caluclated).
+- Plus can show histogram of dead objects (histograms of all and live requested, then difference is calculated).
 - Plus can show N top buckets in histogram.
 
 [More details](sjk-core/COMMANDS.md#hh-command)
