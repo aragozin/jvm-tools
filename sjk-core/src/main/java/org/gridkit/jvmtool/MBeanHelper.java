@@ -278,16 +278,16 @@ public class MBeanHelper {
 		if (type.equals("java.lang.String")) {
 			return value;
 		}
-		if (type.equals("boolean")) {
+		if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
 			return Boolean.valueOf(value);
 		}
-		else if (type.equals("byte")) {
+		else if (type.equals("byte") || type.equals("java.lang.Byte")) {
 			return Byte.valueOf(value);
 		}
-		else if (type.equals("short")) {
+		else if (type.equals("short") || type.equals("java.lang.Short")) {
 			return Short.valueOf(value);
 		}
-		else if (type.equals("char")) {
+		else if (type.equals("char") || type.equals("java.lang.Character")) {
 			if (value.length() == 1) {
 				return value.charAt(0);
 			}
@@ -295,16 +295,16 @@ public class MBeanHelper {
 				throw new IllegalArgumentException("Cannot convert '" + value + "' to " + type);
 			}
 		}
-		else if (type.equals("int")) {
+		else if (type.equals("int") || type.equals("java.lang.Integer")) {
 			return Integer.valueOf(value);
 		}
-		else if (type.equals("long")) {
+		else if (type.equals("long") || type.equals("java.lang.Long")) {
 			return Long.valueOf(value);
 		}
-		else if (type.equals("float")) {
+		else if (type.equals("float") || type.equals("java.lang.Float")) {
 			return Float.valueOf(value);
 		}
-		else if (type.equals("double")) {
+		else if (type.equals("double") || type.equals("java.lang.Double")) {
 			return Double.valueOf(value);
 		}
 		else if (type.startsWith("[")) {
