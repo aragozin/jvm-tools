@@ -22,7 +22,7 @@ Usage
     Usage: ttop [options]
       Options:
         -f, --filter
-           Wild card expression to filter thread by name
+           Wild card expression to filter threads by name
             --help
            
            Default: false
@@ -135,9 +135,9 @@ Extended version of `jmap -histo` command.
 
 `--dead-young` options forces full GC then wait for specified period of time (default 10 seconds) then produce `--dead` histogram. 
 Idea is following: after full GC there are no garbage in heap. So `--dead` histogram is showing only objects recenctly allocated (young garbage).
-There are two problems with that aprouch though. Firts, finalizer may prevent some objects to be collected in firts full GC. 
-Second, if young GC is performed between full GC and `--dead` histogram samplig, garbage population can be skewed.
-Command tracks young GC counter and warns if youg GC was detected.
+There are two problems with that aprouch though. First, finalizer may prevent some objects to be collected in first full GC. 
+Second, if young GC is performed between full GC and `--dead` histogram sampling, garbage population can be skewed.
+Command tracks young GC counter and warns if young GC was detected.
 
 `gc` command
 ----
@@ -263,7 +263,7 @@ Example
 
 `stcap` command
 ----
-stcap commands dumps thread from target process with configure period (or non-stop) to a file
+stcap commands dumps threads from target process with configured period (or non-stop) to a file
 
     > java -jar sjk.jar mx -p 6344 -mg -b java.lang:type=Memory -f HeapMemoryUsage
 
@@ -284,15 +284,15 @@ stcap commands dumps thread from target process with configure period (or non-st
            (0 - unlimited)
            Default: 0
         -m, --match-frame
-           Frame filter, only trace conatining this string would be included to dump
+           Frame filter, only traces containing this string will be included in dump
       * -o, --output
-           Name of file to write thread dump
+           Name of file to write thread dump to
             --password
            Password for JMX authentication (only for socket connection)
         -p, --pid
            JVM process PID
         -r, --rotate
-           If specified output file would be rotate every N traces (0 - do not
+           If specified output file would be rotated every N traces (0 - do not
            rotate)
            Default: 0
         -i, --sampler-interval
@@ -301,7 +301,7 @@ stcap commands dumps thread from target process with configure period (or non-st
         -s, --socket
            Socket address for JMX port (host:port)
         -t, --timeout
-           Time untill command will terminate even if not enough traces collected
+           Time until command terminate even without enough traces collected
            Default: 30000
             --user
            User for JMX authentication (only for socket connection)
@@ -311,7 +311,7 @@ stcap commands dumps thread from target process with configure period (or non-st
 
 `ssa` command
 ----
-ssa commands used to analyze thread dump produced by stcap command.
+ssa command's used to analyze thread dump produced by stcap command.
 
     > java -jar sjk.jar ssa --help
     
