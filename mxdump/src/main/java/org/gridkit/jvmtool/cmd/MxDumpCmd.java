@@ -66,11 +66,11 @@ public class MxDumpCmd implements CmdRef {
 		private String query;
 		
 		@ParametersDelegate
-		private JmxConnectionInfo conn = new JmxConnectionInfo();
+		private JmxConnectionInfo conn;
 
 		public MxDump(CommandLauncher host) {
-			super();
 			this.host = host;
+			this.conn = new JmxConnectionInfo(host);
 		}
 
 		@Override
@@ -92,7 +92,7 @@ public class MxDumpCmd implements CmdRef {
 				System.out.println();
 				System.out.flush();
 			} catch (Exception e) {
-				CommandLauncher.fail(e.toString());
+				host.fail(e.toString());
 			}			
 		}
 		

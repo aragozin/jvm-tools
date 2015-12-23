@@ -69,14 +69,15 @@ public class ThreadTopCmd implements CmdRef {
 		@Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, ALLOC, NAME")
 		private List<String> sortOrder;
 		
-		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter thread by name")
+		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter threads by name")
 		private String threadFilter;
 		
 		@ParametersDelegate
-		private JmxConnectionInfo connInfo = new JmxConnectionInfo();
+		private JmxConnectionInfo connInfo;
 		
 		public TTop(CommandLauncher host) {
 			this.host = host;
+			this.connInfo = new JmxConnectionInfo(host);
 		}
 
 		@Override
@@ -128,7 +129,7 @@ public class ThreadTopCmd implements CmdRef {
 							tmon.sortByThreadName();
 						}
 						else {
-							CommandLauncher.failAndPrintUsage("Invalid order option '" + tag + "'");
+							host.failAndPrintUsage("Invalid order option '" + tag + "'");
 						}
 					}
 				}
@@ -150,7 +151,7 @@ public class ThreadTopCmd implements CmdRef {
 					}
 				}
 			} catch (Exception e) {
-				CommandLauncher.fail("Unexpected error: " + e.toString(), e);
+				host.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 	}

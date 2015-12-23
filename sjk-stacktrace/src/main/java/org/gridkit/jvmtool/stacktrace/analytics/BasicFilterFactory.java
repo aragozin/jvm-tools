@@ -246,7 +246,11 @@ public class BasicFilterFactory {
 
         @Override
         public int matchNext(StackFrameList trace, int matchFrom) {
-            for(int i = trace.depth() - 1; i >= matchFrom; --i) {
+            if (matchFrom > 0) {
+                // assume that match have been found already
+                return -1;
+            }
+            for(int i = matchFrom; i < trace.depth(); ++i) {
                 if (matcher.evaluate(trace.frameAt(i))) {
                     return i;
                 }
@@ -277,7 +281,7 @@ public class BasicFilterFactory {
             }
             if (n >= 0) {
                 StackFrameList remained = snapshot.stackTrace();
-                remained = remained.fragment(n, remained.depth());
+                remained = remained.fragment(0, n);
                 return tailFilter.evaluate(new ThreadSnapProxy(snapshot, remained)); 
             }
             else {

@@ -62,15 +62,15 @@ public class CommandLauncher {
 	private Map<String, Runnable> commands = new HashMap<String, Runnable>();
 
 	
-    public static void fail(String... messages) {
+    public RuntimeException fail(String... messages) {
         throw new CommandAbortedError(false, messages);
     }
 
-    public static void fail(String message, Exception e) {
+    public RuntimeException fail(String message, Exception e) {
         throw new CommandAbortedError(false, new String[]{message}, e);
     }
 
-    public static void failAndPrintUsage(String... messages) {
+    public RuntimeException failAndPrintUsage(String... messages) {
         throw new CommandAbortedError(true, messages);
     }
 	

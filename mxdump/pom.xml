@@ -36,7 +36,7 @@
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-core</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency>        
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>

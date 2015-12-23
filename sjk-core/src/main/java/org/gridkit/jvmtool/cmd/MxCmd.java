@@ -50,7 +50,7 @@ public class MxCmd implements CmdRef {
 		private CommandLauncher host;
 		
 		@ParametersDelegate
-		private JmxConnectionInfo connInfo = new JmxConnectionInfo();
+		private JmxConnectionInfo connInfo;
 
 		@Parameter(names={"-b", "--bean"}, required = true, description="MBean name")
 		private String mbean;
@@ -75,6 +75,7 @@ public class MxCmd implements CmdRef {
 
 		public MX(CommandLauncher host) {
 			this.host = host;
+			this.connInfo = new JmxConnectionInfo(host);
 		}
 
 		@Override
@@ -94,11 +95,11 @@ public class MxCmd implements CmdRef {
 					action.add(info);
 				}
 				if (action.isEmpty() || action.size() > 1) {
-					CommandLauncher.failAndPrintUsage("You should choose one of --info, --get, --set, --call");
+					host.failAndPrintUsage("You should choose one of --info, --get, --set, --call");
 				}
 				action.get(0).run();
 			} catch (Exception e) {
-				CommandLauncher.fail(e.toString(), e);
+				host.fail(e.toString(), e);
 			}
 		}
 
@@ -106,14 +107,14 @@ public class MxCmd implements CmdRef {
 			ObjectName name = new ObjectName(mbean);
 			Set<ObjectName> beans = conn.queryNames(name, null);
 			if (beans.isEmpty()) {
-				CommandLauncher.fail("MBean not found: " + mbean);
+				host.fail("MBean not found: " + mbean);
 			}
             if (!all && beans.size() > 1) {
                 StringBuilder sb = new StringBuilder();
                 for(ObjectName n: beans) {
                     sb.append('\n').append(n);
                 }
-                CommandLauncher.fail("Ambiguous MBean selection. Use '-all' param for process all matched MBeans" + sb.toString());
+                host.fail("Ambiguous MBean selection. Use '-all' param for process all matched MBeans" + sb.toString());
 			}
 			return beans;
 		}
@@ -133,7 +134,7 @@ public class MxCmd implements CmdRef {
 			public void run() {
 				try {
 					if (operation == null) {
-						CommandLauncher.failAndPrintUsage("MBean operation name is missing");
+						host.failAndPrintUsage("MBean operation name is missing");
 					}
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
@@ -143,7 +144,7 @@ public class MxCmd implements CmdRef {
                         System.out.println(helper.invoke(name, operation, arguments.toArray(new String[arguments.size()])));
                     }
 				} catch (Exception e) {
-					CommandLauncher.fail(e.toString(), e);
+					host.fail(e.toString(), e);
 				}
 			}
 		}
@@ -157,7 +158,7 @@ public class MxCmd implements CmdRef {
 			public void run() {
 				try {
 					if (attrib == null) {
-						CommandLauncher.failAndPrintUsage("MBean operation name is missing");
+						host.failAndPrintUsage("MBean operation name is missing");
 					}
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
@@ -167,7 +168,7 @@ public class MxCmd implements CmdRef {
 					    System.out.println(helper.get(name, attrib));
                     }
 				} catch (Exception e) {
-					CommandLauncher.fail(e.toString(), e);
+					host.fail(e.toString(), e);
 				}
 			}
 		}
@@ -184,10 +185,10 @@ public class MxCmd implements CmdRef {
 			public void run() {
 				try {
 					if (attrib == null) {
-						CommandLauncher.failAndPrintUsage("MBean attribute name is missing");
+						host.failAndPrintUsage("MBean attribute name is missing");
 					}
 					if (value == null) {
-						CommandLauncher.failAndPrintUsage("Value is required");
+						host.failAndPrintUsage("Value is required");
 					}
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
@@ -197,7 +198,7 @@ public class MxCmd implements CmdRef {
                         helper.set(name, attrib, value);
                     }
 				} catch (Exception e) {
-					CommandLauncher.fail(e.toString(), e);
+					host.fail(e.toString(), e);
 				}
 			}
 		}
@@ -217,7 +218,7 @@ public class MxCmd implements CmdRef {
                         System.out.println(helper.describe(name));
                     }
 				} catch (Exception e) {
-					CommandLauncher.fail(e.toString(), e);
+					host.fail(e.toString(), e);
 				}
 			}
 		}

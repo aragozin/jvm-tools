@@ -11,33 +11,37 @@ public class ReaderProxy implements ThreadSnapshot {
         this.reader = reader;
     }
 
+    protected StackTraceReader reader() {
+        return reader;
+    }
+    
     @Override
     public long threadId() {
-        return reader.getThreadId();
+        return reader().getThreadId();
     }
 
     @Override
     public String threadName() {
-        return reader.getThreadName();
+        return reader().getThreadName();
     }
 
     @Override
     public long timestamp() {
-        return reader.getTimestamp();
+        return reader().getTimestamp();
     }
 
     @Override
     public StackFrameList stackTrace() {
-        return reader.getStackTrace();
+        return reader().getStackTrace();
     }
 
     @Override
     public State threadState() {
-        return reader.getThreadState();
+        return reader().getThreadState();
     }
 
     @Override
     public CounterCollection counters() {
-        return reader.getCounters();
+        return reader().getCounters();
     }
 }

@@ -77,7 +77,7 @@ public class HeapHistoCmd implements CmdRef {
 		public void run() {
 			try {
 				if (live && dead || live && deadYoung || dead && deadYoung) {
-					CommandLauncher.failAndPrintUsage("--live, --dead and --deadYoung are mutually exclusive");
+					host.failAndPrintUsage("--live, --dead and --deadYoung are mutually exclusive");
 				}
 				
 				HeapHisto histo;
@@ -99,7 +99,7 @@ public class HeapHistoCmd implements CmdRef {
 				System.out.println(histo.print(n));
 
 			} catch (Exception e) {
-				CommandLauncher.fail(e.toString(), e);
+				host.fail(e.toString(), e);
 			}
 		}
 

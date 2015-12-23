@@ -49,10 +49,11 @@ public class GcRepCmd implements CmdRef {
 		private CommandLauncher host;
 		
 		@ParametersDelegate
-		private JmxConnectionInfo conn = new JmxConnectionInfo();
+		private JmxConnectionInfo conn;
 
 		public GcRep(CommandLauncher host) {
 			this.host = host;
+			this.conn = new JmxConnectionInfo(host);
 		}
 
 		@Override
@@ -98,7 +99,7 @@ public class GcRepCmd implements CmdRef {
 					}
 				}
 			} catch (Exception e) {
-				CommandLauncher.fail(e.toString());
+				host.fail(e.toString());
 			}			
 		}
 	}
