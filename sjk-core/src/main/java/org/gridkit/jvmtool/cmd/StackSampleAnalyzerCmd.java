@@ -28,6 +28,11 @@ import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
+import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
+import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
+import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
+import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
 import org.gridkit.util.formating.Formats;
 
 import com.beust.jcommander.Parameter;
@@ -61,10 +66,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         @Parameter(names = { "-b", "--buckets" }, required = false, description = "Restrict analysis to specific class")
         private String bucket = null;
 
-        @Parameter(names={"-sf", "--simple-filter"}, required = false, description="Process only traces containing this string")
-        private String simpleFilter = null;
+        @Parameter(names={"-tf", "--trace-filter"}, required = false, description="Apply filter to traces before processing. Use --ssa-help for more details about filter notation")
+        private String traceFilter = null;
 
-        
         private List<SsaCmd> allCommands = new ArrayList<SsaCmd>();
 
         @ParametersDelegate
@@ -75,6 +79,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
         @ParametersDelegate
 		private SsaCmd csummary = new ClassSummaryCmd();
+
+        @ParametersDelegate
+        private SsaCmd help = new HelpCmd();
 
 		StackTraceClassifier buckets;
 
@@ -93,7 +100,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				    }
 				}
 				if (action.isEmpty() || action.size() > 1) {
-					CommandLauncher.failAndPrintUsage("You should choose one of " + allCommands);
+					host.failAndPrintUsage("You should choose one of " + allCommands);
 				}
 				if (classifier != null) {
 				    Config cfg = new Config();
@@ -101,69 +108,36 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				    buckets = cfg.create();
 				}
 				if (classifier == null  && bucket != null) {
-				    CommandLauncher.failAndPrintUsage("--bucket option requires --classifer");
+				    host.failAndPrintUsage("--bucket option requires --classifer");
 				}
 				action.get(0).run();
 			} catch (Exception e) {
-				CommandLauncher.fail(e.toString(), e);
+			    host.fail(e.toString(), e);
 			}
 		}
 
 		StackTraceReader getFilteredReader() throws IOException {
 		    if (classifier == null ) {
-		        if (simpleFilter == null) {
+		        if (traceFilter == null) {
 		            return getUnclassifiedReader();
 		        }
 		        else {
 		            final StackTraceReader unclassified = getUnclassifiedReader();
-		            return new StackTraceReader.StackTraceReaderDelegate() {
-
-                        @Override
-                        protected StackTraceReader getReader() {
-                            return unclassified;
-                        }
-                        
-                        @Override
-                        public boolean loadNext() throws IOException {
-                            while(unclassified.loadNext()) {
-                                StackTraceElement[] trace = getTrace();
-                                for(StackTraceElement e: trace) {
-                                    if (e.toString().startsWith(simpleFilter)) {
-                                        return true;
-                                    }
-                                }
-                            }
-                            return false;
-                        }
-                        
-                        @Override
-                        public boolean isLoaded() {
-                            return unclassified.isLoaded();
-                        }
-                        
-                        @Override
-                        public StackTraceElement[] getTrace() {
-                            return unclassified.getTrace();
-                        }
-                        
-                        @Override
-                        public long getTimestamp() {
-                            return unclassified.getTimestamp();
-                        }
-                        
-                        @Override
-                        public long getThreadId() {
-                            return unclassified.getThreadId();
-                        }
-                    };
+		            try {
+		                ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, new CachingFilterFactory());
+		                return new FilteredStackTraceReader(ts, unclassified);
+		            }
+		            catch(ParserException e) {
+		                throw host.fail("Failed to parse trace filter - " + e.getMessage() + " at " + e.getOffset() + " [" + e.getParseText() + "]");
+		            }
 		        }
 		    }
 		    else {
-		        if (simpleFilter != null) {
-		            CommandLauncher.fail("Simple filter cannot be used with classification");
+		        if (traceFilter != null) {
+		            host.fail("Trace filter cannot be used with classification");
 		        }		        
 		        if (bucket != null && !buckets.getClasses().contains(bucket)) {
-		            CommandLauncher.fail("Bucket [" + bucket + "] is not defined");
+		            host.fail("Bucket [" + bucket + "] is not defined");
 		        }
 		        final StackTraceReader unfiltered = getUnclassifiedReader();
 		        return new StackTraceReader.StackTraceReaderDelegate() {
@@ -286,7 +260,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			        }
 				    
 				} catch (Exception e) {
-					CommandLauncher.fail(e.toString(), e);
+					host.fail(e.toString(), e);
 				}
 			}
             
@@ -327,7 +301,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
                     
                 } catch (Exception e) {
-                    CommandLauncher.fail(e.toString(), e);
+                    host.fail(e.toString(), e);
                 }
             }
             
@@ -351,10 +325,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 try {
 
                     if (classifier == null) {
-                        CommandLauncher.failAndPrintUsage("Classification is required");
+                        host.failAndPrintUsage("Classification is required");
                     }
                     if (bucket != null) {
-                        CommandLauncher.failAndPrintUsage("--summary cannot be used with --bucket option");
+                        host.failAndPrintUsage("--summary cannot be used with --bucket option");
                     }
                     List<String> bucketNames = new ArrayList<String>(buckets.getClasses());
                     long[] counters = new long[bucketNames.size()];
@@ -376,12 +350,32 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
 
                 } catch (Exception e) {
-                    CommandLauncher.fail(e.toString(), e);
+                    host.fail(e.toString(), e);
                 }
             }
 
             public String toString() {
                 return "--summary";
+            }
+        }
+        
+        public class HelpCmd extends SsaCmd {
+
+            @Parameter(names={"--ssa-help"}, description="Additional information about SSA")
+            boolean run;
+
+            @Override
+            public boolean isSelected() {
+                return run;
+            }
+
+            @Override
+            public void run() {
+                
+            }
+
+            public String toString() {
+                return "--ssa-help";
             }
         }
 	}	

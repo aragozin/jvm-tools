@@ -2,3 +2,5 @@ target/
 .classpath
 .settings
 .project
+.factorypath
+.codenvy

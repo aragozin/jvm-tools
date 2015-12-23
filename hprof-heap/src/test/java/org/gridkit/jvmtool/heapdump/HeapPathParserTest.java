@@ -33,7 +33,7 @@ import org.junit.runners.Parameterized.Parameters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class HeapPathParserTest {
 
-    @Parameters//(name = "\"{0}\" {1}")
+    @Parameters(name = "\"{0}\" {1}")
     public static List<Object[]> getExpressions() {
         List<Object[]> result = new ArrayList<Object[]>();
 

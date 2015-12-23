@@ -69,13 +69,13 @@ public class StackDumpCopyCmd implements CmdRef {
 		@Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
 		private List<String> inputFiles = new ArrayList<String>();
 		
-		@Parameter(names = {"-tf", "--thread-filter"}, description = "Wild card expression to filter thread by name")
+		@Parameter(names = {"-tf", "--thread-filter"}, description = "Filter threads by name (Java RegEx syntax)")
 		private String threadFilter = ".*";
 
 		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
 		private boolean retainEmptyTraces = false;
 
-		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only trace conatining this string would be included to dump")
+		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
 		private List<String> frameFilter;
 
         @Parameter(names = { "--mask" }, variableArity = true, description = "One or more masking rules. E.g. com.mycompany:com.somecomplany")
@@ -105,7 +105,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    for(String rule: maskingRules) {
 			        String[] parts = rule.split("[:]");
 			        if (parts.length != 2) {
-			            CommandLauncher.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
+			            host.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
 			        }
 			        masking.add(new MaskRule(parts[0], parts[1]));
 			    }
@@ -129,7 +129,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    System.out.println();
 			    
 			    if (inputs.isEmpty()) {
-			        CommandLauncher.fail("Input file list is empty");
+			        host.fail("Input file list is empty");
 			    }
 			    
 			    openWriter();
@@ -179,7 +179,7 @@ public class StackDumpCopyCmd implements CmdRef {
 			    writer.close();
 				
 			} catch (Exception e) {
-				CommandLauncher.fail("Unexpected error: " + e.toString(), e);
+				host.fail("Unexpected error: " + e.toString(), e);
 			}			
 		}
 
