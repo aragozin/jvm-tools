@@ -20,7 +20,7 @@ import java.lang.management.ManagementFactory;
 
 import junit.framework.Assert;
 
-import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -72,30 +72,30 @@ public class CliCheck {
 		exec("jps", "-pd", "PID", "MAIN", "XMaxHeapSize", "XBackgroundCompilation");
 	}
 
-	@Test
+	@Test @Ignore
 	public void ttop_self() {
 
 		exec("ttop", "-p", PID, "-X");
 	}
 
-	@Test
+	@Test @Ignore
 	public void ttop_top_N_cpu() {
 
 		exec("ttop", "-p", PID, "-o", "CPU", "-n", "10");
 	}
 
-	@Test
+	@Test @Ignore
 	public void ttop_top_N_alloc() {
 
 		exec("ttop", "-p", PID, "-o", "ALLOC", "-n", "10");
 	}
 
-	@Test
+	@Test @Ignore
 	public void ttop_top_N_filtered() {
 		exec("ttop", "-p", PID, "-f", "*RMI*", "-o", "CPU", "-n", "10");
 	}
 
-	@Test
+	@Test @Ignore
 	public void gc_self() {
 		exec("gc", "-p", PID);
 	}
@@ -205,6 +205,11 @@ public class CliCheck {
 	    exec("ssa", "--histo", "-f", "target/test.stp", "-X");
 	}
 
+	@Test
+	public void ssa_histo_with_classes() {
+	    exec("ssa", "--histo", "-co", "-f", "target/test.stp", "-nc", "IO=java.net.SocketInputStream", "GridKit=org.gridkit", "-X");
+	}
+
     @Test
     public void ssa_histo_masked() {
         exec("ssa", "--histo", "-f", "target/test-masked.all-stp", "-X");
@@ -217,16 +222,21 @@ public class CliCheck {
 
 	@Test
 	public void ssa_histo_with_filter() {
-	    exec("ssa", "--histo", "-sf", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
+	    exec("ssa", "--histo", "-tf", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
 	}
 
 	@Test
-	public void ssa_summary() {
-	    exec("ssa", "--summary", "-c", "src/test/resources/sample-seam-jsf-profile.shp", "-f", "target/test.stp");
+	public void ssa_categorize() {
+	    exec("ssa", "--categorize", "-co", "-cf", "src/test/resources/sample-seam-jsf-profile.ctz", "-f", "target/test.stp");
 	}
+
+    @Test
+    public void ssa_help() {
+        exec("ssa", "--ssa-help");
+    }
 	
 	private void exec(String... cmd) {
-		CommandLauncher sjk = new CommandLauncher();
+	    SJK sjk = new SJK();
 		sjk.suppressSystemExit();
 		StringBuilder sb = new StringBuilder();
 		sb.append("SJK");
@@ -238,7 +248,7 @@ public class CliCheck {
 	}
 
 	private void fail(String... cmd) {
-		CommandLauncher sjk = new CommandLauncher();
+	    SJK sjk = new SJK();
 		sjk.suppressSystemExit();
 		StringBuilder sb = new StringBuilder();
 		sb.append("SJK");

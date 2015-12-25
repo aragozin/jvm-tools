@@ -1,0 +1,71 @@
+jdbc._: JDBC
+jdbc: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.jboss.jca.adapters.jdbc.
+ 
+hibernate.autoFlush._: Hibernate (autoFlush)
+hibernate.autoFlush: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.hibernate.internal.SessionImpl.autoFlushIfRequired
+
+hibernate._: Hibernate (rest)
+hibernate: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.hibernate.
+
+facelets._: Facelets compile
+facelets: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +com.sun.faces.facelets.compiler.Compiler.compile
+
+XML: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +javax.xml.
+
+resBundle.missing._: ResourceBundle - missing resource
+resBundle.missing: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +java.util.ResourceBundle.getObject*:395
+
+resBundle.getObject._: ResourceBundle - getObject
+resBundle.getObject: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +java.util.ResourceBundle.getObject
+
+seam.bijection._: Seam bean intercepter - inject/disinject/outject
+seam.bijection: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke \
+ /!**.proceed \
+ +org.jboss.seam.Component.inject,org.jboss.seam.Component.disinject,org.jboss.seam.Component.outject 
+
+seam.contention._: Seam bean intercepter - lock contention
+seam.contention: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke \
+ /!**.proceed \
+ +java.util.concurrent.locks.ReentrantLock
+
+seam._: Seam bean intercepter - other
+seam: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke \
+ /!**.proceed \
+
+jsf.execute._: LifecycleImpl.execute
+jsf.execute: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +com.sun.faces.lifecycle.LifecycleImpl.execute
+  
+jsf.render._: LifecycleImpl.render
+jsf.render: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +com.sun.faces.lifecycle.LifecycleImpl.render
+
+doGet._: DefaultServlet.doGet
+doGet: \
+ org.apache.catalina.connector.CoyoteAdapter.service \
+ +org.apache.catalina.servlets.DefaultServlet.doGet
+
+other._: Other
+other: org.apache.catalina.connector.CoyoteAdapter.service

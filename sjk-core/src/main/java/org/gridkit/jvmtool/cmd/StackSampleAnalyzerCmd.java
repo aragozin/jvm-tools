@@ -17,23 +17,30 @@ package org.gridkit.jvmtool.cmd;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.gridkit.jvmtool.Cascade;
+import org.gridkit.jvmtool.CategorizerParser;
 import org.gridkit.jvmtool.StackHisto;
-import org.gridkit.jvmtool.StackTraceClassifier;
-import org.gridkit.jvmtool.StackTraceClassifier.Config;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.jvmtool.stacktrace.ReaderProxy;
+import org.gridkit.jvmtool.stacktrace.StackFrameList;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
+import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
 import org.gridkit.util.formating.Formats;
+import org.gridkit.util.formating.TextTable;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -57,18 +64,21 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		@ParametersDelegate
 		private CommandLauncher host;
 		
-		@Parameter(names={"-f", "--file"}, required = true, variableArity=true, description="Path to stack dump file")
+		@Parameter(names={"-f", "--file"}, required = false, variableArity=true, description="Path to stack dump file")
 		private List<String> files;
 		
-		@Parameter(names={"-c", "--classifier"}, required = false, description="Path to file with stack trace classification definition")
-		private String classifier = null;
+		@Parameter(names={"-cf", "--categorizer-file"}, required = false, description="Path to file with stack trace categorization definition")
+		private String categorizerFile = null;
 
-        @Parameter(names = { "-b", "--buckets" }, required = false, description = "Restrict analysis to specific class")
-        private String bucket = null;
-
+        @Parameter(names={"-nc", "--named-class"}, required = false, variableArity = true, description="May be used with some commands to define name stack trace classes\nUse <name>=<filter expression> notation")
+        private List<String> namedClasses = new ArrayList<String>();
+        
         @Parameter(names={"-tf", "--trace-filter"}, required = false, description="Apply filter to traces before processing. Use --ssa-help for more details about filter notation")
         private String traceFilter = null;
 
+        @Parameter(names={"-co", "--csv-output"}, required = false, description="Output data in CSV format")
+        private boolean csvOutput = false;
+        
         private List<SsaCmd> allCommands = new ArrayList<SsaCmd>();
 
         @ParametersDelegate
@@ -78,12 +88,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		private SsaCmd histo = new HistoCmd();
 
         @ParametersDelegate
-		private SsaCmd csummary = new ClassSummaryCmd();
+		private SsaCmd csummary = new CategorizeCmd();
 
         @ParametersDelegate
         private SsaCmd help = new HelpCmd();
 
-		StackTraceClassifier buckets;
+		ThreadSnapshotCategorizer categorizer;
 
 
 		public SSA(CommandLauncher host) {
@@ -102,13 +112,19 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				if (action.isEmpty() || action.size() > 1) {
 					host.failAndPrintUsage("You should choose one of " + allCommands);
 				}
-				if (classifier != null) {
-				    Config cfg = new Config();
-				    Cascade.parse(new FileReader(classifier), cfg);
-				    buckets = cfg.create();
-				}
-				if (classifier == null  && bucket != null) {
-				    host.failAndPrintUsage("--bucket option requires --classifer");
+				if (categorizerFile != null) {
+				    if (!namedClasses.isEmpty()) {
+				        host.failAndPrintUsage("You eigther should specify categorizer (-cf) or named classed (-nc)");
+				    }
+				    try {
+                        FileReader csource = new FileReader(categorizerFile);
+                        SimpleCategorizer sc = new SimpleCategorizer();
+                        CachingFilterFactory cff = new CachingFilterFactory();
+                        CategorizerParser.loadCategories(csource, sc, false, cff);
+                        categorizer = sc;
+                    } catch (ParserException e) {
+                        throw host.fail("Failed to parse filter expression at [" + e.getOffset() + "] : " + e.getMessage(), e.getParseText());
+                    }
 				}
 				action.get(0).run();
 			} catch (Exception e) {
@@ -116,82 +132,54 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			}
 		}
 
-		StackTraceReader getFilteredReader() throws IOException {
-		    if (classifier == null ) {
-		        if (traceFilter == null) {
-		            return getUnclassifiedReader();
-		        }
-		        else {
-		            final StackTraceReader unclassified = getUnclassifiedReader();
-		            try {
-		                ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, new CachingFilterFactory());
-		                return new FilteredStackTraceReader(ts, unclassified);
-		            }
-		            catch(ParserException e) {
-		                throw host.fail("Failed to parse trace filter - " + e.getMessage() + " at " + e.getOffset() + " [" + e.getParseText() + "]");
-		            }
-		        }
+		Map<String, ThreadSnapshotFilter> getNamedClasses() {
+		    if (namedClasses.isEmpty()) {
+		        return new HashMap<String, ThreadSnapshotFilter>();
 		    }
 		    else {
-		        if (traceFilter != null) {
-		            host.fail("Trace filter cannot be used with classification");
-		        }		        
-		        if (bucket != null && !buckets.getClasses().contains(bucket)) {
-		            host.fail("Bucket [" + bucket + "] is not defined");
+		        CachingFilterFactory factory = new CachingFilterFactory();
+		        Map<String, ThreadSnapshotFilter> classes = new LinkedHashMap<String, ThreadSnapshotFilter>();
+		        for(String nc: namedClasses) {
+		            int n = nc.indexOf('=');
+		            if (n < 0) {
+		                throw host.fail("Cannot parse named class", "[" + nc + "]", "Required format NAME=FILTER_EXPRESSION");
+		            }
+		            String name = nc.substring(0, n);
+		            String filter = nc.substring(n + 1);
+		            if (classes.containsKey(name)) {
+		                throw host.fail("Duplicated class name [" + name + "]");		                
+		            }
+		            try {
+                        ThreadSnapshotFilter tf = TraceFilterPredicateParser.parseFilter(filter, factory);
+                        classes.put(name, tf);
+                    } catch (ParserException e) {
+                        throw host.fail("Cannot parse named class", "[" + nc + "]", e.getMessage());
+                    }
 		        }
-		        final StackTraceReader unfiltered = getUnclassifiedReader();
-		        return new StackTraceReader.StackTraceReaderDelegate() {
-
-                    @Override
-                    protected StackTraceReader getReader() {
-                        return unfiltered;
-                    }
-
-                    @Override
-                    public boolean loadNext() throws IOException {
-                        while(true) {
-                            if (unfiltered.loadNext()) {
-                                String cl = buckets.classify(unfiltered.getTrace());
-                                if (bucket != null) {
-                                    if (!bucket.equals(cl)) {
-                                        continue;
-                                    }
-                                }
-                                else if (cl == null) {
-                                    continue;
-                                }
-                                return true;
-                            }
-                            else {
-                                return false;
-                            }
-                        }
-                    }
-
-                    @Override
-                    public boolean isLoaded() {
-                        return unfiltered.isLoaded();
-                    }
-
-                    @Override
-                    public StackTraceElement[] getTrace() {
-                        return unfiltered.getTrace();
-                    }
-
-                    @Override
-                    public long getTimestamp() {
-                        return unfiltered.getTimestamp();
-                    }
-
-                    @Override
-                    public long getThreadId() {
-                        return unfiltered.getThreadId();
-                    }
-                };
+		        return classes;
 		    }
+		}
+		
+		StackTraceReader getFilteredReader() throws IOException {
+	        if (traceFilter == null) {
+	            return getUnclassifiedReader();
+	        }
+	        else {
+	            final StackTraceReader unclassified = getUnclassifiedReader();
+	            try {
+	                ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, new CachingFilterFactory());
+	                return new FilteredStackTraceReader(ts, unclassified);
+	            }
+	            catch(ParserException e) {
+	                throw host.fail("Failed to parse trace filter - " + e.getMessage() + " at " + e.getOffset() + " [" + e.getParseText() + "]");
+	            }
+	        }
 		}
 
 		StackTraceReader getUnclassifiedReader() throws IOException {
+		    if (files == null) {
+		        host.fail("No input files provided, used -f option");
+		    }
 		    final StackTraceReader reader = StackTraceCodec.newReader(files.toArray(new String[0]));
 		    return new StackTraceReader.StackTraceReaderDelegate() {
                 
@@ -284,17 +272,25 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 try {
 
                     StackHisto histo = new StackHisto();
+                    for(Map.Entry<String, ThreadSnapshotFilter> entry: getNamedClasses().entrySet()) {
+                        histo.addCondition(entry.getKey(), entry.getValue());
+                    }
                     
                     StackTraceReader reader = getFilteredReader();
                     int n = 0;
                     while(reader.loadNext()) {
-                        StackTraceElement[] trace = reader.getTrace();
+                        StackFrameList trace = reader.getStackTrace();
                         histo.feed(trace);
                         ++n;
                     }
                     
                     if (n > 0) {
-                    System.out.println(histo.formatHisto());
+                        if (csvOutput) {
+                            System.out.println(histo.formatHistoToCSV());
+                        }
+                        else {
+                            System.out.println(histo.formatHisto());
+                        }
                     }
                     else {
                         System.out.println("No data");
@@ -310,9 +306,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
         }
 
-        class ClassSummaryCmd extends SsaCmd {
+        class CategorizeCmd extends SsaCmd {
 
-            @Parameter(names={"--summary"}, description="Print summary for provided classification")
+            @Parameter(names={"--categorize"}, description="Print summary for provided categorization")
             boolean run;
 
             @Override
@@ -324,29 +320,51 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             public void run() {
                 try {
 
-                    if (classifier == null) {
-                        host.failAndPrintUsage("Classification is required");
+                    ThreadSnapshotCategorizer cat = categorizer;
+                    if (categorizer == null) {
+                        if (!namedClasses.isEmpty()) {
+                            SimpleCategorizer sc = new SimpleCategorizer();
+                            Map<String, ThreadSnapshotFilter> nf = getNamedClasses();
+                            for(String fn: nf.keySet()) {
+                                sc.addCategory(fn, nf.get(fn));
+                            }
+                            cat = sc;
+                        }
                     }
-                    if (bucket != null) {
-                        host.failAndPrintUsage("--summary cannot be used with --bucket option");
+                    
+                    if (cat == null) {
+                        throw host.fail("Neigther -cf nor -nc. Eigther of them is required.");
                     }
-                    List<String> bucketNames = new ArrayList<String>(buckets.getClasses());
+                    
+                    List<String> bucketNames = new ArrayList<String>(cat.getCategories());
                     long[] counters = new long[bucketNames.size()];
                     long total = 0;
 
                     StackTraceReader reader = getUnclassifiedReader();
+                    ReaderProxy proxy = new ReaderProxy(reader);
                     while(reader.loadNext()) {
-                        StackTraceElement[] trace = reader.getTrace();
-                        String cl = buckets.classify(trace);
+                        String cl = cat.categorize(proxy);
                         if (cl != null) {
                             ++total;
                             ++counters[bucketNames.indexOf(cl)];
                         }
                     }
 
-                    System.out.println(String.format("%-40s\t%d\t%.2f%%", "Total samples", total, 100f));
+                    TextTable tt = new TextTable();
+                    String tab = csvOutput ? "" : "\t ";
+
+                    tt.addRow("Total samples", tab + total,  tab + "100.00%");
+                    
+                    
                     for(int i = 0; i != counters.length; ++i) {
-                        System.out.println(String.format("%-40s\t%d\t%.2f%%", bucketNames.get(i), counters[i], (100f * counters[i]) / total));
+                        tt.addRow(bucketNames.get(i), tab + counters[i],  tab + (counters[i] == 0 ? "0.00%" : String.format("%.2f%%", (100f * counters[i]) / total)));
+                    }
+                    
+                    if (csvOutput) {
+                        System.out.println(tt.formatToCSV());
+                    }
+                    else {
+                        System.out.println(tt.formatTextTableUnbordered(Integer.MAX_VALUE));
                     }
 
                 } catch (Exception e) {
@@ -355,7 +373,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
 
             public String toString() {
-                return "--summary";
+                return "--categorize";
             }
         }
         
@@ -371,7 +389,27 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
             @Override
             public void run() {
-                
+                try {
+                    InputStream is  = getClass().getResourceAsStream("ssa-help.md");
+                    if (is == null) {
+                        System.out.println("Failed to load help");
+                        return;
+                    }
+                    System.out.println();
+                    byte[] buf = new byte[4 << 10];
+                    while(true) {
+                        int n = is.read(buf);
+                        if (n < 0) {
+                            break;
+                        }
+                        else {
+                            System.out.write(buf, 0, n);
+                        }
+                    }
+                    System.out.println();
+                } catch (IOException e) {
+                    System.out.println("Failed to load help");
+                }
             }
 
             public String toString() {
