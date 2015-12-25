@@ -16,6 +16,10 @@
 package org.gridkit.util.formating;
 
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -122,6 +126,20 @@ public class TextTable {
 		return formatTable(rows, maxCellWidth, true);
 	}
 
+    public String formatToCSV() {
+        try {
+            StringWriter sw = new StringWriter();
+            CSVWriter writer = new CSVWriter(sw, ',', '"', '"', "\n");
+            for(String[] rows: rows) {
+                writer.writeNext(rows);
+            }
+            writer.close();
+            return sw.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 	public String formatTextTableUnbordered(int maxCellWidth) {
 		return formatTable(rows, maxCellWidth, false);
 	}
@@ -130,7 +148,7 @@ public class TextTable {
 		int[] width = new int[content.get(0).length];
 		for(String[] row: content) {
 			for(int i = 0; i != row.length; ++i) {
-				width[i] = Math.min(Math.max(width[i], (row[i] == null ? 0 : row[i].length())), maxCell);
+				width[i] = Math.min(Math.max(width[i], measureCell(row[i])), maxCell);
 			}
 		}
 
@@ -138,14 +156,7 @@ public class TextTable {
 		boolean header = table;
 		for(String[] row: content) {
 			for(int i = 0; i != width.length; ++i) {
-				String cell = row[i] == null ? "" : row[i];
-				if (cell.length() > width[i]) {
-					cell = cell.substring(0, width[i] - 3) + "...";
-				}
-				sb.append(cell);
-				for(int s = 0; s != width[i] - cell.length(); ++s) {
-					sb.append(' ');
-				}
+				renderCell(sb, row[i], width[i]);
 				if (table) {
 					sb.append('|');
 				}
@@ -169,4 +180,148 @@ public class TextTable {
 		
 		return sb.toString();
 	}
+
+    protected int measureCell(String cell) {
+        if (cell == null) {
+            return 0;
+        }
+        else {
+            int len = 0;
+            for(int i = 0; i != cell.length(); ++i) {
+                if (cell.charAt(i) != '\t') {
+                    len++;
+                }
+            }
+            return len;
+        }
+    }
+
+    protected void renderCell(StringBuilder sb, String rawCell, int width) {
+        String cell = rawCell == null ? "" : rawCell;
+        int tabs = 0;
+        for(int i = 0; i != cell.length(); ++i) {
+            if (cell.charAt(i) == '\t') {
+                tabs++;
+            }
+        }
+        if (cell.length() - tabs > width) {
+            int n = width - 3;
+            for(int i = 0; i != cell.length(); ++i) {
+                if (cell.charAt(i) != '\t') {
+                    sb.append(cell.charAt(i));
+                    if (0 == --n) {
+                        break;
+                    }
+                }
+            }
+            sb.append("...");
+                    
+        }
+        else {
+            if (tabs == 0) {
+                sb.append(cell);
+                for(int s = 0; s != width - cell.length(); ++s) {
+                    sb.append(' ');
+                }
+            }
+            else {
+                int gap = width - cell.length() + tabs;
+                for(int i = 0; i != cell.length(); ++i) {
+                    if (cell.charAt(i) == '\t') {
+                        int fill = (gap + tabs - 1) / tabs;
+                        for(int j = 0; j != fill; ++j) {
+                            sb.append(' ');
+                        }
+                        gap -= fill;
+                        tabs--;
+                    }
+                    else {
+                        sb.append(cell.charAt(i));
+                    }
+                }
+            }
+        }
+    }
+    
+    class CSVWriter {
+        
+        private Writer rawWriter;
+        private PrintWriter pw;
+        private char separator;
+        private char quoteChar;
+        private char quoteEscapeChar;
+        private String lineEnd;
+
+        public CSVWriter(Writer writer, char separator, char quotechar, char escapechar, String lineEnd) {
+            this.rawWriter = writer;
+            this.pw = new PrintWriter(writer);
+            this.separator = separator;
+            this.quoteChar = quotechar;
+            this.quoteEscapeChar = escapechar;
+            this.lineEnd = lineEnd;
+        }
+        
+        public void writeNext(String[] nextLine) {
+            
+            if (nextLine == null)
+                return;
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < nextLine.length; i++) {
+
+                if (i != 0) {
+                    sb.append(separator);
+                }
+
+                String nextElement = nextLine[i];
+                if (nextElement == null)
+                    continue;
+                if (quoteChar != 0)
+                    sb.append(quoteChar);
+                
+                sb.append(stringContainsSpecialCharacters(nextElement) ? processLine(nextElement) : nextElement);
+
+                if (quoteChar != 0)
+                    sb.append(quoteChar);
+            }
+            
+            sb.append(lineEnd);
+            pw.write(sb.toString());
+        }
+
+        private boolean stringContainsSpecialCharacters(String line) {
+            return line.indexOf(quoteChar) != -1 || line.indexOf(quoteEscapeChar) != -1;
+        }
+
+        protected StringBuilder processLine(String nextElement)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < nextElement.length(); j++) {
+                char nextChar = nextElement.charAt(j);
+                if (quoteEscapeChar != 0 && nextChar == quoteChar) {
+                    sb.append(quoteEscapeChar).append(nextChar);
+                } else if (quoteEscapeChar != 0 && nextChar == quoteEscapeChar) {
+                    sb.append(quoteEscapeChar).append(nextChar);
+                } else {
+                    sb.append(nextChar);
+                }
+            }
+            
+            return sb;
+        }
+
+        public void flush() throws IOException {
+            pw.flush();
+        } 
+
+        public void close() throws IOException {
+            flush();
+            pw.close();
+            rawWriter.close();
+        }
+
+        public boolean checkError() {
+            return pw.checkError();
+        }
+    }    
 }

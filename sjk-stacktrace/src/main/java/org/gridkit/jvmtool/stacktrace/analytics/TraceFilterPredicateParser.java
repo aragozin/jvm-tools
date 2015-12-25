@@ -29,7 +29,7 @@ public class TraceFilterPredicateParser {
         TOKENIZER = Pattern.compile(pattern);
     }
     
-    public static ThreadSnapshotFilter parseFilter(String source, BasicFilterFactory factory) {
+    public static ThreadSnapshotFilter parseFilter(String source, BasicFilterFactory factory) throws ParserException {
         FilterParser parser = new FilterParser(factory, source);
         return parser.parse();
     }
