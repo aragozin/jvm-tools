@@ -53,7 +53,7 @@ import java.util.ResourceBundle;
  *
  * @author Tomas Hurka
  */
-abstract class HprofByteBuffer {
+public abstract class HprofByteBuffer {
     //~ Static fields/initializers -----------------------------------------------------------------------------------------------
 
     // Magic header
@@ -91,7 +91,6 @@ abstract class HprofByteBuffer {
             }
         } catch (IOException ex) {
             if (ex.getCause() instanceof OutOfMemoryError) { // can happen on 32bit Windows, since there is only 2G for memory mapped data for whole java process.
-
                 return new HprofFileBuffer(dumpFile);
             }
 
