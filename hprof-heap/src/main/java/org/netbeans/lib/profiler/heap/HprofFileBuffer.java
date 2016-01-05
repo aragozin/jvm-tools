@@ -185,4 +185,8 @@ class HprofFileBuffer extends HprofByteBuffer {
 
         return (int) (index - bufferStartOffset);
     }
+    
+    public String toString() {
+        return "Single buffer, random access strategy";
+    }
 }

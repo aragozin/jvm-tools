@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gridkit.jvmtool.heapdump.HeapHistogram;
+import org.gridkit.jvmtool.heapdump.HeapTools;
 import org.gridkit.jvmtool.heapdump.HeapWalker;
 import org.gridkit.jvmtool.util.TextTree;
 import org.junit.Test;
-import org.netbeans.lib.profiler.heap.FastHprofHeap;
 import org.netbeans.lib.profiler.heap.Heap;
 import org.netbeans.lib.profiler.heap.Instance;
 import org.netbeans.lib.profiler.heap.JavaClass;
@@ -29,7 +29,8 @@ public class JsfTreeExample {
     @Test
     public void check() throws FileNotFoundException, IOException {
         String dumppath = ""; // path to dump of JEE server
-        dumpComponentTree(new FastHprofHeap(new File(dumppath), 0));
+        Heap heap = HeapTools.openHeapDump(new File(dumppath));
+        dumpComponentTree(heap);
     }
     
     public void dumpComponentTree(Heap heap) {

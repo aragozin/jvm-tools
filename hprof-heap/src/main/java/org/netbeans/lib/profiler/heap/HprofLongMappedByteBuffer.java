@@ -128,4 +128,8 @@ class HprofLongMappedByteBuffer extends HprofByteBuffer {
     private int getBufferOffset(long index) {
         return (int) (index & BUFFER_SIZE_MASK);
     }
+    
+    public String toString() {
+        return "Long memory mapped file strategy";
+    }
 }

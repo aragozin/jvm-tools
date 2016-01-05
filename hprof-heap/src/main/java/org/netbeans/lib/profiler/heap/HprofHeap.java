@@ -143,6 +143,20 @@ class HprofHeap implements Heap {
         nearestGCRoot = new NearestGCRoot(this);
     }
 
+    HprofHeap(HprofByteBuffer buffer, int seg) throws FileNotFoundException, IOException {
+        dumpBuffer = buffer;
+        segment = seg;
+        fillTagBounds(dumpBuffer.getHeaderSize());
+        heapDumpSegment = computeHeapDumpStart();
+        
+        if (heapDumpSegment != null) {
+            fillHeapTagBounds();
+        }
+        
+        idToOffsetMap = initIdMap();
+        nearestGCRoot = new NearestGCRoot(this);
+    }
+
     protected LongMap initIdMap() throws FileNotFoundException, IOException {
         return new LongMap(idMapSize,dumpBuffer.getIDSize(),dumpBuffer.getFoffsetSize());
     }
@@ -297,6 +311,17 @@ class HprofHeap implements Heap {
         }
 
         return computedSummary;
+    }
+
+    public synchronized boolean hasSummary() {
+        TagBounds summaryBound = tagBounds[HEAP_SUMMARY];
+        
+        if (summaryBound != null) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public Properties getSystemProperties() {

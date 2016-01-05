@@ -105,4 +105,8 @@ class HprofMappedByteBuffer extends HprofByteBuffer {
         dumpBuffer.position((int) position);
         dumpBuffer.get(chars);
     }
+    
+    public String toString() {
+        return "Memory mapped file strategy";
+    }
 }

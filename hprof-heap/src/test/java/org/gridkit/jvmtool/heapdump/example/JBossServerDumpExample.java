@@ -16,11 +16,11 @@ import org.gridkit.jvmtool.heapdump.HeapClusterAnalyzer;
 import org.gridkit.jvmtool.heapdump.HeapClusterAnalyzer.ClusterDetails;
 import org.gridkit.jvmtool.heapdump.HeapHistogram;
 import org.gridkit.jvmtool.heapdump.HeapHistogram.ClassRecord;
+import org.gridkit.jvmtool.heapdump.HeapTools;
 import org.gridkit.jvmtool.heapdump.StringCollector;
 import org.gridkit.jvmtool.util.TextTable;
 import org.junit.Before;
 import org.junit.Test;
-import org.netbeans.lib.profiler.heap.FastHprofHeap;
 import org.netbeans.lib.profiler.heap.Heap;
 import org.netbeans.lib.profiler.heap.Instance;
 import org.netbeans.lib.profiler.heap.JavaClass;
@@ -38,7 +38,7 @@ public class JBossServerDumpExample {
     @Before
     public void initHeapDump() throws IOException {
         String dumppath = ""; // path to dump file                
-        heap = new FastHprofHeap(new File(dumppath), 0);        
+        heap = HeapTools.openHeapDump(new File(dumppath));        
     }
 
     /** Reports retained size of string object in dump */
