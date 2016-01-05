@@ -130,8 +130,8 @@ public class TextTable {
         try {
             StringWriter sw = new StringWriter();
             CSVWriter writer = new CSVWriter(sw, ',', '"', '"', "\n");
-            for(String[] rows: rows) {
-                writer.writeNext(rows);
+            for(String[] row: rows) {
+                writer.writeNext(row);
             }
             writer.close();
             return sw.toString();
