@@ -1,5 +1,8 @@
 Next
 ----
+
+0.3.9 - 2016 Jan 14
+----
 - Added stack trace filter expression language.
 - CLI related stuff is moved into separate module for reuse.
 - Fixed potential devision by zero in safe point rate calculation.
