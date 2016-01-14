@@ -98,12 +98,12 @@ class HeapOffsetMap {
     public long offset(long origId) {
         try {
             if (origId % allignment != 0) {
-                throw new IllegalArgumentException("ID is not alligned: " + origId);
+                throw new IllegalInstanceIDException("ID is not alligned: " + origId);
             }
             return offsetForCompressed(origId >>> allignmentBits);
         }
-        catch(IllegalArgumentException e) {
-            IllegalArgumentException ee = new IllegalArgumentException(e.getMessage() + " ID: " + origId);
+        catch(IllegalInstanceIDException e) {
+            IllegalInstanceIDException ee = new IllegalInstanceIDException(e.getMessage() + " ID: " + origId);
             ee.setStackTrace(e.getStackTrace());
             throw ee;
         }
@@ -143,11 +143,11 @@ class HeapOffsetMap {
         int[] shiftMap = getPage(page);
         long baseOffs = offsetMap[page];
         if (baseOffs < 0) {
-            throw new IllegalArgumentException("ID is not valid: " + cid);
+            throw new IllegalInstanceIDException("ID is not valid: " + cid);
         }
         int shift = shiftMap[(int) (ref % pageSize)];
         if (shift < 0) {
-            throw new IllegalArgumentException("Compressed ID is not valid: " + cid);
+            throw new IllegalInstanceIDException("Compressed ID is not valid: " + cid);
         }
         long offs = baseOffs + shift;
         return offs;
@@ -248,7 +248,7 @@ class HeapOffsetMap {
                         return page;
                     }
                     else {
-                        throw new IllegalArgumentException("No such ID, end of heap reached");
+                        throw new IllegalInstanceIDException("No such ID, end of heap reached");
                     }
                 }
                 return n;
@@ -347,7 +347,7 @@ class HeapOffsetMap {
 
     private long compressID(long origId) {
         if (origId % allignment != 0) {
-            throw new IllegalArgumentException("ID is not alligned: " + origId);
+            throw new IllegalInstanceIDException("ID is not alligned: " + origId);
         }
         if (cidOffset > (origId >>> allignmentBits)) {
             throw new MalformedInstanceIdException("ID is below threshold (" + (cidOffset << allignmentBits) + "): " + origId);

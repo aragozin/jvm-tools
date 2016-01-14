@@ -44,8 +44,13 @@
 package org.netbeans.lib.profiler.heap;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.zip.GZIPInputStream;
+
+import org.gridkit.jvmtool.heapdump.CompressdHprofByteBuffer;
 
 
 /**
@@ -57,6 +62,8 @@ public class HeapFactory {
 
     /**
      * this factory method creates {@link Heap} from a memory dump file in Hprof format.
+     * <br>
+     * <b>This implementation is using temporary disk files for building auxiliary indexes</b>
      * <br>
      * Speed: slow
      * @param heapDump file which contains memory dump
@@ -70,9 +77,19 @@ public class HeapFactory {
     }
 
     /**
+     * Fast {@link Heap} implementation is optimized for batch processing of dump.
+     * Unlike normal {@link Heap} it doesn't create/use any temporary files. 
+     */
+    public static Heap createFastHeap(File heapDump) throws FileNotFoundException, IOException {
+        return new FastHprofHeap(createBuffer(heapDump), 0);
+    }
+    
+    /**
      * this factory method creates {@link Heap} from a memory dump file in Hprof format.
      * If the memory dump file contains more than one dump, parameter segment is used to
      * select particular dump.
+     * <br>
+     * <b>This implementation is using temporary disk files for building auxiliary indexes</b>
      * <br>
      * Speed: slow
      * @return implementation of {@link Heap} corresponding to the memory dump
@@ -84,6 +101,38 @@ public class HeapFactory {
      */
     public static Heap createHeap(File heapDump, int segment)
                            throws FileNotFoundException, IOException {
-        return new HprofHeap(heapDump, segment);
+        return new HprofHeap(createBuffer(heapDump), segment);
+    }
+    
+    private static HprofByteBuffer createBuffer(File heapDump) throws IOException {
+        if (isGZIP(heapDump)) {
+            return createCompressedHprofBuffer(heapDump);
+        }
+        else {
+            HprofByteBuffer bb = HprofByteBuffer.createHprofByteBuffer(heapDump);
+            return bb;
+        }
+    }
+
+    private static HprofByteBuffer createCompressedHprofBuffer(File heapDump) throws IOException, FileNotFoundException {
+        return new CompressdHprofByteBuffer(new RandomAccessFile(heapDump, "r"), 8 << 20, 16);
+    }
+    
+    private static boolean isGZIP(File headDump) {
+        try {
+            FileInputStream in = new FileInputStream(headDump);        
+            GZIPInputStream is;
+            try {
+                is = new GZIPInputStream(in);
+                is.read();
+                is.close();
+                return true;
+            } catch (IOException e) {
+                in.close();
+            }
+        } catch (IOException e) {
+            // ignore
+        }
+        return false;
     }
 }

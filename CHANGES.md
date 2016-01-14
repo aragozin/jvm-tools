@@ -5,6 +5,8 @@ Next
 - Fixed potential devision by zero in safe point rate calculation.
 - Support of basic primitive wrappers in mx command.
 - Optional CSV output for stack trace histogram and categorization.
+- Added compressed (gzip) heap dump support.
+- Ignore incomplete instances in heap dump.
 
 0.3.8 - 2015 Sep 10
 ----

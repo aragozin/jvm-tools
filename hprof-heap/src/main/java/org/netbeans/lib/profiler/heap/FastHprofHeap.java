@@ -35,13 +35,19 @@ public class FastHprofHeap extends HprofHeap {
     private Map<Long, ClassEntry> classes;
     private HeapOffsetMap offsetMap;
 
-    public FastHprofHeap(File dumpFile, int seg) throws FileNotFoundException, IOException {
+    /**
+     * Please use {@link HeapFactory}
+     */
+    protected FastHprofHeap(File dumpFile, int seg) throws FileNotFoundException, IOException {
         super(dumpFile, seg);
         classes = new HashMap<Long, ClassEntry>();
         offsetMap = new HeapOffsetMap(this);
     }
 
-    public FastHprofHeap(HprofByteBuffer dumpBuffer, int seg) throws FileNotFoundException, IOException {
+    /**
+     * Please use {@link HeapFactory}
+     */
+    protected FastHprofHeap(HprofByteBuffer dumpBuffer, int seg) throws FileNotFoundException, IOException {
         super(dumpBuffer, seg);
         classes = new HashMap<Long, ClassEntry>();
         offsetMap = new HeapOffsetMap(this);
@@ -124,8 +130,13 @@ public class FastHprofHeap extends HprofHeap {
         } else {
             long classId = dumpBuffer.getID(start + 1 + classIdOffset);
             classDump = classDumpBounds.getClassDumpByID(classId);
+
+            if (classDump == null) {
+                throw new IllegalInstanceIDException("Missing instance type (" + classId + ") ID: " + instanceID);
+            }
         }
 
+        
         if (tag == INSTANCE_DUMP) {
             return new InstanceDump(classDump, start);
         } else if (tag == OBJECT_ARRAY_DUMP) {
@@ -133,10 +144,22 @@ public class FastHprofHeap extends HprofHeap {
         } else if (tag == CLASS_DUMP) {
             return new ClassDumpInstance(classDump);
         } else {
-            throw new IllegalArgumentException("Illegal tag " + tag); // NOI18N
+            throw new IllegalInstanceIDException("Illegal tag " + tag + " ID: " + instanceID); // NOI18N
         }
     }
 
+    @Override
+    public JavaClass getJavaClassByID(long javaclassId) {
+        List<JavaClass> jc = getClassDumpSegment().createClassCollection();
+        ClassEntry ce = classes.get(javaclassId);
+        if (ce != null) {
+            return jc.get(ce.index - 1);
+        }
+        else {
+            return null;
+        }
+    }
+    
     @Override
     public List<Instance> getBiggestObjectsByRetainedSize(int number) {
         throw new UnsupportedOperationException();
