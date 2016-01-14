@@ -81,11 +81,34 @@ class HprofInstanceIterator implements Iterator<Instance> {
 
             ClassDump jc = (ClassDump) heap.getJavaClassByID(instanceClassId);
 
+            if (jc == null) {
+                // Dump details of broken instances
+//                System.err.print("Bad heap entry, missing class ref(#" + instanceClassId + ")");
+//                try {
+//                    if (tag == HprofHeap.INSTANCE_DUMP) {
+//                        jc = (ClassDump) heap.getJavaClassByName("java.lang.Object");
+//                        Instance instance = new InstanceDump(jc, start);
+//                        System.err.print(" ID:" + instance.getInstanceId());
+//                    } else if (tag == HprofHeap.OBJECT_ARRAY_DUMP) {
+//                        jc = (ClassDump) heap.getJavaClassByName("java.lang.Object[]");
+//                        ObjectArrayInstance instance = new ObjectArrayDump(jc, start);  
+//                        System.err.print(" ID:" + instance.getInstanceId() + " array length: " + instance.getLength());
+//                    } else if (tag == HprofHeap.PRIMITIVE_ARRAY_DUMP) {
+//                        System.err.print(" PRIMITIVE_ARRAY");
+//                    }
+//                }
+//                catch(Exception e) {
+//                    System.err.println(" {" + e.toString() + "}");
+//                }
+//                System.err.println(" dump size: " + (pointer[0] - start));
+                continue;
+            }
+            
             Instance instance = null;
             if (tag == HprofHeap.INSTANCE_DUMP) {
                 instance = new InstanceDump(jc, start);
             } else if (tag == HprofHeap.OBJECT_ARRAY_DUMP) {
-                instance = new ObjectArrayDump(jc, start);
+                instance = new ObjectArrayDump(jc, start);   
             } else if (tag == HprofHeap.PRIMITIVE_ARRAY_DUMP) {
                 instance = new PrimitiveArrayDump(jc, start);
             } else {

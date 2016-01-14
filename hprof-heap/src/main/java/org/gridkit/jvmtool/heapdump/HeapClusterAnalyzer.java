@@ -26,6 +26,7 @@ import org.gridkit.jvmtool.heapdump.PathStep.Move;
 import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.Heap;
+import org.netbeans.lib.profiler.heap.IllegalInstanceIDException;
 import org.netbeans.lib.profiler.heap.Instance;
 import org.netbeans.lib.profiler.heap.JavaClass;
 import org.netbeans.lib.profiler.heap.ObjectArrayInstance;
@@ -206,11 +207,16 @@ public class HeapClusterAnalyzer {
         RefSet marked = cluster.objects;
         for(Long id: marked.ones()) {
             if (knownRefs.getAndSet(id, true)) {
-                Instance i = heap.getInstanceByID(id);
-                sharedErrorMargin += i.getSize();
-                if (!sharedRefs.getAndSet(id, true)) {
+                try {
+                    Instance i = heap.getInstanceByID(id);
                     sharedErrorMargin += i.getSize();
-                    sharedSummary.accumulate(i);
+                    if (!sharedRefs.getAndSet(id, true)) {
+                        sharedErrorMargin += i.getSize();
+                        sharedSummary.accumulate(i);
+                    }
+                }
+                catch(IllegalInstanceIDException e) {
+                    System.err.println("Object missing in dump: " + id);
                 }
             }
         }
@@ -367,53 +373,60 @@ public class HeapClusterAnalyzer {
                     continue;
                 }
 
-                Instance i = heap.getInstanceByID(id);
-                if (blacklist.contains(i.getJavaClass().getName())) {
+                try {
+                    Instance i = heap.getInstanceByID(id);
+                    if (blacklist.contains(i.getJavaClass().getName())) {
+                        ignoreRefs.set(id, true);
+                        continue;
+                    }
+    
+                    if (details.objects.getAndSet(id, true)) {
+                        continue;
+                    }
+                    
+                    ++count;
+                    
+                    @SuppressWarnings("unused")
+                    String type = i.getJavaClass().getName();
+                    
+                    if (!accountShared || sharedRefs.get(i.getInstanceId())) {
+                        details.summary.accumulate(i);
+                    }
+                    
+                    if (i instanceof ObjectArrayInstance) {
+                        ObjectArrayInstance array = (ObjectArrayInstance) i;
+                        if (!isBlackListedArray(array.getJavaClass())) {
+                            for(Long ref: array.getValueIDs()) {
+                                if (ref != 0) {
+                                    // early check to avoid needless instantiation
+                                    if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
+                                        queue.set(ref, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        for(FieldValue f: i.getFieldValues()) {
+                            @SuppressWarnings("unused")
+                            String fieldName = f.getField().getName();
+                            if (f instanceof ObjectFieldValue) {
+                                ObjectFieldValue of = (ObjectFieldValue) f;
+                                if (!isBlackListed(of.getField())) {
+                                    long ref = of.getInstanceId();
+                                    // early check to avoid instantiation
+                                    if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
+                                        queue.set(ref, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch(IllegalInstanceIDException e) {
                     ignoreRefs.set(id, true);
+                    System.err.println("Object missing in dump: " + id);
                     continue;
-                }
-
-                if (details.objects.getAndSet(id, true)) {
-                    continue;
-                }
-
-                ++count;
-
-                @SuppressWarnings("unused")
-                String type = i.getJavaClass().getName();
-
-                if (!accountShared || sharedRefs.get(i.getInstanceId())) {
-                    details.summary.accumulate(i);
-                }
-
-                if (i instanceof ObjectArrayInstance) {
-                    ObjectArrayInstance array = (ObjectArrayInstance) i;
-                    if (!isBlackListedArray(array.getJavaClass())) {
-                        for(Long ref: array.getValueIDs()) {
-                            if (ref != 0) {
-                                // early check to avoid needless instantiation
-                                if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
-                                    queue.set(ref, true);
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    for(FieldValue f: i.getFieldValues()) {
-                        @SuppressWarnings("unused")
-                        String fieldName = f.getField().getName();
-                        if (f instanceof ObjectFieldValue) {
-                            ObjectFieldValue of = (ObjectFieldValue) f;
-                            if (!isBlackListed(of.getField())) {
-                                long ref = of.getInstanceId();
-                                // early check to avoid instantiation
-                                if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
-                                    queue.set(ref, true);
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
