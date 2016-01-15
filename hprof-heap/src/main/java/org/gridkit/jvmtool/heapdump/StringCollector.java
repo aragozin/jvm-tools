@@ -54,6 +54,7 @@ public class StringCollector {
                 callback.feed(i);
             }
         }
+        arrays.set(0, false); // skip null reference
         for(Long id: arrays.ones()) {
             try {
                 totalSize += heap.getInstanceByID(id).getSize();
