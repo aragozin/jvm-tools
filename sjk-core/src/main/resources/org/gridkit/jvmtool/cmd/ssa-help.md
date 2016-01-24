@@ -7,6 +7,9 @@ Trace filter expression language
 Some commands in SSA can accept expression for filtering
 stack traces for some commands.
 
+Stack trimming is another option using same expression
+location to identify trim point within each trace.
+
 Simple expression language can be used to express 
 sophisticated filtering criteria.
 
@@ -36,13 +39,15 @@ AND and AND NOT are left associative
 
 ### Positional predicates
 
-There are two positional predicates
+There are four positional predicates
 
 - last frame followed by (/+)
 - last frame not followed by (/!)
+- first frame followed by (/^+)
+- first frame not followed by (/^!)
 
-Left side of operator should be one 
-or more frame matchers (via comma).
+Left side of operator MUST be a frame matcher
+(or multiple via comma operator).
 
 Right is filter expression.
 Right filter expression will be applied 
@@ -52,6 +57,13 @@ matched by left argument and end of trace.
 ### Parenthesis
 
 Round parenthesis () could be used in expression
+
+### Trimming
+
+Trimming expression should be either positional operator
+or conjunction of frame matchers.
+
+If conjunction of frame matchers is used as trimming expression trimming point would be first frame matched.
 
 ### Examples
 

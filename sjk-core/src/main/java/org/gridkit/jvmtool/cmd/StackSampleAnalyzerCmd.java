@@ -413,7 +413,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                             for(String fn: nf.keySet()) {
                                 sc.addCategory(fn, nf.get(fn));
                             }
-                            cat = sc;
+                            cat = sc;                            
                         }
                     }
                     

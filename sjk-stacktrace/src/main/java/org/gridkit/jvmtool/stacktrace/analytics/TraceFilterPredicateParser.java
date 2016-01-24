@@ -14,6 +14,8 @@ public class TraceFilterPredicateParser {
     private static final String REG_EXCL = "[!]";
     private static final String REG_SLASH_PLUS = "[/][+]";
     private static final String REG_SLASH_EXCL = "[/][!]";
+    private static final String REG_SLASH_UP_PLUS = "[/]\\^[+]";
+    private static final String REG_SLASH_UP_EXCL = "[/]\\^[!]";
     
     static final Pattern TOKENIZER;
     static {
@@ -25,6 +27,8 @@ public class TraceFilterPredicateParser {
                 + "(" + REG_EXCL + ")|"
                 + "(" + REG_SLASH_PLUS + ")|"
                 + "(" + REG_SLASH_EXCL + ")|"
+                + "(" + REG_SLASH_UP_PLUS + ")|"
+                + "(" + REG_SLASH_UP_EXCL + ")|"
                 + "\\s+)";
         TOKENIZER = Pattern.compile(pattern);
     }
@@ -92,10 +96,15 @@ public class TraceFilterPredicateParser {
                     else if (matcher.group(8) != null) {
                         processOp(TokenType.SLASH_EXCL, 2);
                     }
+                    else if (matcher.group(9) != null) {
+                        processOp(TokenType.SLASH_UP_PLUS, 2);
+                    }
+                    else if (matcher.group(10) != null) {
+                        processOp(TokenType.SLASH_UP_EXCL, 2);
+                    }
                 }
                 else {
-                    error(matcher.regionStart(), "cannot parse");
-                    throw new IllegalArgumentException("Cannot parse, error at " + matcher.start() + ": " + text);
+                    throw error(matcher.regionStart(), "cannot parse");
                 }
                 
                 if (matcher.end() == text.length()) {
@@ -259,6 +268,10 @@ public class TraceFilterPredicateParser {
                     return filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), produceFilter(node.right));
                 case SLASH_EXCL:
                     return filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), filterFactory.not(produceFilter(node.right)));
+                case SLASH_UP_PLUS:
+                    return filterFactory.followed(filterFactory.firstFrame(produceMatcher(node.left)), produceFilter(node.right));
+                case SLASH_UP_EXCL:
+                    return filterFactory.followed(filterFactory.firstFrame(produceMatcher(node.left)), filterFactory.not(produceFilter(node.right)));
                 case UNIVERSE:
                     return filterFactory.trueFilter();
                 default:
@@ -270,11 +283,15 @@ public class TraceFilterPredicateParser {
             switch(node.toc) {
                 case PATTERN:
                 case COMMA:
-                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node)), filterFactory.trueFilter());
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.firstFrame(produceMatcher(node)), filterFactory.trueFilter());
                 case SLASH_PLUS:
                     return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), produceFilter(node.right));
                 case SLASH_EXCL:
                     return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), filterFactory.not(produceFilter(node.right)));
+                case SLASH_UP_PLUS:
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.firstFrame(produceMatcher(node.left)), produceFilter(node.right));
+                case SLASH_UP_EXCL:
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.firstFrame(produceMatcher(node.left)), filterFactory.not(produceFilter(node.right)));
                 default:
                     throw new RuntimeException("Positional operator required");
             }            
@@ -358,6 +375,10 @@ public class TraceFilterPredicateParser {
                     throw error(node.offset, "Unsupported for frame predicate");
                 case SLASH_EXCL:
                     throw error(node.offset, "Unsupported for frame predicate");
+                case SLASH_UP_PLUS:
+                    throw error(node.offset, "Unsupported for frame predicate");
+                case SLASH_UP_EXCL:
+                    throw error(node.offset, "Unsupported for frame predicate");
                 case UNIVERSE:
                     return filterFactory.patternFrameMatcher("**");
                 default:
@@ -373,7 +394,9 @@ public class TraceFilterPredicateParser {
         PLUS,
         EXCL,
         SLASH_PLUS,
-        SLASH_EXCL
+        SLASH_EXCL,
+        SLASH_UP_PLUS,
+        SLASH_UP_EXCL,
     }
     
     private static class Op {        
