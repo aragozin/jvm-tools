@@ -17,6 +17,7 @@ public class ClassificatorParserTest {
         parse("jsf-histo.hsf");
     }
     
+    @SuppressWarnings("resource")
     public void parse(String file) throws ParseException, IOException {
         Reader reader = new FileReader("src/test/resources/" + file);
         BufferedReader br = new BufferedReader(reader);

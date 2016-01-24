@@ -145,7 +145,7 @@ public class JBossServerDumpExample {
         analyzer.addEntryPoint("(**.StandardSession)");
 
         // this is a list of singleton objects we do not care
-        loadSingletons(analyzer, "src/test/java/singletons-list.txt");
+        loadSingletons(analyzer, "src/test/resources/singletons-list.txt");
         
         analyzer.blackList("(+java.lang.Enum)");        
         analyzer.blackList("(**.StandardSession).manager");        

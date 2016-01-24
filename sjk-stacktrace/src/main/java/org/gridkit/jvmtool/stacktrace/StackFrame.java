@@ -260,6 +260,13 @@ public class StackFrame implements CharSequence {
         return true;
     }
 
+    /**
+     * @return stack frame instance with removed source information
+     */
+    public StackFrame withoutSource() {
+        return new StackFrame(classPrefix, className, methodName, null, -1);
+    }
+
     public StackTraceElement toStackTraceElement() {
         String cn = classPrefix == null ? className : (classPrefix + '.' + className);
         return new StackTraceElement(cn, methodName, fileName, lineNumber);

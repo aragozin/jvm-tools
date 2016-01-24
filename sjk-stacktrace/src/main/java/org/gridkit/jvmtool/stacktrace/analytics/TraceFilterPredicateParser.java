@@ -33,6 +33,11 @@ public class TraceFilterPredicateParser {
         FilterParser parser = new FilterParser(factory, source);
         return parser.parse();
     }
+
+    public static PositionalStackMatcher parsePositionMatcher(String source, BasicFilterFactory factory) throws ParserException {
+        FilterParser parser = new FilterParser(factory, source);
+        return parser.parsePositionalMatcher();
+    }
     
     
     private static class FilterParser {
@@ -51,6 +56,18 @@ public class TraceFilterPredicateParser {
         }
         
         public ThreadSnapshotFilter parse() {
+            parseText();
+            Op root = collapse();
+            return produceFilter(root);
+        }
+
+        public PositionalStackMatcher parsePositionalMatcher() {
+            parseText();
+            Op root = collapse();
+            return producePosFilter(root);
+        }
+
+        protected void parseText() {
             while(true) {
                 if (matcher.lookingAt()) {
                     offset = matcher.start();
@@ -88,8 +105,6 @@ public class TraceFilterPredicateParser {
                     matcher.region(matcher.end(), text.length());
                 }
             }
-            Op root = collapse();
-            return produceFilter(root);
         }
 
         private void processOp(TokenType tt, int rank) {
@@ -248,6 +263,20 @@ public class TraceFilterPredicateParser {
                     return filterFactory.trueFilter();
                 default:
                     throw new RuntimeException("Unknown node");
+            }            
+        }
+
+        private PositionalStackMatcher producePosFilter(Op node) {
+            switch(node.toc) {
+                case PATTERN:
+                case COMMA:
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node)), filterFactory.trueFilter());
+                case SLASH_PLUS:
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), produceFilter(node.right));
+                case SLASH_EXCL:
+                    return (PositionalStackMatcher)filterFactory.followed(filterFactory.lastFrame(produceMatcher(node.left)), filterFactory.not(produceFilter(node.right)));
+                default:
+                    throw new RuntimeException("Positional operator required");
             }            
         }
 

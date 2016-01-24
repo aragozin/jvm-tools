@@ -1,6 +1,6 @@
 package org.gridkit.jvmtool.stacktrace.analytics;
 
-import org.gridkit.jvmtool.stacktrace.StackFrameList;
+import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 public interface PositionalStackMatcher {
 
@@ -10,6 +10,6 @@ public interface PositionalStackMatcher {
      * 
      * @return frame index or -1 if not found
      */
-    public int matchNext(StackFrameList trace, int matchFrom);
+    public int matchNext(ThreadSnapshot snap, int matchFrom);
     
 }

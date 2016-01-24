@@ -18,7 +18,11 @@ package org.gridkit.jvmtool.cmd;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.Thread.State;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,13 +32,16 @@ import org.gridkit.jvmtool.CategorizerParser;
 import org.gridkit.jvmtool.StackHisto;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.ReaderProxy;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
+import org.gridkit.jvmtool.stacktrace.analytics.FlameGraph;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
+import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
@@ -76,6 +83,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         @Parameter(names={"-tf", "--trace-filter"}, required = false, description="Apply filter to traces before processing. Use --ssa-help for more details about filter notation")
         private String traceFilter = null;
 
+        @Parameter(names={"-tt", "--trace-trim"}, required = false, description="Positional filter trim frames to process. Use --ssa-help for more details about filter notation")
+        private String traceTrim = null;
+
         @Parameter(names={"-co", "--csv-output"}, required = false, description="Output data in CSV format")
         private boolean csvOutput = false;
         
@@ -88,7 +98,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		private SsaCmd histo = new HistoCmd();
 
         @ParametersDelegate
-		private SsaCmd csummary = new CategorizeCmd();
+		private SsaCmd flame = new FlameCmd();
+
+        @ParametersDelegate
+        private SsaCmd csummary = new CategorizeCmd();
 
         @ParametersDelegate
         private SsaCmd help = new HelpCmd();
@@ -161,14 +174,37 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		}
 		
 		StackTraceReader getFilteredReader() throws IOException {
-	        if (traceFilter == null) {
+	        if (traceFilter == null && traceTrim == null) {
 	            return getUnclassifiedReader();
 	        }
 	        else {
-	            final StackTraceReader unclassified = getUnclassifiedReader();
+	            StackTraceReader reader = getUnclassifiedReader();
 	            try {
-	                ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, new CachingFilterFactory());
-	                return new FilteredStackTraceReader(ts, unclassified);
+	                CachingFilterFactory factory = new CachingFilterFactory();
+	                if (traceFilter != null) {
+                        ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, factory);
+    	                reader = new FilteredStackTraceReader(ts, reader);
+	                }
+	                if (traceTrim != null) {
+	                    final PositionalStackMatcher mt = TraceFilterPredicateParser.parsePositionMatcher(traceTrim, factory);
+	                    reader = new TrimProxy(reader) {
+	                        
+	                        ReaderProxy proxy = new ReaderProxy(reader);
+	                        
+                            @Override
+                            public boolean loadNext() throws IOException {
+                                while(super.loadNext()) {
+                                    int n = mt.matchNext(proxy, 0);
+                                    if (n >= 0) {
+                                        trimPoint = n;
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            }
+	                    };
+	                }
+	                return reader;
 	            }
 	            catch(ParserException e) {
 	                throw host.fail("Failed to parse trace filter - " + e.getMessage() + " at " + e.getOffset() + " [" + e.getParseText() + "]");
@@ -306,6 +342,55 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
         }
 
+        class FlameCmd extends SsaCmd {
+
+            @Parameter(names={"--flame"}, description="Export flame graph to SVG format")
+            boolean run;
+            
+            @Parameter(names={"--title"}, description="Flame graph title")
+            String title = "Flame Graph";
+            
+            @Parameter(names={"--width"}, description="Flame graph width in pixels")
+            int width = 1200;
+
+            @Override
+            public boolean isSelected() {
+                return run;
+            }
+
+            @Override
+            public void run() {
+                try {
+
+                    FlameGraph fg = new FlameGraph();
+                    
+                    StackTraceReader reader = getFilteredReader();
+                    int n = 0;
+                    while(reader.loadNext()) {
+                        StackFrameList trace = reader.getStackTrace();
+                        fg.feed(trace);
+                        ++n;
+                    }
+                    
+                    if (n > 0) {
+                        Writer w = new OutputStreamWriter(System.out);
+                        fg.renderSVG(title, width, w);
+                        w.flush();
+                    }
+                    else {
+                        System.out.println("No data");
+                    }
+                    
+                } catch (Exception e) {
+                    host.fail(e.toString(), e);
+                }
+            }
+            
+            public String toString() {
+                return "--histo";
+            }
+        }
+        
         class CategorizeCmd extends SsaCmd {
 
             @Parameter(names={"--categorize"}, description="Print summary for provided categorization")
@@ -416,5 +501,51 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 return "--ssa-help";
             }
         }
-	}	
+	}
+	
+	static class TrimProxy implements StackTraceReader {
+	    
+	    protected StackTraceReader reader;
+	    protected int trimPoint = 0;
+	    
+        public TrimProxy(StackTraceReader reader) {
+            this.reader = reader;
+        }
+
+        public boolean isLoaded() {
+            return reader.isLoaded();
+        }
+
+        public long getThreadId() {
+            return reader.getThreadId();
+        }
+
+        public long getTimestamp() {
+            return reader.getTimestamp();
+        }
+
+        public String getThreadName() {
+            return reader.getThreadName();
+        }
+
+        public State getThreadState() {
+            return reader.getThreadState();
+        }
+
+        public CounterCollection getCounters() {
+            return reader.getCounters();
+        }
+
+        public StackTraceElement[] getTrace() {
+            return Arrays.copyOf(reader.getTrace(), trimPoint);
+        }
+
+        public StackFrameList getStackTrace() {
+            return reader.getStackTrace().fragment(0, trimPoint);
+        }
+
+        public boolean loadNext() throws IOException {
+            return reader.loadNext();
+        }
+	}
 }
