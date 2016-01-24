@@ -245,7 +245,8 @@ public class BasicFilterFactory {
         }
 
         @Override
-        public int matchNext(StackFrameList trace, int matchFrom) {
+        public int matchNext(ThreadSnapshot snap, int matchFrom) {
+            StackFrameList trace = snap.stackTrace();
             if (matchFrom > 0) {
                 // assume that match have been found already
                 return -1;
@@ -259,7 +260,7 @@ public class BasicFilterFactory {
         }
     }
     
-    protected static class FollowedPredicate implements ThreadSnapshotFilter {
+    protected static class FollowedPredicate implements ThreadSnapshotFilter, PositionalStackMatcher {
 
         private final PositionalStackMatcher matcher;
         private final ThreadSnapshotFilter tailFilter;
@@ -273,7 +274,7 @@ public class BasicFilterFactory {
         public boolean evaluate(ThreadSnapshot snapshot) {
             int n = -1;
             while(true) {
-                int m = matcher.matchNext(snapshot.stackTrace(), n + 1);
+                int m = matcher.matchNext(snapshot, n + 1);
                 if (m < 0) {
                     break;
                 }
@@ -286,6 +287,25 @@ public class BasicFilterFactory {
             }
             else {
                 return false;
+            }
+        }
+
+        @Override
+        public int matchNext(ThreadSnapshot snap, int matchFrom) {
+            int n = matchFrom - 1;
+            while(true) {
+                int m = matcher.matchNext(snap, n + 1);
+                if (m < 0) {
+                    if (n >= matchFrom) {
+                        StackFrameList remained = snap.stackTrace();
+                        remained = remained.fragment(0, n);
+                        if (tailFilter.evaluate(new ThreadSnapProxy(snap, remained))) {
+                            return n;
+                        }
+                    }
+                    return -1;
+                }
+                n = m;
             }
         }
     }

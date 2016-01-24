@@ -201,6 +201,11 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_print_trim() {
+	    exec("ssa", "--print", "-tt", "javax.management.StandardMBean.invoke/+**", "-f", "target/test.stp");
+	}
+
+	@Test
 	public void ssa_histo() {
 	    exec("ssa", "--histo", "-f", "target/test.stp", "-X");
 	}
@@ -225,6 +230,26 @@ public class CliCheck {
 	    exec("ssa", "--histo", "-tf", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
 	}
 
+	@Test
+	public void ssa_histo_with_trim() {
+	    exec("ssa", "--histo", "-tt", "javax.management.remote.rmi.RMIConnectionImpl.invoke/+**", "-f", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_histo_with_trim2() {
+	    exec("ssa", "--histo", "-tt", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_flame() {
+	    exec("ssa", "--flame", "-f", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_flame_with_trim() {
+	    exec("ssa", "--flame", "-tt", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
+	}
+	
 	@Test
 	public void ssa_categorize() {
 	    exec("ssa", "--categorize", "-co", "-cf", "src/test/resources/sample-seam-jsf-profile.ctz", "-f", "target/test.stp");

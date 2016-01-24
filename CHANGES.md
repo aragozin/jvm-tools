@@ -1,5 +1,8 @@
 Next
 ----
+- Added flame graph generation support (SVG format).
+- `--trace-trim` option for SSA commands, command used 
+to remove unintersting top of call tree from analysis.
 
 0.3.9 - 2016 Jan 14
 ----
