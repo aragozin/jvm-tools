@@ -1,4 +1,7 @@
-Next
+Next version
+----
+
+0.4.0 - 2016 Jan 24
 ----
 - Added flame graph generation support (SVG format).
 - `--trace-trim` option for SSA commands, command used 
