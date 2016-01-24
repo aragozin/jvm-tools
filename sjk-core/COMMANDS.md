@@ -314,35 +314,56 @@ stcap commands dumps threads from target process with configured period (or non-
 ssa command's used to analyze thread dump produced by stcap command.
 
     > java -jar sjk.jar ssa --help
-    
+
     [Stack Sample Analyzer] Analyzing stack trace dumps
     Usage: ssa [options]
       Options:
-        -b, --buckets
-           Restrict analysis to specific class
-        -c, --classifier
-           Path to file with stack trace classification definition
-      * -f, --file
+            --categorize
+           Print summary for provided categorization
+           Default: false
+        -cf, --categorizer-file
+           Path to file with stack trace categorization definition
+            --commands
+
+           Default: false
+        -co, --csv-output
+           Output data in CSV format
+           Default: false
+        -f, --file
            Path to stack dump file
+            --flame
+           Export flame graph to SVG format
+           Default: false
             --help
 
            Default: false
             --histo
            Print frame histogram
            Default: false
+        -nc, --named-class
+           May be used with some commands to define name stack trace classes
+           <name>=<filter expression> notation
+           Default: []
             --print
            Print traces from file
            Default: false
-        -sf, --simple-filter
-           Process only traces containing this string
-            --summary
-           Print summary for provided classification
+            --ssa-help
+           Additional information about SSA
            Default: false
-        -X, --verbose
-           Enable detailed diagnostics
-           Default: false
+            --title
+           Flame graph title
+           Default: Flame Graph
+        -tf, --trace-filter
+           Apply filter to traces before processing. Use --ssa-help for more details
+           about filter notation
+        -tt, --trace-trim
+           Positional filter trim frames to process. Use --ssa-help for more details
+           about filter notation
+            --width
+           Flame graph width in pixels
+           Default: 1200
 
-Following reports are available:
+Following subcommands are available:
 
 `--print` print stack trace in text format.
 
@@ -363,7 +384,11 @@ Following reports are available:
 - Frm N - number of occurrences for this frame in all traces (same frame may be on stack for multiple times)
 - Term N - number of traces terminating with that frame
 
-`--summary` calculate hit count for each category in provided classification file.
+`--flame` produces flame graph in SVG format.
+
+`--categorize` calculate hit count for each category in provided eigther by classification file or via `-nc` option.
+
+See also [SSA documentation page](src/main/resources/org/gridkit/jvmtool/cmd/ssa-help.md).
 
 `stcpy` command
 ----
