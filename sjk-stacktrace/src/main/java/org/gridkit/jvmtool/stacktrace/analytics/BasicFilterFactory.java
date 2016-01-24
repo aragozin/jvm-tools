@@ -214,6 +214,10 @@ public class BasicFilterFactory {
     public PositionalStackMatcher lastFrame(StackFrameMatcher matcher) {
         return new LastFrameMatcher(matcher);
     }
+
+    public PositionalStackMatcher firstFrame(StackFrameMatcher matcher) {
+        return new FirstFrameMatcher(matcher);
+    }
     
     protected final class TrueFilter implements ThreadSnapshotFilter {
         @Override
@@ -260,6 +264,30 @@ public class BasicFilterFactory {
         }
     }
     
+    protected class FirstFrameMatcher implements PositionalStackMatcher {
+        
+        private final StackFrameMatcher matcher;
+
+        public FirstFrameMatcher(StackFrameMatcher matcher) {
+            this.matcher = matcher;
+        }
+
+        @Override
+        public int matchNext(ThreadSnapshot snap, int matchFrom) {
+            StackFrameList trace = snap.stackTrace();
+            if (matchFrom > 0) {
+                // assume that match have been found already
+                return -1;
+            }
+            for(int i = trace.depth(); i > 0; --i) {
+                if (matcher.evaluate(trace.frameAt(i - 1))) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    }
+
     protected static class FollowedPredicate implements ThreadSnapshotFilter, PositionalStackMatcher {
 
         private final PositionalStackMatcher matcher;

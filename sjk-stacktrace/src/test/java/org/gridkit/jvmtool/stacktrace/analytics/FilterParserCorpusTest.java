@@ -44,6 +44,8 @@ public class FilterParserCorpusTest {
         addCase(1362,  "**.CoyoteAdapter.service+org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke/!**.proceed");
         addCase(934,   "**.CoyoteAdapter.service+org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke/!**.proceed+org.jboss.seam.Component.*ject");
         addCase(428,   "**.CoyoteAdapter.service+org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke/!**.proceed+java.util.concurrent.locks.ReentrantLock");
+        addCase(2891,   "org.hibernate/^+**.onAutoFlush");
+        addCase(1542,   "org.hibernate/^!**.onAutoFlush");
         
         return cases;
     }

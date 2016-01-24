@@ -241,6 +241,11 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_histo_with_trim3() {
+	    exec("ssa", "--histo", "-tf", "**!**.jdbc", "-tt", "org.hibernate", "-f", "../sjk-stacktrace/src/test/resources/jboss-10k.std");
+	}
+
+	@Test
 	public void ssa_flame() {
 	    exec("ssa", "--flame", "-f", "target/test.stp");
 	}
@@ -252,7 +257,12 @@ public class CliCheck {
 	
 	@Test
 	public void ssa_categorize() {
-	    exec("ssa", "--categorize", "-co", "-cf", "src/test/resources/sample-seam-jsf-profile.ctz", "-f", "target/test.stp");
+	    exec("ssa", "--categorize", "-co", "-cf", "src/test/resources/sample-seam-jsf-profile.ctz", "-f", "../sjk-stacktrace/src/test/resources/jboss-10k.std");
+	}
+
+	@Test
+	public void ssa_categorize_nc() {
+	    exec("ssa", "--categorize", "-nc", "JDBC=**.jdbc", "-f", "../sjk-stacktrace/src/test/resources/jboss-10k.std");
 	}
 
     @Test
