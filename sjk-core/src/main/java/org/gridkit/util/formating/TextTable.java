@@ -164,6 +164,7 @@ public class TextTable {
 			if (table) {
 				sb.setLength(sb.length() - 1);
 			}
+			trimTail(sb);
 			sb.append('\n');
 			if (header) {
 				header = false;
@@ -174,6 +175,7 @@ public class TextTable {
 					sb.append('+');
 				}
 				sb.setLength(sb.length() - 1);
+				trimTail(sb);
 				sb.append('\n');
 			}
 		}
@@ -240,6 +242,12 @@ public class TextTable {
                     }
                 }
             }
+        }
+    }
+    
+    private static void trimTail(StringBuilder sb) {
+        while(sb.length() > 0 && sb.charAt(sb.length() - 1) == ' ') {
+            sb.setLength(sb.length() - 1);
         }
     }
     
