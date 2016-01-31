@@ -1,3 +1,18 @@
+/**
+ * Copyright 2016 Alexey Ragozin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gridkit.jvmtool.stacktrace.analytics;
 
 import java.awt.Color;
@@ -51,15 +66,11 @@ public class FlameGraph {
 
         int height = maxDepth * frameheight + topm + bm;  
         
-        String line = null;
-
         appendHeader(width, height, writer);
         
-        format(writer, "<rect x=\"0.0\" y=\"0\" width=\"%d\" height=\"%d\" fill=\"url(#background)\"/>", width, height);
-        writer.append(line).append("\n");
+        format(writer, "<rect x=\"0.0\" y=\"0\" width=\"%d\" height=\"%d\" fill=\"url(#background)\"/>\n", width, height);
 
-        format(writer, "<text text-anchor=\"middle\" x=\"%d\" y=\"%d\" font-size=\"17\" font-family=\"Verdana\" fill=\"rgb(0,0,0)\"  >%s</text>", width/2, topm, title);
-        writer.append(line).append("\n");
+        format(writer, "<text text-anchor=\"middle\" x=\"%d\" y=\"%d\" font-size=\"17\" font-family=\"Verdana\" fill=\"rgb(0,0,0)\"  >%s</text>\n", width/2, topm, title);
         
         appendChildNodes(writer, root, 0, width, height - frameheight, frameheight, threashold);        
 
@@ -113,7 +124,7 @@ public class FlameGraph {
         format(writer, "</g>\n");
         
         if (node.terminalCount == node.totalCount) {
-            format(writer, "<g class=\"func_g\">\n");
+            format(writer, "<g>\n");
             format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(20,20,20)\" rx=\"1\" ry=\"1\"/>\n",
                     rx, ry - rh / 2, rw, 3f);
             format(writer, "</g>\n");            
@@ -238,7 +249,7 @@ public class FlameGraph {
         
     }
     
-    public class SimpleColorPicker implements ColorPicker {
+    public static class SimpleColorPicker implements ColorPicker {
 
         @Override
         public int pickColor(StackFrame[] trace) {
@@ -249,20 +260,37 @@ public class FlameGraph {
             
             StackFrame sf = trace[trace.length - 1];
             
-            int hP = packageNameHash(sf.getClassName());
-            int hC = classNameHash(sf.getClassName());
-            int hM = sf.getMethodName().hashCode();
-            
-            int hue = 12 + (hP % 20) - 10;
-            int sat = 180 + (hC % 20) - 10;
-            int lum = 220 + (hM % 20) - 10;
-            
-            int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
+            int c = hashColor(12, 10, sf);
             
             return c;
         }
 
-        private int packageNameHash(String className) {
+        public static int hashColor(int baseHue, int deltaHue, StackFrame sf) {
+            int hP = packageNameHash(sf.getClassName());
+            int hC = classNameHash(sf.getClassName());
+            int hM = sf.getMethodName().hashCode();
+            
+            int hue = deltaHue == 0 ? baseHue : baseHue + (hP % (2 * deltaHue)) - deltaHue;
+            int sat = 180 + (hC % 20) - 10;
+            int lum = 220 + (hM % 20) - 10;
+            
+            int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
+            return c;
+        }
+
+        public static int hashGrayColor(StackFrame sf) {
+            int hC = classNameHash(sf.getClassName());
+            int hM = sf.getMethodName().hashCode();
+            
+            int hue = 0;
+            int sat = 0;
+            int lum = 220 + ((hM + hC) % 20) - 10;
+            
+            int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
+            return c;
+        }
+
+        private static int packageNameHash(String className) {
             int c = className.lastIndexOf('.');
             if (c >= 0) {
                 return className.substring(0, c).hashCode();
@@ -272,7 +300,7 @@ public class FlameGraph {
             }
         }
 
-        private int classNameHash(String className) {
+        private static int classNameHash(String className) {
             int c = className.lastIndexOf('.');
             if (c >= 0) {
                 className = className.substring(c + 1);

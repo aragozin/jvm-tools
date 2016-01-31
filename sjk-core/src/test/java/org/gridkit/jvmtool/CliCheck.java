@@ -254,6 +254,11 @@ public class CliCheck {
 	public void ssa_flame_with_trim() {
 	    exec("ssa", "--flame", "-tt", "javax.management.remote.rmi.RMIConnectionImpl.invoke", "-f", "target/test.stp");
 	}
+
+	@Test
+	public void ssa_flame_rainbow() {
+	    exec("ssa", "--flame", "-f", "target/test.stp");
+	}
 	
 	@Test
 	public void ssa_categorize() {

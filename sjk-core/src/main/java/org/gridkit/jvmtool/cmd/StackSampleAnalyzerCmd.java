@@ -42,6 +42,7 @@ import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.FlameGraph;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
+import org.gridkit.jvmtool.stacktrace.analytics.RainbowColorPicker;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
@@ -352,6 +353,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             
             @Parameter(names={"--width"}, description="Flame graph width in pixels")
             int width = 1200;
+            
+            @Parameter(names={"-rc", "--rainbow"}, variableArity = true, description="List of filters for rainbow coloring")
+            List<String> rainbow;
 
             @Override
             public boolean isSelected() {
@@ -363,6 +367,14 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 try {
 
                     FlameGraph fg = new FlameGraph();
+                    if (rainbow != null && rainbow.size() > 0) {
+                        ThreadSnapshotFilter[] filters = new ThreadSnapshotFilter[rainbow.size()];
+                        CachingFilterFactory factory = new CachingFilterFactory();
+                        for (int i = 0; i != rainbow.size(); ++i) {
+                            filters[i] = TraceFilterPredicateParser.parseFilter(rainbow.get(i), factory);
+                        }
+                        fg.setColorPicker(new RainbowColorPicker(filters));
+                    }
                     
                     StackTraceReader reader = getFilteredReader();
                     int n = 0;
