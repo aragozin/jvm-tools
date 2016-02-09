@@ -184,7 +184,10 @@ public class MBeanCpuUsageReporter {
     	    if (threadAllocatedMemoryEnabled) {
     	        long[] alloc = ((ThreadMXBeanEx)mbean).getThreadAllocatedBytes(ids);
     	        for (int i = 0 ; i != ids.length; ++i) {
-    	            threadDump.get(ids[i]).lastAllocatedBytes = alloc[i];
+    	            if (threadDump.get(ids[i]) == null) {
+    	                continue;
+    	            }
+	                threadDump.get(ids[i]).lastAllocatedBytes = alloc[i];
     	        }
     	    }
     	    
@@ -192,12 +195,18 @@ public class MBeanCpuUsageReporter {
     	        long[] cpu = ((ThreadMXBeanEx)mbean).getThreadCpuTime(ids);
     	        long[] usr = ((ThreadMXBeanEx)mbean).getThreadUserTime(ids);
                 for (int i = 0 ; i != ids.length; ++i) {
+                    if (threadDump.get(ids[i]) == null) {
+                        continue;
+                    }
                     threadDump.get(ids[i]).lastCpuTime = cpu[i];
                     threadDump.get(ids[i]).lastUserTime = usr[i];
                 }
     	    }
     	    else {
     	        for(long id: ids) {
+                    if (threadDump.get(id) == null) {
+                        continue;
+                    }
     	            ThreadTrac tt = threadDump.get(id);
     	            tt.lastCpuTime = mbean.getThreadCpuTime(id);
     	            tt.lastUserTime = mbean.getThreadCpuTime(id);
