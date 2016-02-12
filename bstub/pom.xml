@@ -1,0 +1,144 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<!--
+
+    Copyright 2016 Alexey Ragozin
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.4.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>bstub</artifactId>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>Repackaging for BTrace profiler</description>
+
+  <properties>
+    <nanocloud.version>0.8.11</nanocloud.version>
+    <btrace.version>2.0.1-nimble</btrace.version>
+    <jvm-attach.version>1.2</jvm-attach.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.gridkit.jvmtool</groupId>
+      <artifactId>sjk-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.lab</groupId>
+      <artifactId>jvm-attach-api</artifactId>
+      <version>${jvm-attach.version}</version>
+    </dependency>    
+    <dependency>
+      <groupId>org.gridkit.3rd.btrace</groupId>
+      <artifactId>btrace-boot</artifactId>
+      <version>${btrace.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.3rd.btrace</groupId>
+      <artifactId>client</artifactId>
+      <version>${btrace.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.3rd.btrace</groupId>
+      <artifactId>btrace-agent</artifactId>
+      <version>${btrace.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.3rd.btrace</groupId>
+      <artifactId>instr</artifactId>
+      <version>${btrace.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.3rd.btrace</groupId>
+      <artifactId>ext-default</artifactId>
+      <version>${btrace.version}</version>
+    </dependency>
+    <!--
+    <dependency>
+      <groupId>org.gridkit.lab</groupId>
+      <artifactId>nimble-btrace</artifactId>
+      <version>0.2.5-SNAPSHOT</version>
+    </dependency>
+      -->
+    <dependency>
+      <groupId>org.gridkit.lab</groupId>
+      <artifactId>nanotest</artifactId>
+      <version>${nanocloud.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>org.gridkit.jvmtool:*</include>
+                  <include>org.gridkit.lab:*</include>
+                  <include>com.beust:*</include>
+                  <include>org.gridkit.3rd.btrace:*</include>
+                </includes>
+              </artifactSet>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.gridkit.jvmtool.bstub.BStub</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
