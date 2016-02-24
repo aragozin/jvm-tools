@@ -206,6 +206,16 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_print_thread_name() {
+	    exec("ssa", "--print", "-tn", "RMI TCP Connection.*", "-f", "target/test.stp");
+	}
+
+	@Test
+	public void ssa_print_time_range() {
+	    exec("ssa", "--print", "-tr", "34:08-34:10", "-tn", "RMI TCP Connection.*", "-f", "target/test.stp");
+	}
+
+	@Test
 	public void ssa_histo() {
 	    exec("ssa", "--histo", "-f", "target/test.stp", "-X");
 	}

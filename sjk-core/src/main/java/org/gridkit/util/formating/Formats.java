@@ -15,6 +15,8 @@
  */
 package org.gridkit.util.formating;
 
+import java.text.SimpleDateFormat;
+
 /**
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
@@ -66,5 +68,6 @@ public class Formats {
 		System.out.println("ZERO_LEAD_DECIMAL_6: " + String.format(ZERO_LEAD_DECIMAL_6, 1234));
 		System.out.println(String.format("[%-6s]", "x"));
 		System.out.println(String.format("[%.2f]", 0.1));
+		System.out.println("SimpleDataFormat: " + new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(System.currentTimeMillis()));
 	}
 }

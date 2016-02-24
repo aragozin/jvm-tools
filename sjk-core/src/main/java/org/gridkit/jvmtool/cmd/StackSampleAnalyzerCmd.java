@@ -21,17 +21,22 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.Thread.State;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.gridkit.jvmtool.CategorizerParser;
 import org.gridkit.jvmtool.StackHisto;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.jvmtool.stacktrace.AbstractFilteringStackTraceReader;
 import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.ReaderProxy;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
@@ -46,8 +51,8 @@ import org.gridkit.jvmtool.stacktrace.analytics.RainbowColorPicker;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
+import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
-import org.gridkit.util.formating.Formats;
 import org.gridkit.util.formating.TextTable;
 
 import com.beust.jcommander.Parameter;
@@ -86,6 +91,15 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
         @Parameter(names={"-tt", "--trace-trim"}, required = false, description="Positional filter trim frames to process. Use --ssa-help for more details about filter notation")
         private String traceTrim = null;
+
+        @Parameter(names={"-tn", "--thread-name"}, required = false, description="Thread name filter (Java RegEx syntax)")
+        private String threadName = null;
+
+        @Parameter(names={"-tr", "--time-range"}, required = false, description="Time range filter")
+        private String timeRange = null;
+
+        @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps")
+        private String timeZone = "UTC";
 
         @Parameter(names={"-co", "--csv-output"}, required = false, description="Output data in CSV format")
         private boolean csvOutput = false;
@@ -145,6 +159,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			    host.fail(e.toString(), e);
 			}
 		}
+		
+		TimeZone timeZone() {
+		    return TimeZone.getTimeZone(timeZone);
+		}
 
 		Map<String, ThreadSnapshotFilter> getNamedClasses() {
 		    if (namedClasses.isEmpty()) {
@@ -175,11 +193,22 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		}
 		
 		StackTraceReader getFilteredReader() throws IOException {
-	        if (traceFilter == null && traceTrim == null) {
+	        if (traceFilter == null && traceTrim == null && threadName == null && timeRange == null) {
 	            return getUnclassifiedReader();
 	        }
 	        else {
 	            StackTraceReader reader = getUnclassifiedReader();
+	            if (threadName != null) {
+	                reader = new ThreadNameFilter(reader, threadName);
+	            }
+	            if (timeRange != null) {
+	                String[] lh = timeRange.split("[-]");
+	                if (lh.length != 2) {
+	                    host.fail("Invalid time range '" + timeRange + "'", "Valid format yyyy.MM.dd_HH:mm:ss-yyyy.MM.dd_HH:mm:ss hours and higher parts can be ommited");
+	                }
+	                TimeRangeChecker checker = new TimeRangeChecker(lh[0], lh[1], timeZone());
+	                reader = new TimeFilter(reader, checker);
+	            }
 	            try {
 	                CachingFilterFactory factory = new CachingFilterFactory();
 	                if (traceFilter != null) {
@@ -262,8 +291,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				try {
 				    
 			        StackTraceReader reader = getFilteredReader();
+			        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+			        fmt.setTimeZone(timeZone());
 			        while(reader.loadNext()) {
-			            String timestamp = Formats.toDatestamp(reader.getTimestamp());
+			            String timestamp = fmt.format(reader.getTimestamp());
 			            StringBuilder threadHeader = new StringBuilder();
 			            threadHeader
 			                .append("Thread [")
@@ -513,6 +544,54 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 return "--ssa-help";
             }
         }
+	}
+	
+	static class TimeFilter extends AbstractFilteringStackTraceReader {
+	    
+	    StackTraceReader reader;
+	    TimeRangeChecker checker;
+	    
+        public TimeFilter(StackTraceReader reader, TimeRangeChecker checker) {
+            this.reader = reader;
+            this.checker = checker;
+        }
+
+        @Override
+        protected boolean evaluate() {
+            return checker.evaluate(getTimestamp());
+        }
+
+        @Override
+        protected StackTraceReader getReader() {
+            return reader;
+        }
+	}
+
+	static class ThreadNameFilter extends AbstractFilteringStackTraceReader {
+	    
+	    StackTraceReader reader;
+	    Matcher matcher;
+	    
+	    public ThreadNameFilter(StackTraceReader reader, String regex) {
+	        this.reader = reader;
+	        this.matcher = Pattern.compile(regex).matcher("");
+	    }
+	    
+	    @Override
+	    protected boolean evaluate() {
+	        if (getThreadName() != null) {
+    	        matcher.reset(getThreadName());
+    	        return matcher.matches();
+	        }
+	        else {
+	            return false;
+	        }
+	    }
+	    
+	    @Override
+	    protected StackTraceReader getReader() {
+	        return reader;
+	    }
 	}
 	
 	static class TrimProxy implements StackTraceReader {
