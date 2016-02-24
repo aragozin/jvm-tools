@@ -313,7 +313,7 @@ public class MBeanCpuUsageReporter {
 			}
 			if (currentSafePointCount > 0) {
 			    if (currentSafePointCount == lastSafePointCount) {
-			        sb.append(String.format("  no safe points"));			    
+			        sb.append(String.format("  no safe points\n"));			    
 			    }
 			    else {
     			    double spRate = (TimeUnit.SECONDS.toNanos(1) * (double)(currentSafePointCount - lastSafePointCount)) / timeSplit;
