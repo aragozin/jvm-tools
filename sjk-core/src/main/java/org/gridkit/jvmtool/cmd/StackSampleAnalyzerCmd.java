@@ -15,6 +15,8 @@
  */
 package org.gridkit.jvmtool.cmd;
 
+import static org.gridkit.jvmtool.stacktrace.analytics.ThreadDumpAggregatorFactory.COMMON;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,10 +51,13 @@ import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
 import org.gridkit.jvmtool.stacktrace.analytics.RainbowColorPicker;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadDumpAggregatorFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadSplitAggregator;
 import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
+import org.gridkit.util.formating.Formats;
 import org.gridkit.util.formating.TextTable;
 
 import com.beust.jcommander.Parameter;
@@ -118,6 +123,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         @ParametersDelegate
         private SsaCmd csummary = new CategorizeCmd();
 
+        @ParametersDelegate
+        private SsaCmd threadInfo = new ThreadInfoCmd();
+        
         @ParametersDelegate
         private SsaCmd help = new HelpCmd();
 
@@ -190,6 +198,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		        }
 		        return classes;
 		    }
+		}
+		
+		ThreadSnapshotFilter parseFilter(String filter) {
+		    CachingFilterFactory factory = new CachingFilterFactory();
+		    ThreadSnapshotFilter tf = TraceFilterPredicateParser.parseFilter(filter, factory);
+		    return tf;
 		}
 		
 		StackTraceReader getFilteredReader() throws IOException {
@@ -504,6 +518,166 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 return "--categorize";
             }
         }
+
+        class ThreadInfoCmd extends SsaCmd {
+            
+            @Parameter(names={"--thread-info"}, description="Per thread info summary")
+            boolean run;
+
+            @Parameter(names={"-si", "--summary-info"}, variableArity = true, description="List of summaries")
+            List<String> summaryInfo;
+
+            @Override
+            public boolean isSelected() {
+                return run;
+            }
+            
+            List<String> summaryNames = new ArrayList<String>();
+            List<ThreadDumpAggregatorFactory> summaries = new ArrayList<ThreadDumpAggregatorFactory>();
+            List<SummaryFormater> summaryFormaters = new ArrayList<SummaryFormater>();
+
+            void add(String name, ThreadDumpAggregatorFactory summary) {
+                add(name, summary, new DefaultFormater());
+            }
+
+            void add(String name, ThreadDumpAggregatorFactory summary, SummaryFormater formater) {
+                summaryNames.add(name + " ");
+                summaries.add(summary);
+                summaryFormaters.add(formater);
+            }
+            
+            @Override
+            public void run() {
+                try {
+                    
+                    if (summaryInfo == null || summaryInfo.isEmpty()) {
+                        add("Name", COMMON.name());
+                        add("Count", COMMON.count(), new RightFormater());
+                        add("On CPU", COMMON.cpu(), new PercentFormater());
+                        add("Alloc ", COMMON.alloc(), new MemRateFormater());
+                        add("RUNNABLE", COMMON.threadState(State.RUNNABLE), new PercentFormater());
+                        add("Native", COMMON.inNative(), new PercentFormater());
+                    }
+                    else {
+                        for(String si: summaryInfo) {
+                            addSummary(si);
+                        }
+                    }
+                    
+                    ThreadSplitAggregator threadAgg = new ThreadSplitAggregator(summaries.toArray(new ThreadDumpAggregatorFactory[0]));
+                    StackTraceReader str = getFilteredReader();
+                    if (!str.isLoaded()) {
+                        str.loadNext();
+                    }
+                    ReaderProxy proxy = new ReaderProxy(str);
+                    while(str.isLoaded()) {
+                        threadAgg.feed(proxy);
+                        str.loadNext();
+                    }
+                    
+                    TextTable tt = new TextTable();
+                    tt.addRow(summaryNames);
+                    int n = 0;
+                    for(Object[] row: threadAgg.report()) {
+                        ++n;
+                        String[] frow = new String[summaries.size()];
+                        for(int i = 0; i != summaries.size(); ++i) {
+                            SummaryFormater sf = summaryFormaters.get(i);
+                            frow[i] = sf.toString(row[i + 2]) + " ";
+                        }
+                        tt.addRow(frow);
+                    }
+                    
+                    if (n > 0) {
+                        if (csvOutput) {
+                            System.out.println(tt.formatToCSV());
+                        }
+                        else {
+                            System.out.println(tt.formatTextTableUnbordered(80));
+                        }
+                    }
+                    else {
+                        System.out.println("No data");
+                    }
+                    
+                } catch (Exception e) {
+                    host.fail(e.toString(), e);
+                }
+            }
+            
+            private void addSummary(String si) {
+                si = si.trim();
+                if ("NAME".equals(si)) {
+                    add("Name", COMMON.name());
+                    
+                }
+                else if ("COUNT".equals(si)) {
+                    add("Count", COMMON.count(), new RightFormater());
+                }
+                else if ("TSMIN".equals(si)) {
+                    add("First time", COMMON.minTimestamp(), new DateFormater(timeZone()));
+                }
+                else if ("TSMAX".equals(si)) {
+                    add("Last time", COMMON.maxTimestamp(), new DateFormater(timeZone()));
+                }
+                else if ("CPU".equals(si)) {
+                    add("On CPU", COMMON.cpu(), new PercentFormater());
+                }
+                else if ("ALLOC".equals(si)) {
+                    add("Alloc ", COMMON.alloc(), new MemRateFormater());
+                }
+                else if (si.startsWith("S:")) {
+                    State st = State.valueOf(si.substring(2));
+                    add(st.toString(), COMMON.threadState(st), new PercentFormater());
+                }
+                else if ("NATIVE".equals(si)) {
+                    add("Native", COMMON.inNative(), new PercentFormater());
+                }
+                else if (Pattern.matches(".*=.*", si)) {
+                    String[] p = si.split("[=]");
+                    if (p.length != 2) {
+                        badSummary(si);
+                    }
+                    ThreadSnapshotFilter ts = parseFilter(p[1]);
+                    add(p[0], COMMON.threadFilter(ts), new PercentFormater());
+                }
+                else if ("FREQ".equals(si)) {
+                    add("Freq.", COMMON.frequency(), new DecimalFormater(1));
+                }
+                else if ("FREQ_HM".equals(si)) {
+                    add("Freq. (1/HM)", COMMON.frequencyHM(), new DecimalFormater(1));
+                }
+                else if ("GAP_CHM".equals(si)) {
+                    add("Gap CHM", COMMON.periodCHM(), new DecimalFormater(3));
+                }
+                else { 
+                    badSummary(si);
+                }
+            }
+
+            private void badSummary(String si) {
+                host.fail("Unknown summary '" + si + "'",
+                        "Allowed summaries are",
+                        "  NAME",
+                        "  COUNT",
+                        "  TSMIN",
+                        "  TSMAX",
+                        "  CPU",
+                        "  ALLOC",
+                        "  NATIVE",
+                        "  FREQ",
+                        "  FREQ_HM",
+                        "  GAP_CHM",
+                        "  S:[RUNNABLE|BLOCKED|WAITING|TIMED_WAITING]",
+                        "  <name>=<filter expression>"
+                        );
+                
+            }
+
+            public String toString() {
+                return "--categorize";
+            }
+        }
         
         public class HelpCmd extends SsaCmd {
 
@@ -638,5 +812,96 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         public boolean loadNext() throws IOException {
             return reader.loadNext();
         }
+	}
+	
+	interface SummaryFormater {
+	    
+	    public String toString(Object summary);
+	}
+	
+	static class DefaultFormater implements SummaryFormater {
+
+        @Override
+        public String toString(Object summary) {
+            return String.valueOf(summary);
+        }
+	}
+
+	static class RightFormater implements SummaryFormater {
+	    
+	    @Override
+	    public String toString(Object summary) {
+	        return "\t" + String.valueOf(summary);
+	    }
+	}
+
+	static class DecimalFormater implements SummaryFormater {
+	    
+	    int n;
+	    
+	    public DecimalFormater(int n) {
+            this.n = n;
+        }
+	    
+	    @Override
+	    public String toString(Object summary) {
+	        if (summary instanceof Long) {
+	            return "\t" + summary;
+	        }
+	        else if (summary instanceof Number) {
+	            return "\t" + String.format("%." + n +"f", ((Number) summary).doubleValue());
+	        }
+	        else {
+	            return "";
+	        }
+	    }
+	}
+
+	static class PercentFormater implements SummaryFormater {
+	    
+	    @Override
+	    public String toString(Object summary) {
+            if (summary instanceof Number) {
+                double d = ((Number) summary).doubleValue();
+                if (!Double.isNaN(d)) {
+                    return String.format("\t%.1f%%", 100 * d);
+                }
+            }
+            return "";
+	    }
+	}
+	
+	static class MemRateFormater implements SummaryFormater {
+
+        @Override
+        public String toString(Object summary) {
+            if (summary instanceof Number) {
+                double d = ((Number) summary).doubleValue();
+                if (!Double.isNaN(d)) {
+                    return Formats.toMemorySize((long)d) + "/s";
+                }
+            }
+            return "";
+        }
+	}
+
+	static class DateFormater implements SummaryFormater {
+	    
+	    SimpleDateFormat fmt;
+	    
+	    public DateFormater(TimeZone tz) {
+            fmt = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss");
+            fmt.setTimeZone(tz);
+        }
+	    
+	    @Override
+	    public String toString(Object summary) {
+	        if (summary instanceof Long) {
+	            return fmt.format(summary);
+	        }
+	        else {
+	            return "";
+	        }
+	    }
 	}
 }

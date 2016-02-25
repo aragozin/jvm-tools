@@ -104,6 +104,10 @@ public class StackFrame implements CharSequence {
         return lineNumber;
     }
 
+    public boolean isNative() {
+        return lineNumber == NATIVE;
+    }
+
     public StackFrame internSymbols() {
         String cp = classPrefix == null ? null : classPrefix.intern();
         String cn = className.intern();

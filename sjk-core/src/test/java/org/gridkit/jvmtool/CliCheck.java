@@ -102,7 +102,7 @@ public class CliCheck {
 
 	@Test
 	public void hh_self() {
-		exec("hh", "-p", PID);
+		exec("hh", "-p", "3112");
 	}
 
 	@Test
@@ -112,7 +112,12 @@ public class CliCheck {
 
 	@Test
 	public void hh_dead_young_N_self() {
-	    exec("hh", "-p", PID, "--dead-young", "-n", "20", "-d", "1s");
+	    exec("hh", "-p", PID, "--dead-young", "-n", "20", "-d", "10s");
+	}
+
+	@Test
+	public void hh_young_N_self() {
+	    exec("hh", "-p", PID, "--young", "-n", "20", "-d", "1s");
 	}
 	
 	@Test
@@ -278,6 +283,21 @@ public class CliCheck {
 	@Test
 	public void ssa_categorize_nc() {
 	    exec("ssa", "--categorize", "-nc", "JDBC=**.jdbc", "-f", "../sjk-stacktrace/src/test/resources/jboss-10k.std");
+	}
+
+	@Test
+	public void ssa_thread_info() {
+	    exec("ssa", "--thread-info", "-f", "target/test.stp", "-X");
+	}
+
+	@Test
+	public void ssa_thread_info_2() {
+	    exec("ssa", "--thread-info", "-si", "NAME", "FREQ", "FREQ_HM", "GAP_CHM", "TSMIN", "TSMAX", "-f", "target/test.stp", "-X");
+	}
+
+	@Test
+	public void ssa_thread_info_3() {
+	    exec("ssa", "--thread-info", "-si", "NAME", "ALLOC", "Sock=java.net.SocketInputStream.socketRead0", "-f", "target/test.stp", "-X");
 	}
 
     @Test
