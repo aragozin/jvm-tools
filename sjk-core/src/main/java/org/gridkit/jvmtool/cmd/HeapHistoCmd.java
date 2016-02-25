@@ -63,8 +63,11 @@ public class HeapHistoCmd implements CmdRef {
 		@Parameter(names = "--dead-young", description = "Histogram for sample of dead young objects")
 		private boolean deadYoung = false;
 
-        @Parameter(names = {"-d", "--sample-depth"}, converter = TimeIntervalConverter.class, description = "Used with --dead-young option. Specific time duration to collect young population.")
-		private long deadYoungSampleDepth = 10000;
+		@Parameter(names = "--young", description = "Histogram for sample of new objects")
+		private boolean young = false;
+
+        @Parameter(names = {"-d", "--sample-depth"}, converter = TimeIntervalConverter.class, description = "Used with --dead-young and --young options. Specific time duration to collect young population.")
+		private long youngSampleDepth = 10000;
 		
 		@Parameter(names = {"-n", "--top-number"}, description = "Show only N top buckets")
 		private int n = Integer.MAX_VALUE;
@@ -76,8 +79,16 @@ public class HeapHistoCmd implements CmdRef {
 		@Override
 		public void run() {
 			try {
-				if (live && dead || live && deadYoung || dead && deadYoung) {
-					host.failAndPrintUsage("--live, --dead and --deadYoung are mutually exclusive");
+			    int x = 0;
+			    x += live ? 1 : 0;
+			    x += dead ? 1 : 0;
+			    x += deadYoung ? 1 : 0;
+			    x += young ? 1 : 0;
+				if (x > 1) {
+					host.failAndPrintUsage("--live, --dead, --young and --deadYoung are mutually exclusive");
+				}
+				else if (x < 1) {
+				    host.failAndPrintUsage("--live, --dead, --young, --deadYoung - one of options is required");
 				}
 				
 				HeapHisto histo;
@@ -90,6 +101,9 @@ public class HeapHistoCmd implements CmdRef {
 				}
 				else if (deadYoung) {
 				    histo = collectDeadYoung();				    
+				}
+				else if (young) {
+				    histo = collectYoung();				    
 				}
 				else {
 					histo = HeapHisto.getHistoAll(pid, 300000);
@@ -117,7 +131,7 @@ public class HeapHistoCmd implements CmdRef {
             }
             HeapHisto.getHistoLive(pid, 3000000);
             System.out.println("Gathering young garbage ...");
-            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(deadYoungSampleDepth);
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(youngSampleDepth);
             while(System.nanoTime() < deadline) {
                 long sleepTime = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
                 if (sleepTime > 0) {
@@ -134,13 +148,53 @@ public class HeapHistoCmd implements CmdRef {
                     System.out.println("Use --sample-depth option to reduce time to sample if needed.");                    
                 }
             }
-            if (deadYoungSampleDepth % 1000 == 0) {
-                System.out.println("Garbage histogram for last " + (deadYoungSampleDepth/1000) + "s");
+            if (youngSampleDepth % 1000 == 0) {
+                System.out.println("Garbage histogram for last " + (youngSampleDepth/1000) + "s");
             }
             else {
-                System.out.println("Garbage histogram for last " + deadYoungSampleDepth + "ms");
+                System.out.println("Garbage histogram for last " + youngSampleDepth + "ms");
             }
             return histo;
+        }
+
+        private HeapHisto collectYoung() throws InterruptedException {
+            // Force full GC
+            long ygc = 0;
+            LongCounter youngGcCnt = null;
+            try {
+                JStatData jsd = JStatData.connect(pid);
+                youngGcCnt = (LongCounter) jsd.getAllCounters().get("sun.gc.collector.0.invocations");
+                ygc = youngGcCnt == null ? 0 : youngGcCnt.getLong();
+            }
+            catch(Exception e) {
+                // ignore
+            }
+            HeapHisto retained = HeapHisto.getHistoLive(pid, 3000000);
+            System.out.println("Gathering young population ...");
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(youngSampleDepth);
+            while(System.nanoTime() < deadline) {
+                long sleepTime = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
+                if (sleepTime > 0) {
+                    Thread.sleep(sleepTime);
+                }
+                else {
+                    break;
+                }
+            }
+            HeapHisto histo = HeapHisto.getHistoAll(pid, 300000);
+            if (youngGcCnt != null) {
+                if (ygc != youngGcCnt.getLong()) {
+                    System.out.println("Warning: one or more young collections have occured during sampling.");
+                    System.out.println("Use --sample-depth option to reduce time to sample if needed.");                    
+                }
+            }
+            if (youngSampleDepth % 1000 == 0) {
+                System.out.println("Garbage histogram for last " + (youngSampleDepth/1000) + "s");
+            }
+            else {
+                System.out.println("Garbage histogram for last " + youngSampleDepth + "ms");
+            }
+            return HeapHisto.subtract(histo, retained);
         }
 	}
 }
