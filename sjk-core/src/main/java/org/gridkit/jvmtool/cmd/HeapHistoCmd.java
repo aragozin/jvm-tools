@@ -87,9 +87,9 @@ public class HeapHistoCmd implements CmdRef {
 				if (x > 1) {
 					host.failAndPrintUsage("--live, --dead, --young and --deadYoung are mutually exclusive");
 				}
-				else if (x < 1) {
-				    host.failAndPrintUsage("--live, --dead, --young, --deadYoung - one of options is required");
-				}
+//				else if (x < 1) {
+//				    host.failAndPrintUsage("--live, --dead, --young, --deadYoung - one of options is required");
+//				}
 				
 				HeapHisto histo;
 				
@@ -106,6 +106,7 @@ public class HeapHistoCmd implements CmdRef {
 				    histo = collectYoung();				    
 				}
 				else {
+				    // all histo - default behavior
 					histo = HeapHisto.getHistoAll(pid, 300000);
 				}
 				

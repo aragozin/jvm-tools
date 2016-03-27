@@ -102,7 +102,7 @@ public class CliCheck {
 
 	@Test
 	public void hh_self() {
-		exec("hh", "-p", "3112");
+		exec("hh", "-p", PID);
 	}
 
 	@Test
@@ -297,7 +297,7 @@ public class CliCheck {
 
 	@Test
 	public void ssa_thread_info_3() {
-	    exec("ssa", "--thread-info", "-si", "NAME", "ALLOC", "Sock=java.net.SocketInputStream.socketRead0", "-f", "target/test.stp", "-X");
+	    exec("ssa", "--thread-info", "-si", "NAME8", "ALLOC", "Sock=java.net.SocketInputStream.socketRead0", "-f", "target/test.stp", "-X");
 	}
 
     @Test
