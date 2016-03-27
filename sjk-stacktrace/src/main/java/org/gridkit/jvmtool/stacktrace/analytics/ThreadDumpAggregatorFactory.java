@@ -59,7 +59,11 @@ public interface ThreadDumpAggregatorFactory {
         }        
 
         public ThreadDumpAggregatorFactory name() {
-            return new ThreadNameAggregatorFactory();
+            return new ThreadNameAggregatorFactory(32);
+        }        
+
+        public ThreadDumpAggregatorFactory name(int length) {
+            return new ThreadNameAggregatorFactory(length);
         }        
 
         public ThreadDumpAggregatorFactory threadId() {

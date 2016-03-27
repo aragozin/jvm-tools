@@ -25,38 +25,31 @@ import java.io.Writer;
 import java.lang.Thread.State;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gridkit.jvmtool.CategorizerParser;
 import org.gridkit.jvmtool.StackHisto;
+import org.gridkit.jvmtool.ThreadDumpSource;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
-import org.gridkit.jvmtool.stacktrace.AbstractFilteringStackTraceReader;
-import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.ReaderProxy;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
-import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
-import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
-import org.gridkit.jvmtool.stacktrace.analytics.FlameGraph;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
-import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
-import org.gridkit.jvmtool.stacktrace.analytics.RainbowColorPicker;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadDumpAggregatorFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotCategorizer;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSplitAggregator;
-import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
+import org.gridkit.jvmtool.stacktrace.analytics.flame.FlameGraphGenerator;
+import org.gridkit.jvmtool.stacktrace.analytics.flame.RainbowColorPicker;
 import org.gridkit.util.formating.Formats;
 import org.gridkit.util.formating.TextTable;
 
@@ -80,10 +73,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 	public static class SSA implements Runnable {
 		
 		@ParametersDelegate
-		private CommandLauncher host;
-		
-		@Parameter(names={"-f", "--file"}, required = false, variableArity=true, description="Path to stack dump file")
-		private List<String> files;
+		private final CommandLauncher host;
+
+		@ParametersDelegate
+		private final ThreadDumpSource dumpSource;
 		
 		@Parameter(names={"-cf", "--categorizer-file"}, required = false, description="Path to file with stack trace categorization definition")
 		private String categorizerFile = null;
@@ -91,18 +84,6 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         @Parameter(names={"-nc", "--named-class"}, required = false, variableArity = true, description="May be used with some commands to define name stack trace classes\nUse <name>=<filter expression> notation")
         private List<String> namedClasses = new ArrayList<String>();
         
-        @Parameter(names={"-tf", "--trace-filter"}, required = false, description="Apply filter to traces before processing. Use --ssa-help for more details about filter notation")
-        private String traceFilter = null;
-
-        @Parameter(names={"-tt", "--trace-trim"}, required = false, description="Positional filter trim frames to process. Use --ssa-help for more details about filter notation")
-        private String traceTrim = null;
-
-        @Parameter(names={"-tn", "--thread-name"}, required = false, description="Thread name filter (Java RegEx syntax)")
-        private String threadName = null;
-
-        @Parameter(names={"-tr", "--time-range"}, required = false, description="Time range filter")
-        private String timeRange = null;
-
         @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps")
         private String timeZone = "UTC";
 
@@ -134,6 +115,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
 		public SSA(CommandLauncher host) {
 			this.host = host;
+			this.dumpSource = new ThreadDumpSource(host);
 		}
 
 		@Override
@@ -148,6 +130,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 				if (action.isEmpty() || action.size() > 1) {
 					host.failAndPrintUsage("You should choose one of " + allCommands);
 				}
+				dumpSource.setTimeZone(timeZone());
 				if (categorizerFile != null) {
 				    if (!namedClasses.isEmpty()) {
 				        host.failAndPrintUsage("You eigther should specify categorizer (-cf) or named classed (-nc)");
@@ -207,78 +190,11 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		}
 		
 		StackTraceReader getFilteredReader() throws IOException {
-	        if (traceFilter == null && traceTrim == null && threadName == null && timeRange == null) {
-	            return getUnclassifiedReader();
-	        }
-	        else {
-	            StackTraceReader reader = getUnclassifiedReader();
-	            if (threadName != null) {
-	                reader = new ThreadNameFilter(reader, threadName);
-	            }
-	            if (timeRange != null) {
-	                String[] lh = timeRange.split("[-]");
-	                if (lh.length != 2) {
-	                    host.fail("Invalid time range '" + timeRange + "'", "Valid format yyyy.MM.dd_HH:mm:ss-yyyy.MM.dd_HH:mm:ss hours and higher parts can be ommited");
-	                }
-	                TimeRangeChecker checker = new TimeRangeChecker(lh[0], lh[1], timeZone());
-	                reader = new TimeFilter(reader, checker);
-	            }
-	            try {
-	                CachingFilterFactory factory = new CachingFilterFactory();
-	                if (traceFilter != null) {
-                        ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, factory);
-    	                reader = new FilteredStackTraceReader(ts, reader);
-	                }
-	                if (traceTrim != null) {
-	                    final PositionalStackMatcher mt = TraceFilterPredicateParser.parsePositionMatcher(traceTrim, factory);
-	                    reader = new TrimProxy(reader) {
-	                        
-	                        ReaderProxy proxy = new ReaderProxy(reader);
-	                        
-                            @Override
-                            public boolean loadNext() throws IOException {
-                                while(super.loadNext()) {
-                                    int n = mt.matchNext(proxy, 0);
-                                    if (n >= 0) {
-                                        trimPoint = n;
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            }
-	                    };
-	                }
-	                return reader;
-	            }
-	            catch(ParserException e) {
-	                throw host.fail("Failed to parse trace filter - " + e.getMessage() + " at " + e.getOffset() + " [" + e.getParseText() + "]");
-	            }
-	        }
+		    return dumpSource.getFilteredReader();
 		}
 
 		StackTraceReader getUnclassifiedReader() throws IOException {
-		    if (files == null) {
-		        host.fail("No input files provided, used -f option");
-		    }
-		    final StackTraceReader reader = StackTraceCodec.newReader(files.toArray(new String[0]));
-		    return new StackTraceReader.StackTraceReaderDelegate() {
-                
-                @Override
-                protected StackTraceReader getReader() {
-                    return reader;
-                }
-
-                @Override
-                public boolean loadNext() throws IOException {
-                    try {
-                        return super.loadNext();
-                    }
-                    catch(IOException e) {
-                        System.err.println("Dump file read error: " + e.toString());
-                        return false;
-                    }
-                }
-            };
+		    return dumpSource.getUnclassifiedReader();
 		}
 
 		abstract class SsaCmd implements Runnable {
@@ -411,7 +327,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             public void run() {
                 try {
 
-                    FlameGraph fg = new FlameGraph();
+                    FlameGraphGenerator fg = new FlameGraphGenerator();
                     if (rainbow != null && rainbow.size() > 0) {
                         ThreadSnapshotFilter[] filters = new ThreadSnapshotFilter[rainbow.size()];
                         CachingFilterFactory factory = new CachingFilterFactory();
@@ -609,7 +525,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 si = si.trim();
                 if ("NAME".equals(si)) {
                     add("Name", COMMON.name());
-                    
+                }
+                if (si.startsWith("NAME") && si.indexOf('=') < 0) {
+                    int n = Integer.valueOf(si.substring(4));
+                    add("Name", COMMON.name(n));
                 }
                 else if ("COUNT".equals(si)) {
                     add("Count", COMMON.count(), new RightFormater());
@@ -659,6 +578,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 host.fail("Unknown summary '" + si + "'",
                         "Allowed summaries are",
                         "  NAME",
+                        "  NAME<len>",
                         "  COUNT",
                         "  TSMIN",
                         "  TSMAX",
@@ -719,101 +639,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
         }
 	}
-	
-	static class TimeFilter extends AbstractFilteringStackTraceReader {
-	    
-	    StackTraceReader reader;
-	    TimeRangeChecker checker;
-	    
-        public TimeFilter(StackTraceReader reader, TimeRangeChecker checker) {
-            this.reader = reader;
-            this.checker = checker;
-        }
-
-        @Override
-        protected boolean evaluate() {
-            return checker.evaluate(getTimestamp());
-        }
-
-        @Override
-        protected StackTraceReader getReader() {
-            return reader;
-        }
-	}
-
-	static class ThreadNameFilter extends AbstractFilteringStackTraceReader {
-	    
-	    StackTraceReader reader;
-	    Matcher matcher;
-	    
-	    public ThreadNameFilter(StackTraceReader reader, String regex) {
-	        this.reader = reader;
-	        this.matcher = Pattern.compile(regex).matcher("");
-	    }
-	    
-	    @Override
-	    protected boolean evaluate() {
-	        if (getThreadName() != null) {
-    	        matcher.reset(getThreadName());
-    	        return matcher.matches();
-	        }
-	        else {
-	            return false;
-	        }
-	    }
-	    
-	    @Override
-	    protected StackTraceReader getReader() {
-	        return reader;
-	    }
-	}
-	
-	static class TrimProxy implements StackTraceReader {
-	    
-	    protected StackTraceReader reader;
-	    protected int trimPoint = 0;
-	    
-        public TrimProxy(StackTraceReader reader) {
-            this.reader = reader;
-        }
-
-        public boolean isLoaded() {
-            return reader.isLoaded();
-        }
-
-        public long getThreadId() {
-            return reader.getThreadId();
-        }
-
-        public long getTimestamp() {
-            return reader.getTimestamp();
-        }
-
-        public String getThreadName() {
-            return reader.getThreadName();
-        }
-
-        public State getThreadState() {
-            return reader.getThreadState();
-        }
-
-        public CounterCollection getCounters() {
-            return reader.getCounters();
-        }
-
-        public StackTraceElement[] getTrace() {
-            return Arrays.copyOf(reader.getTrace(), trimPoint);
-        }
-
-        public StackFrameList getStackTrace() {
-            return reader.getStackTrace().fragment(0, trimPoint);
-        }
-
-        public boolean loadNext() throws IOException {
-            return reader.loadNext();
-        }
-	}
-	
+		
 	interface SummaryFormater {
 	    
 	    public String toString(Object summary);

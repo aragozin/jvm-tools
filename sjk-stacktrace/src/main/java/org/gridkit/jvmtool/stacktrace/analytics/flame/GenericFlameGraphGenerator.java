@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gridkit.jvmtool.stacktrace.analytics;
+package org.gridkit.jvmtool.stacktrace.analytics.flame;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
@@ -23,24 +22,25 @@ import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
 
-public class FlameGraph {
+public abstract class GenericFlameGraphGenerator {
 
-    private static final StackFrame[] ROOT = new StackFrame[0];
-    private static final FrameComparator FRAME_COMPARATOR = new FrameComparator();
+    private static final GenericStackElement[] ROOT = new GenericStackElement[0];
 
     private Node root;
     
-    private ColorPicker colorPicker = new SimpleColorPicker();    
-//    private int barHeight = 16;
+    private FlameColorPicker colorPicker = new DefaultColorPicker();    
     
-    public FlameGraph() {
-        root = new Node(ROOT);        
+    public GenericFlameGraphGenerator() {
+        root = new Node(ROOT, comparator());        
     }
     
-    public void setColorPicker(ColorPicker cp) {
+    protected abstract Comparator<GenericStackElement> comparator();
+    
+    public void setColorPicker(FlameColorPicker cp) {
         this.colorPicker = cp;
     }
     
@@ -92,14 +92,17 @@ public class FlameGraph {
     
     private void appendChildNodes(Writer writer, Node node, int xoffs, int width, int height, int frameheight, int threshold) throws IOException {
         int x = xoffs;
-        x += node.terminalCount / 2;
+//        x += node.terminalCount / 2;
         for(Node child: node.children.values()) {
             if (child.totalCount > threshold) {
                 renderNode(writer, child, x, height, width, frameheight);
                 appendChildNodes(writer, child, x, width, height - frameheight, frameheight, threshold);
             }
             x += child.totalCount;
-        }        
+        }      
+        if (node.terminalCount > threshold) {
+            renderSmoke(writer, x, node.terminalCount, height, width, frameheight);
+        }
     }
 
     private void renderNode(Writer writer, Node node, int x, int height, int width, int frameheight) throws IOException {
@@ -116,21 +119,31 @@ public class FlameGraph {
         // Node box
         format(writer, "<g class=\"fbar\">\n");
         format(writer, "<title>%s (%d samples, %.2f%%)</title>\n", 
-                describe(node), node.totalCount, 100d * node.totalCount / root.totalCount);
+                escape(describe(node)), node.totalCount, 100d * node.totalCount / root.totalCount);
         format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(%d,%d,%d)\" rx=\"2\" ry=\"2\"/>\n",
                 rx, ry, rw, rh, cr, cg, cb);
         format(writer, "<text text-anchor=\"\" x=\"%.1f\" y=\"%.1f\" fill=\"rgb(0,0,0)\">%s</text>\n",
-                rx + 10, ry + frameheight - 3, trimStr(describe(node), (int)(rw - 10) / 7));
+                rx + 10, ry + frameheight - 3, escape(trimStr(describe(node), (int)(rw - 10) / 7)));
         format(writer, "</g>\n");
         
-        if (node.terminalCount == node.totalCount) {
-            format(writer, "<g>\n");
-            format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(20,20,20)\" rx=\"1\" ry=\"1\"/>\n",
-                    rx, ry - rh / 2, rw, 3f);
-            format(writer, "</g>\n");            
-        }
+//        if (node.terminalCount == node.totalCount) {
+//            renderSmoke(writer, x, node.terminalCount, height, width, frameheight);
+//        }
     }
 
+    private void renderSmoke(Writer writer, int x, int samples, int height, int width, int frameheight) throws IOException {
+        double rx = (double)(width) * x / root.totalCount;
+        double rw = (double)(width) * samples / root.totalCount;
+        double ry = height;
+        double rh = frameheight;
+
+        format(writer, "<g>\n");
+        format(writer, "<title>%d samples, %.2f%%</title>", samples, 100d * samples / root.totalCount);
+        format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(20,20,20)\" rx=\"1\" ry=\"1\"/>\n",
+                rx, ry + rh / 2, rw, 3f);
+        format(writer, "</g>\n");                    
+    }
+    
     private String trimStr(String describe, int len) {
         if (len < 3) {
             return "";
@@ -149,13 +162,13 @@ public class FlameGraph {
         return sb.toString();
     }
 
-    private String describe(Node node) {
-        StackFrame frame = node.path[node.path.length - 1];
-        String line = frame.getClassName() + "." + frame.getMethodName();
-        line = line.replace((CharSequence)"<", "&lt;");
-        line = line.replace((CharSequence)">", "&gt;");
-        return line;
+    protected String escape(String text) {
+        return text
+             .replace((CharSequence)"<", "&lt;")
+             .replace((CharSequence)">", "&gt;");
     }
+    
+    protected abstract String describe(Node node);
 
     private void format(Writer writer, String format, Object...  args) throws IOException {
         writer.append(String.format(format, args));
@@ -177,144 +190,38 @@ public class FlameGraph {
         format(writer, "</style>\n");
     }
     
-    private static class Node {
+    static class Node {
         
-        StackFrame[] path;
+        GenericStackElement[] path;
         int totalCount;
         int terminalCount;
-        SortedMap<StackFrame, Node> children = new TreeMap<StackFrame, Node>(FRAME_COMPARATOR);
+        Comparator<GenericStackElement> comparator;
+        SortedMap<GenericStackElement, Node> children;
 
-        public Node(StackFrame[] path) {
+        public Node(GenericStackElement[] path, Comparator<GenericStackElement> comparator) {
             this.path = path;
+            this.comparator = comparator;
+            this.children = new TreeMap<GenericStackElement, Node>(comparator);
         }
 
-        public Node child(StackFrame f) {
+        public Node child(GenericStackElement f) {
             Node c = children.get(f);
             if (c == null) {
-                StackFrame[] npath = Arrays.copyOf(path, path.length + 1);
+                GenericStackElement[] npath = Arrays.copyOf(path, path.length + 1);
                 npath[path.length] = f;
-                c = new Node(npath);
+                c = new Node(npath, comparator);
                 children.put(f, c);
             }
             return c;
         }        
         
+        public GenericStackElement element() {
+            return path[path.length - 1];
+        }
+        
         @Override
         public String toString() {
             return path.length == 0 ? "<root>" : path[path.length - 1].toString();
-        }
-    }
-    
-    private static class FrameComparator implements Comparator<StackFrame> {
-
-        @Override
-        public int compare(StackFrame o1, StackFrame o2) {
-            int n = compare(o1.getClassName(), o2.getClassName());
-            if (n != 0) {
-                return n;
-            }
-            n = compare(o1.getLineNumber(), o2.getLineNumber());
-            if (n != 0) {
-                return n;
-            }
-            n = compare(o1.getMethodName(), o2.getMethodName());
-            if (n != 0) {
-                return n;
-            }
-            n = compare(o1.getSourceFile(), o2.getSourceFile());
-            return 0;
-        }
-
-        private int compare(int n1, int n2) {            
-            return Long.signum(((long)n1) - ((long)n2));
-        }
-
-        private int compare(String str1, String str2) {
-            if (str1 == str2) {
-                return 0;
-            }
-            else if (str1 == null) {
-                return -1;
-            }
-            else if (str2 == null) {
-                return 1;
-            }
-            return str1.compareTo(str2);
-        }
-    }
-    
-    public interface ColorPicker {
-        
-        public int pickColor(StackFrame[] trace);
-        
-    }
-    
-    public static class SimpleColorPicker implements ColorPicker {
-
-        @Override
-        public int pickColor(StackFrame[] trace) {
-            
-            if (trace.length == 0) {
-                return 0xFFFFFF;
-            }
-            
-            StackFrame sf = trace[trace.length - 1];
-            
-            int c = hashColor(12, 10, sf);
-            
-            return c;
-        }
-
-        public static int hashColor(int baseHue, int deltaHue, StackFrame sf) {
-            int hP = packageNameHash(sf.getClassName());
-            int hC = classNameHash(sf.getClassName());
-            int hM = sf.getMethodName().hashCode();
-            
-            int hue = deltaHue == 0 ? baseHue : baseHue + (hP % (2 * deltaHue)) - deltaHue;
-            int sat = 180 + (hC % 20) - 10;
-            int lum = 220 + (hM % 20) - 10;
-            
-            int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
-            return c;
-        }
-
-        public static int hashGrayColor(StackFrame sf) {
-            int hC = classNameHash(sf.getClassName());
-            int hM = sf.getMethodName().hashCode();
-            
-            int hue = 0;
-            int sat = 0;
-            int lum = 220 + ((hM + hC) % 20) - 10;
-            
-            int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
-            return c;
-        }
-
-        private static int packageNameHash(String className) {
-            int c = className.lastIndexOf('.');
-            if (c >= 0) {
-                return className.substring(0, c).hashCode();
-            }
-            else {
-                return 0;
-            }
-        }
-
-        private static int classNameHash(String className) {
-            int c = className.lastIndexOf('.');
-            if (c >= 0) {
-                className = className.substring(c + 1);
-            }
-            
-            c = className.indexOf('$');
-            if (c >= 0) {
-                int nhash = className.substring(0, c).hashCode();
-                int shash = className.substring(c + 1).hashCode();
-                return nhash + (shash % 10);
-            }
-            else {
-                return className.hashCode();
-            }
         }
     }
 }

@@ -1,18 +1,18 @@
 package org.gridkit.jvmtool.stacktrace;
 
-public interface StackFrameList extends Iterable<StackFrame>, GenericStackElementList<StackFrame> {
+public interface GenericStackElementList<T extends GenericStackElement> extends Iterable<T> {
 
     /**
      * Stack has classical bottom up indexing.
      * Frame at index 0 is last call frame, while last frame in list is root one.
      */
-    public StackFrame frameAt(int n);
+    public T frameAt(int n);
     
     public int depth();
     
-    public StackFrameList fragment(int from, int to);
+    public GenericStackElementList<T> fragment(int from, int to);
     
-    public StackFrame[] toArray();
+    public T[] toArray();
     
     public boolean isEmpty();
     

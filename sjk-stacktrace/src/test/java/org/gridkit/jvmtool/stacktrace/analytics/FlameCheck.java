@@ -9,6 +9,7 @@ import java.io.StringWriter;
 
 import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader;
+import org.gridkit.jvmtool.stacktrace.analytics.flame.FlameGraphGenerator;
 import org.junit.Test;
 
 public class FlameCheck {
@@ -21,7 +22,7 @@ public class FlameCheck {
     
     @Test
     public void check() throws IOException {
-        FlameGraph fg = new FlameGraph();
+        FlameGraphGenerator fg = new FlameGraphGenerator();
         StackTraceReader r = read();
         if (!r.isLoaded()) {
             r.loadNext();

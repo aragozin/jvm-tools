@@ -1,6 +1,6 @@
 package org.gridkit.jvmtool.stacktrace;
 
-public class StackFrame implements CharSequence {
+public class StackFrame implements CharSequence, GenericStackElement {
 
     private static final String NATIVE_METHOD = "Native Method";
     private static final String UNKNOWN_SOURCE = "Unknown Source";

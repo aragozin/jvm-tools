@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gridkit.jvmtool.stacktrace.analytics;
+package org.gridkit.jvmtool.stacktrace.analytics.flame;
 
 import java.lang.Thread.State;
 
 import org.gridkit.jvmtool.stacktrace.CounterCollection;
+import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameArray;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
 import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
-import org.gridkit.jvmtool.stacktrace.analytics.FlameGraph.ColorPicker;
-import org.gridkit.jvmtool.stacktrace.analytics.FlameGraph.SimpleColorPicker;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 
 /**
- * {@link ColorPicker} for {@link FlameGraph}. Rainbow color picker
+ * {@link FlameColorPicker} for {@link FlameGraphGenerator}. Rainbow color picker
  * choose coloring hue based on category of trace above color element.
  * <br/>
  * Categories are provided as a list of filters. 
  * 
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
-public class RainbowColorPicker implements ColorPicker {
+public class RainbowColorPicker implements FlameColorPicker {
 
     ThreadSnapshotFilter[] filters;
     int[] hues;
@@ -51,19 +51,23 @@ public class RainbowColorPicker implements ColorPicker {
     }
 
     @Override
-    public int pickColor(StackFrame[] trace) {
+    public int pickColor(GenericStackElement[] trace) {
         if (trace == null || trace.length < 1) {
             return 0;
         }
-        TSnap snap = new TSnap(trace);
-        StackFrame frame = trace[trace.length - 1];
+        StackFrame[] ftrace = new StackFrame[trace.length];
+        for(int i = 0; i != trace.length; ++i) {
+            ftrace[i] = (StackFrame) trace[i];
+        }
+        TSnap snap = new TSnap(ftrace);
+        StackFrame frame = ftrace[ftrace.length - 1];
         
         for(int n = 0; n != filters.length; ++n) {
             if (filters[n].evaluate(snap)) {
-                return SimpleColorPicker.hashColor(hues[n], 0, frame);
+                return DefaultColorPicker.hashColor(hues[n], 0, frame);
             }
         }
-        return SimpleColorPicker.hashGrayColor(frame);
+        return DefaultColorPicker.hashGrayColor(frame);
     }
     
     
