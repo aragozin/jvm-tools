@@ -1,5 +1,8 @@
 Next version
 ----
+
+0.41 - 2016 March 27
+----
 - Added --thread-info mode for SSA command
 - Added time range filter option for SSA command
 - Added thread name filter option for SSA command

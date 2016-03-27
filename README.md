@@ -9,15 +9,15 @@ to be useful for common troubleshooting case.
 
 Prebuild binaries are available at [bintray.com](https://bintray.com)
 [ ![(download)](https://api.bintray.com/packages/aragozin/generic/sjk/images/download.svg) ](https://bintray.com/aragozin/generic/sjk/_latestVersion) are below. I would encourge you to build jars from sources, though.
-- [sjk-plus.jar - all commands](https://bintray.com/artifact/download/aragozin/generic/sjk-plus-0.4.0.jar)
-- [sjk.jar - all commands without mxdump](https://bintray.com/artifact/download/aragozin/generic/sjk-0.4.0.jar)
+- [sjk-plus.jar - all commands](https://bintray.com/artifact/download/aragozin/generic/sjk-plus-0.4.1.jar)
+- [sjk.jar - all commands without mxdump](https://bintray.com/artifact/download/aragozin/generic/sjk-0.4.1.jar)
 
 
 Starting sjk
 ----
 
     java -jar sjk.jar <cmd> <arguments>
-    java -jar sjk.jar --help
+    java -jar sjk.jar --commands
     java -jar sjk.jar --help <cmd>
 
 Below a few command from SJK ([full command reference](sjk-core/COMMANDS.md)).
