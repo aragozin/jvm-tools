@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -29,7 +30,11 @@ import org.gridkit.jvmtool.stacktrace.StackFrameList;
 public abstract class GenericFlameGraphGenerator {
 
     private static final GenericStackElement[] ROOT = new GenericStackElement[0];
-
+    private static final Locale SVG_LOCALE; 
+    static {
+        SVG_LOCALE = Locale.ROOT;
+    }
+    
     private Node root;
     
     private FlameColorPicker colorPicker = new DefaultColorPicker();    
@@ -122,7 +127,7 @@ public abstract class GenericFlameGraphGenerator {
                 escape(describe(node)), node.totalCount, 100d * node.totalCount / root.totalCount);
         format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(%d,%d,%d)\" rx=\"2\" ry=\"2\"/>\n",
                 rx, ry, rw, rh, cr, cg, cb);
-        format(writer, "<text text-anchor=\"\" x=\"%.1f\" y=\"%.1f\" fill=\"rgb(0,0,0)\">%s</text>\n",
+        format(writer, "<text x=\"%.1f\" y=\"%.1f\" fill=\"rgb(0,0,0)\">%s</text>\n",
                 rx + 10, ry + frameheight - 3, escape(trimStr(describe(node), (int)(rw - 10) / 7)));
         format(writer, "</g>\n");
         
@@ -171,7 +176,7 @@ public abstract class GenericFlameGraphGenerator {
     protected abstract String describe(Node node);
 
     private void format(Writer writer, String format, Object...  args) throws IOException {
-        writer.append(String.format(format, args));
+        writer.append(String.format(SVG_LOCALE, format, args));
     }
     
     protected void appendHeader(int width, int height, Writer writer) throws IOException {
