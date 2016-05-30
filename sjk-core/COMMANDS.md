@@ -263,9 +263,11 @@ Example
 
 `stcap` command
 ----
-stcap commands dumps threads from target process with configured period (or non-stop) to a file
+stcap commands dumps threads from target process with configured period (or non-stop)
 
-    > java -jar sjk.jar mx -p 6344 -mg -b java.lang:type=Memory -f HeapMemoryUsage
+Command example (command below would sample target process for 30 seconds)
+
+    > java -jar sjk.jar stcap -p PID -o dump.std
 
     [Stack Capture] Dumps stack traces to file for further processing
     Usage: stcap [options]
