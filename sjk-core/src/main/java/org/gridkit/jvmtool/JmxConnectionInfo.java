@@ -99,7 +99,12 @@ public class JmxConnectionInfo {
 	@SuppressWarnings("resource")
 	private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
 		try {
-			final String uri = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
+                        String proto = System.getProperty("jmx.service.protocol", "rmi");
+
+                        final String uri = proto == "rmi" ?
+                          "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi" :
+                          "service:jmx:" + proto + "://" + host + ":" + port;
+                  
 			JMXServiceURL jmxurl = new JMXServiceURL(uri);						
 			JMXConnector conn = props == null ? JMXConnectorFactory.connect(jmxurl) : JMXConnectorFactory.connect(jmxurl, props);
 			// TODO credentials
