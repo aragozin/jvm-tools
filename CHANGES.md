@@ -1,7 +1,12 @@
 Next version
 ----
 
-0.41 - 2016 March 27
+0.4.2 - 2016 July 7
+----
+- Option to override JMX URI (support for WildFly JMX over HTTP)
+- Fixed locale dependent decimal separator in flame graph generator
+
+0.4.1 - 2016 March 27
 ----
 - Added --thread-info mode for SSA command
 - Added time range filter option for SSA command
