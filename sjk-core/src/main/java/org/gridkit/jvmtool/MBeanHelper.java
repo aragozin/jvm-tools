@@ -276,18 +276,28 @@ public class MBeanHelper {
 
 	private Object convert(String value, String type) {
 		if (type.equals("java.lang.String")) {
+			if ("<null>".equals(value.trim()))
+				return null;
 			return value;
 		}
 		if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
+			if (type.equals("java.lang.Boolean") && value.trim().isEmpty())
+				return null;
 			return Boolean.valueOf(value);
 		}
 		else if (type.equals("byte") || type.equals("java.lang.Byte")) {
+			if (type.equals("java.lang.Byte") && value.trim().isEmpty())
+				return null;
 			return Byte.valueOf(value);
 		}
 		else if (type.equals("short") || type.equals("java.lang.Short")) {
+			if (type.equals("java.lang.Short") && value.trim().isEmpty())
+				return null;
 			return Short.valueOf(value);
 		}
 		else if (type.equals("char") || type.equals("java.lang.Character")) {
+			if (type.equals("java.lang.Character") && value.trim().isEmpty())
+				return null;
 			if (value.length() == 1) {
 				return value.charAt(0);
 			}
@@ -296,18 +306,28 @@ public class MBeanHelper {
 			}
 		}
 		else if (type.equals("int") || type.equals("java.lang.Integer")) {
+			if (type.equals("java.lang.Integer") && value.trim().isEmpty())
+				return null;
 			return Integer.valueOf(value);
 		}
 		else if (type.equals("long") || type.equals("java.lang.Long")) {
+			if (type.equals("java.lang.Long") && value.trim().isEmpty())
+				return null;
 			return Long.valueOf(value);
 		}
 		else if (type.equals("float") || type.equals("java.lang.Float")) {
+			if (type.equals("java.lang.Float") && value.trim().isEmpty())
+				return null;
 			return Float.valueOf(value);
 		}
 		else if (type.equals("double") || type.equals("java.lang.Double")) {
+			if (type.equals("java.lang.Double") && value.trim().isEmpty())
+				return null;
 			return Double.valueOf(value);
 		}
 		else if (type.startsWith("[")) {
+			if (value.trim().isEmpty())
+				return null;
 			String[] elements = value.split("[,]");
 			Object array = ARRAY_MAP.get(type);
 			if (array == null) {
