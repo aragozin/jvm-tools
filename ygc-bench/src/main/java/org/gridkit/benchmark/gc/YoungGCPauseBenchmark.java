@@ -28,11 +28,13 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 
 /**
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 @SuppressWarnings("restriction")
+@Parameters(commandDescriptionKey="ygc", commandDescription = "Young GC benchmark")
 public class YoungGCPauseBenchmark {
 
 	public enum DataMode {
