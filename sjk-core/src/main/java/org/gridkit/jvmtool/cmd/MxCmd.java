@@ -57,6 +57,12 @@ public class MxCmd implements CmdRef {
 		
 		@Parameter(names={"-f", "--field", "--attribute"}, description="MBean attribute")
 		String attrib = null;
+
+        @Parameter(names={"--quiet"}, description="Avoid non-essential output")
+        boolean quiet = false;
+
+        @Parameter(names={"--max-col-width"}, description="Table column width threshold for formating tabular data")
+		int maxWidth = 40;
 		
 		@ParametersDelegate
 		private CallCmd call = new CallCmd();
@@ -139,8 +145,11 @@ public class MxCmd implements CmdRef {
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
+                    helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, maxWidth);
                     for (ObjectName name : names) {
-                        System.out.println(name);
+                        if (!quiet) {
+                            System.out.println(name);
+                        }
                         System.out.println(helper.invoke(name, operation, arguments.toArray(new String[arguments.size()])));
                     }
 				} catch (Exception e) {
@@ -163,8 +172,11 @@ public class MxCmd implements CmdRef {
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
+					helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, maxWidth);
                     for (ObjectName name : names) {
-                        System.out.println(name);
+                        if (!quiet) {
+                            System.out.println(name);
+                        }
 					    System.out.println(helper.get(name, attrib));
                     }
 				} catch (Exception e) {
@@ -194,7 +206,9 @@ public class MxCmd implements CmdRef {
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
                     for (ObjectName name : names) {
-                        System.out.println(name);
+                        if (!quiet) {
+                            System.out.println(name);
+                        }
                         helper.set(name, attrib, value);
                     }
 				} catch (Exception e) {

@@ -61,6 +61,9 @@ public class CommandLauncher {
 
 	private Map<String, Runnable> commands = new HashMap<String, Runnable>();
 
+	public boolean isVerbose() {
+	    return verbose;
+	}
 	
     public Error fail(String... messages) {
         throw new CommandAbortedError(false, messages);
