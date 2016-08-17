@@ -1,0 +1,5 @@
+Compile command
+
+rustc -C opt-level=3 -C panic=abort -C lto -C debuginfo=0 --crate-type cdylib sjkwinh.rs
+
+Then use strip -s on resulting dll
