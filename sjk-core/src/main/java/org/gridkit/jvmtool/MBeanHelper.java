@@ -39,10 +39,25 @@ import javax.management.openmbean.TabularData;
 
 public class MBeanHelper {
 	
+    public static String FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD = "table.column.maxWidth";
+    public static String FORMAT_COMPOSITE_FIELD_WIDTH_THRESHODL = "composite.field.maxWidth";
+    
 	private MBeanServerConnection mserver;
+	
+	private int widthThresholdTable = 40;
+	private int widthThresholdComposite = 1000;
 	
 	public MBeanHelper(MBeanServerConnection connection) {
 		this.mserver = connection;
+	}
+	
+	public void setFormatingOption(String name, Object value) {
+	    if (FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD.equals(name)) {
+	        widthThresholdTable = (Integer) value;
+	    }
+	    else if (FORMAT_COMPOSITE_FIELD_WIDTH_THRESHODL.equals(name)) {
+	        widthThresholdComposite = (Integer) value;
+	    }
 	}
 	
 	public String get(ObjectName bean, String attr) throws Exception {
@@ -117,7 +132,7 @@ public class MBeanHelper {
 			for(Object row: td) {
 				content.add(formatRow((CompositeData)row, header));
 			}
-			return formatTable(content, 40, true);			
+			return formatTable(content, widthThresholdTable, true);			
 		}
 		else if (v instanceof TabularData) {
 			TabularData td = (TabularData) v;
@@ -133,7 +148,7 @@ public class MBeanHelper {
 			for(Object row: td.values()) {
 				content.add(formatRow((CompositeData)row, header));
 			}
-			return formatTable(content, 40, true);
+			return formatTable(content, widthThresholdTable, true);
 		}
 		else if (v instanceof CompositeData) {
 			CompositeData cd = (CompositeData)v;
@@ -142,7 +157,7 @@ public class MBeanHelper {
 				String val = formatLine(cd.get(field), cd.getCompositeType().getType(field).getClassName());
 				content.add(new String[]{field + ": ", val});
 			}
-			return formatTable(content, 1000, false);
+			return formatTable(content, widthThresholdComposite, false);
 		}
 		else {
 			return formatLine(v, type);

@@ -81,6 +81,13 @@ public class MBeanHelperTest {
 	}
 
 	@Test
+	public void test_get_sys_props_wide() throws Exception {
+	    MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
+	    helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, 200);
+	    System.out.println(helper.get(runtimeMXBean(), "SystemProperties"));
+	}
+
+	@Test
 	public void test_get_mem_heap() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
 		System.out.println(helper.get(memoryMXBean(), "HeapMemoryUsage"));

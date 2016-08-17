@@ -155,6 +155,11 @@ public class CliCheck {
 		exec("mx", "-p", PID, "--call", "--bean", "*:type=Threading", "-op", "dumpAllThreads", "-a", "true", "true");
 	}
 
+	@Test
+	public void mx_get_thread_dump_quiet_wide() {
+	    exec("mx", "-p", PID, "--quiet", "--max-col-width", "80", "--call", "--bean", "*:type=Threading", "-op", "dumpAllThreads", "-a", "true", "true");
+	}
+
     @Test
     public void mx_get_resetPeakUsage_all() {
         exec("mx", "-p", PID, "--call", "-all", "--bean", "*:type=MemoryPool,*", "-op", "resetPeakUsage");
