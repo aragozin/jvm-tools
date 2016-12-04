@@ -130,7 +130,7 @@ class HprofHeap implements Heap {
     //~ Constructors -------------------------------------------------------------------------------------------------------------
 
     HprofHeap(File dumpFile, int seg) throws FileNotFoundException, IOException {
-        dumpBuffer = HprofByteBuffer.createHprofByteBuffer(dumpFile);
+        dumpBuffer = HeapFactory.createHprofByteBuffer(dumpFile, HeapFactory.DEFAULT_BUFFER);
         segment = seg;
         fillTagBounds(dumpBuffer.getHeaderSize());
         heapDumpSegment = computeHeapDumpStart();

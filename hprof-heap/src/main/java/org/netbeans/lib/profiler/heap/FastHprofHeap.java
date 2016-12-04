@@ -29,7 +29,7 @@ import java.util.Map;
 public class FastHprofHeap extends HprofHeap {
 
     public static HprofByteBuffer newFileBuffer(File file) throws IOException {
-        return HprofByteBuffer.createHprofByteBuffer(file);
+        return HeapFactory.createHprofByteBuffer(file, HeapFactory.DEFAULT_BUFFER);
     }
 
     private Map<Long, ClassEntry> classes;

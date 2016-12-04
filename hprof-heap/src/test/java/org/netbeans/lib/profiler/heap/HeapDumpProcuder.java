@@ -16,9 +16,13 @@
 package org.netbeans.lib.profiler.heap;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import org.gridkit.lab.jvm.attach.HeapDumper;
 import org.junit.Test;
@@ -32,6 +36,7 @@ public class HeapDumpProcuder {
     }
 
     private static String HEAP_DUMP_PATH = "target/dump/test.dump";
+    private static String HEAP_DUMP_GZ_PATH = "target/dump/test.dump.gz";
 
     public static File getHeapDump() {
         File file = new File(HEAP_DUMP_PATH);
@@ -42,11 +47,35 @@ public class HeapDumpProcuder {
         }
         return file;
     }
+
+    public static File getCompressedHeapDump() throws IOException {
+        File file = new File(HEAP_DUMP_GZ_PATH);
+        if (!file.exists()) {
+            System.out.println("Generating compressing heap dump: " + HEAP_DUMP_GZ_PATH);
+            FileInputStream fis = new FileInputStream(getHeapDump());
+            FileOutputStream fos = new FileOutputStream(file);
+            GZIPOutputStream gzos = new GZIPOutputStream(fos);
+            byte[] buf = new byte[64 << 10];
+            int n = 0;
+            while(true) {
+                n = fis.read(buf);
+                if (n < 0) {
+                    break;
+                }
+                gzos.write(buf, 0, n);
+            }
+            gzos.close();
+            fis.close();
+            fos.close();
+        }
+        return file;
+    }
     
     // Called manually from IDE to clean cached dump
     @Test
     public void cleanDump() {
         new File(HEAP_DUMP_PATH).delete();
+        new File(HEAP_DUMP_GZ_PATH).delete();
     }
 
     static List<DummyA> dummyA = new ArrayList<DummyA>();
