@@ -28,7 +28,7 @@
 
   <groupId>org.gridkit.jvmtool</groupId>
   <artifactId>jvmtool-umbrella-pom</artifactId>
-  <version>0.4.4</version>
+  <version>0.5-SNAPSHOT</version>
   <name>${project.groupId}::${project.artifactId}</name>
   <description>JVM tools, parent project</description>
   <packaging>pom</packaging>
@@ -66,7 +66,7 @@
     <connection>scm:git:https://github.com/aragozin/jvm-tools.git</connection>
     <developerConnection>scm:git:https://github.com/aragozin/jvm-tools.git</developerConnection>
     <url>https://github.com/aragozin/jvm-tools</url>
-    <tag>jvmtool-umbrella-pom-0.4.4</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <build>
