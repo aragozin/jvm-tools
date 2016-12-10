@@ -16,7 +16,6 @@ public class SingletonDetector {
                 if (field instanceof ObjectFieldValue) {
                     long ref = ((ObjectFieldValue)field).getInstanceId();
                     if (ref != 0) {
-                        System.out.println(jc.getName() + "#" + field.getField().getName());
                         singletons.set(ref, true);
                     }
                 }
