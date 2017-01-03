@@ -24,7 +24,7 @@ public class FilteredStackTraceReader extends ReaderProxy implements StackTraceR
     }
 
     @Override
-    protected StackTraceReader reader() {
+    protected StackTraceReader getReader() {
         return this;
     }
 

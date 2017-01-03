@@ -14,6 +14,8 @@ import javax.management.ObjectName;
  */
 public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
 
+    public static final ObjectName THREADING_MBEAN = BeanHelper.name("java.lang:type=Threading");
+
     public long[] getThreadCpuTime(long[] ids);
 
     public long[] getThreadUserTime(long[] ids);
@@ -22,8 +24,6 @@ public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
     
     public static class BeanHelper {
 
-        public static final ObjectName THREADING_MBEAN = name("java.lang:type=Threading");
-        
         private static ObjectName name(String name) {
             try {
                 return new ObjectName(name);

@@ -11,7 +11,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-public class StateTraceReaderTest {
+public class StackTraceReaderTest {
 
     @Rule
     public TestName testName = new TestName();
@@ -40,7 +40,7 @@ public class StateTraceReaderTest {
         StackTraceReader reader = StackTraceCodec.newReader(new FileInputStream("src/test/resources/dump_v2.std"));
 
         if (!reader.isLoaded()) {
-            reader.loadNext();            
+            reader.loadNext();
         }
 
         int n = 0;
@@ -94,7 +94,6 @@ public class StateTraceReaderTest {
 
         assertEqual(origReader, reader);
     }
-
 
     void assertEqual(StackTraceReader r1, StackTraceReader r2) throws IOException {
         if (!r1.isLoaded()) {

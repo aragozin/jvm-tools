@@ -37,9 +37,10 @@ import org.gridkit.jvmtool.StackHisto;
 import org.gridkit.jvmtool.ThreadDumpSource;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
-import org.gridkit.jvmtool.stacktrace.ReaderProxy;
+import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEvent;
+import org.gridkit.jvmtool.event.EventReader;
+import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
-import org.gridkit.jvmtool.stacktrace.StackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.SimpleCategorizer;
@@ -189,11 +190,11 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 		    return tf;
 		}
 		
-		StackTraceReader getFilteredReader() throws IOException {
+		EventReader<ThreadSnapshotEvent> getFilteredReader() {
 		    return dumpSource.getFilteredReader();
 		}
 
-		StackTraceReader getUnclassifiedReader() throws IOException {
+		EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
 		    return dumpSource.getUnclassifiedReader();
 		}
 
@@ -220,27 +221,27 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			public void run() {
 				try {
 				    
-			        StackTraceReader reader = getFilteredReader();
+			        EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
 			        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 			        fmt.setTimeZone(timeZone());
-			        while(reader.loadNext()) {
-			            String timestamp = fmt.format(reader.getTimestamp());
+			        for(ThreadSnapshotEvent e: reader) {
+			            String timestamp = fmt.format(e.timestamp());
 			            StringBuilder threadHeader = new StringBuilder();
 			            threadHeader
 			                .append("Thread [")
-			                .append(reader.getThreadId())
+			                .append(e.threadId())
 			                .append("] ");
-			            if (reader.getThreadState() != null) {
-			                threadHeader.append(reader.getThreadState()).append(' ');
+			            if (e.threadState() != null) {
+			                threadHeader.append(e.threadState()).append(' ');
 			            }
 			            threadHeader.append("at ").append(timestamp);
-			            if (reader.getThreadName() != null) {
-			                threadHeader.append(" - ").append(reader.getThreadName());
+			            if (e.threadName() != null) {
+			                threadHeader.append(" - ").append(e.threadName());
 			            }
 			            System.out.println(threadHeader);
-			            StackTraceElement[] trace = reader.getTrace();
-			            for(int i = 0; i != trace.length; ++i) {
-			                System.out.println(trace[i]);
+			            StackFrameList trace = e.stackTrace();
+			            for(StackFrame frame: trace) {
+			                System.out.println(frame);
 			            }
 			            System.out.println();
 			        }
@@ -274,10 +275,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         histo.addCondition(entry.getKey(), entry.getValue());
                     }
                     
-                    StackTraceReader reader = getFilteredReader();
+                    EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
                     int n = 0;
-                    while(reader.loadNext()) {
-                        StackFrameList trace = reader.getStackTrace();
+                    for(ThreadSnapshotEvent e: reader) {
+                        StackFrameList trace = e.stackTrace();
                         histo.feed(trace);
                         ++n;
                     }
@@ -337,10 +338,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         fg.setColorPicker(new RainbowColorPicker(filters));
                     }
                     
-                    StackTraceReader reader = getFilteredReader();
+                    EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
                     int n = 0;
-                    while(reader.loadNext()) {
-                        StackFrameList trace = reader.getStackTrace();
+                    for(ThreadSnapshotEvent e: reader) {
+                        StackFrameList trace = e.stackTrace();
                         fg.feed(trace);
                         ++n;
                     }
@@ -398,10 +399,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     long[] counters = new long[bucketNames.size()];
                     long total = 0;
 
-                    StackTraceReader reader = getUnclassifiedReader();
-                    ReaderProxy proxy = new ReaderProxy(reader);
-                    while(reader.loadNext()) {
-                        String cl = cat.categorize(proxy);
+                    EventReader<ThreadSnapshotEvent> reader = getUnclassifiedReader();
+                    for(ThreadSnapshotEvent e: reader) {
+                        String cl = cat.categorize(e);
                         if (cl != null) {
                             ++total;
                             ++counters[bucketNames.indexOf(cl)];
@@ -481,14 +481,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
                     
                     ThreadSplitAggregator threadAgg = new ThreadSplitAggregator(summaries.toArray(new ThreadDumpAggregatorFactory[0]));
-                    StackTraceReader str = getFilteredReader();
-                    if (!str.isLoaded()) {
-                        str.loadNext();
-                    }
-                    ReaderProxy proxy = new ReaderProxy(str);
-                    while(str.isLoaded()) {
-                        threadAgg.feed(proxy);
-                        str.loadNext();
+                    EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
+                    for(ThreadSnapshotEvent e: reader) {
+                        threadAgg.feed(e);
                     }
                     
                     TextTable tt = new TextTable();

@@ -1,24 +1,29 @@
 package org.gridkit.jvmtool;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gridkit.jvmtool.cli.CommandLauncher;
-import org.gridkit.jvmtool.stacktrace.AbstractFilteringStackTraceReader;
-import org.gridkit.jvmtool.stacktrace.CounterCollection;
-import org.gridkit.jvmtool.stacktrace.ReaderProxy;
-import org.gridkit.jvmtool.stacktrace.StackFrameList;
-import org.gridkit.jvmtool.stacktrace.StackTraceCodec;
-import org.gridkit.jvmtool.stacktrace.StackTraceReader;
+import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEvent;
+import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEventPojo;
+import org.gridkit.jvmtool.event.ChainedEventReader;
+import org.gridkit.jvmtool.event.ErrorHandler;
+import org.gridkit.jvmtool.event.Event;
+import org.gridkit.jvmtool.event.EventMorpher;
+import org.gridkit.jvmtool.event.EventReader;
+import org.gridkit.jvmtool.event.ShieldedEventReader;
+import org.gridkit.jvmtool.event.SimpleErrorEvent;
+import org.gridkit.jvmtool.event.SingleEventReader;
+import org.gridkit.jvmtool.stacktrace.ThreadEventCodec;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
-import org.gridkit.jvmtool.stacktrace.analytics.FilteredStackTraceReader;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
+import org.gridkit.jvmtool.stacktrace.analytics.ThreadEventFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
@@ -54,14 +59,14 @@ public class ThreadDumpSource {
         this.timeZone = tz;
     }
     
-    public StackTraceReader getFilteredReader() throws IOException {
+    public EventReader<ThreadSnapshotEvent> getFilteredReader() {
         if (traceFilter == null && traceTrim == null && threadName == null && timeRange == null) {
             return getUnclassifiedReader();
         }
         else {
-            StackTraceReader reader = getUnclassifiedReader();
+            EventReader<ThreadSnapshotEvent> reader = getUnclassifiedReader();
             if (threadName != null) {
-                reader = new ThreadNameFilter(reader, threadName);
+                reader = reader.morph(new ThreadNameFilter(threadName));
             }
             if (timeRange != null) {
                 String[] lh = timeRange.split("[-]");
@@ -69,32 +74,30 @@ public class ThreadDumpSource {
                     host.fail("Invalid time range '" + timeRange + "'", "Valid format yyyy.MM.dd_HH:mm:ss-yyyy.MM.dd_HH:mm:ss hours and higher parts can be ommited");
                 }
                 TimeRangeChecker checker = new TimeRangeChecker(lh[0], lh[1], timeZone);
-                reader = new TimeFilter(reader, checker);
+                reader = reader.morph(new TimeFilter(checker));
             }
             try {
                 CachingFilterFactory factory = new CachingFilterFactory();
                 if (traceFilter != null) {
                     ThreadSnapshotFilter ts = TraceFilterPredicateParser.parseFilter(traceFilter, factory);
-                    reader = new FilteredStackTraceReader(ts, reader);
+                    reader = reader.morph(new ThreadEventFilter(ts));
                 }
                 if (traceTrim != null) {
                     final PositionalStackMatcher mt = TraceFilterPredicateParser.parsePositionMatcher(traceTrim, factory);
-                    reader = new TrimProxy(reader) {
-                        
-                        ReaderProxy proxy = new ReaderProxy(reader);
-                        
+                    reader = reader.morph(new TrimProxy() {
+
                         @Override
-                        public boolean loadNext() throws IOException {
-                            while(super.loadNext()) {
-                                int n = mt.matchNext(proxy, 0);
-                                if (n >= 0) {
-                                    trimPoint = n;
-                                    return true;
-                                }
+                        public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
+                            int n = mt.matchNext(event, 0);
+                            if (n >= 0) {
+                                trimPoint = n;
+                                return super.morph(event);
                             }
-                            return false;
+                            else {
+                                return null;
+                            }
                         }
-                    };
+                    });
                 }
                 return reader;
             }
@@ -104,122 +107,89 @@ public class ThreadDumpSource {
         }
     }
 
-    public StackTraceReader getUnclassifiedReader() throws IOException {
+    public EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
         if (files == null) {
             host.fail("No input files provided, used -f option");
         }
-        final StackTraceReader reader = StackTraceCodec.newReader(files.toArray(new String[0]));
-        return new StackTraceReader.StackTraceReaderDelegate() {
-            
-            @Override
-            protected StackTraceReader getReader() {
-                return reader;
-            }
+
+        final Iterator<String> it = files.iterator();
+        ChainedEventReader<Event> reader = new ChainedEventReader<Event>() {
 
             @Override
-            public boolean loadNext() throws IOException {
+            protected EventReader<Event> produceNext() {
+                return it.hasNext() ? open(it.next()) : null;
+            }
+
+            private EventReader<Event> open(String next) {
                 try {
-                    return super.loadNext();
-                }
-                catch(IOException e) {
-                    System.err.println("Dump file read error: " + e.toString());
-                    return false;
+                    return ThreadEventCodec.createEventReader(new FileInputStream(next));
+                } catch (IOException e) {
+                    return new SingleEventReader<Event>(new SimpleErrorEvent(e));
                 }
             }
         };
+
+        ShieldedEventReader<ThreadSnapshotEvent> shielderReader = new ShieldedEventReader<ThreadSnapshotEvent>(reader, ThreadSnapshotEvent.class, new ErrorHandler() {
+            @Override
+            public void onException(Exception e) {
+                System.err.println("Stream reader error: " + e);
+            }
+        });
+
+        return shielderReader;
     }    
     
-    static class TimeFilter extends AbstractFilteringStackTraceReader {
+    static class TimeFilter implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
         
-        StackTraceReader reader;
         TimeRangeChecker checker;
         
-        public TimeFilter(StackTraceReader reader, TimeRangeChecker checker) {
-            this.reader = reader;
+        public TimeFilter(TimeRangeChecker checker) {
             this.checker = checker;
         }
 
         @Override
-        protected boolean evaluate() {
-            return checker.evaluate(getTimestamp());
-        }
-
-        @Override
-        protected StackTraceReader getReader() {
-            return reader;
+        public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
+            return checker.evaluate(event.timestamp()) ? event : null;
         }
     }
 
-    static class ThreadNameFilter extends AbstractFilteringStackTraceReader {
+    static class ThreadNameFilter implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
         
-        StackTraceReader reader;
         Matcher matcher;
         
-        public ThreadNameFilter(StackTraceReader reader, String regex) {
-            this.reader = reader;
+        public ThreadNameFilter(String regex) {
             this.matcher = Pattern.compile(regex).matcher("");
         }
-        
+
         @Override
-        protected boolean evaluate() {
-            if (getThreadName() != null) {
-                matcher.reset(getThreadName());
+        public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
+            return evaluate(event) ? event : null;
+        }
+
+        protected boolean evaluate(ThreadSnapshotEvent event) {
+            if (event.threadName() != null) {
+                matcher.reset(event.threadName());
                 return matcher.matches();
             }
             else {
                 return false;
             }
         }
-        
-        @Override
-        protected StackTraceReader getReader() {
-            return reader;
-        }
     }
     
-    static class TrimProxy implements StackTraceReader {
+    static class TrimProxy implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
         
-        protected StackTraceReader reader;
+        protected ThreadSnapshotEventPojo snap = new ThreadSnapshotEventPojo();
         protected int trimPoint = 0;
         
-        public TrimProxy(StackTraceReader reader) {
-            this.reader = reader;
+        public TrimProxy() {
         }
 
-        public boolean isLoaded() {
-            return reader.isLoaded();
-        }
-
-        public long getThreadId() {
-            return reader.getThreadId();
-        }
-
-        public long getTimestamp() {
-            return reader.getTimestamp();
-        }
-
-        public String getThreadName() {
-            return reader.getThreadName();
-        }
-
-        public State getThreadState() {
-            return reader.getThreadState();
-        }
-
-        public CounterCollection getCounters() {
-            return reader.getCounters();
-        }
-
-        public StackTraceElement[] getTrace() {
-            return Arrays.copyOf(reader.getTrace(), trimPoint);
-        }
-
-        public StackFrameList getStackTrace() {
-            return reader.getStackTrace().fragment(0, trimPoint);
-        }
-
-        public boolean loadNext() throws IOException {
-            return reader.loadNext();
+        @Override
+        public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
+            snap.loadFrom(event);
+            snap.stackTrace(event.stackTrace().fragment(0, trimPoint));
+            return snap;
         }
     }    
 }

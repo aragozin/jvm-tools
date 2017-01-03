@@ -10,12 +10,12 @@ public interface ThreadSnapshot {
     public String threadName();
     
     public long timestamp();
-    
-    public StackFrameList stackTrace();
-    
+
     /** may be <code>null</code> */
     public State threadState();
     
+    public StackFrameList stackTrace();
+
     public CounterCollection counters();
         
 }

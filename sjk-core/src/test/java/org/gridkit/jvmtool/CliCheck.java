@@ -84,7 +84,7 @@ public class CliCheck {
 		exec("ttop", "-p", PID, "-o", "CPU", "-n", "10");
 	}
 
-	@Test @Ignore
+	@Test //@Ignore
 	public void ttop_top_N_alloc() {
 
 		exec("ttop", "-p", PID, "-o", "ALLOC", "-n", "10");
@@ -211,6 +211,11 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_print_x() {
+	    exec("ssa", "--print", "-f", "target/test.cap", "-X");
+	}
+
+	@Test
 	public void ssa_print_trim() {
 	    exec("ssa", "--print", "-tt", "javax.management.StandardMBean.invoke/+**", "-f", "target/test.stp");
 	}
@@ -222,7 +227,7 @@ public class CliCheck {
 
 	@Test
 	public void ssa_print_time_range() {
-	    exec("ssa", "--print", "-tr", "34:08-34:10", "-tn", "RMI TCP Connection.*", "-f", "target/test.stp");
+	    exec("ssa", "--print", "-tr", "02:11-02:12", "-tn", "RMI TCP Connection.*", "-f", "target/test.stp");
 	}
 
 	@Test

@@ -18,6 +18,10 @@ class RotatingStringDictionary {
         this.limit = limit;
     }
 
+    public boolean contains(String str) {
+        return dic.containsKey(str);
+    }
+
     public int intern(String str) {
         Integer id = dic.remove(str);
         if (id != null) {

@@ -45,7 +45,7 @@ public class ThreadDumpSampler {
                     @SuppressWarnings("unused")
                     /* Method added in Java 7, required for compilation */
                     public ObjectName getObjectName() {
-                        return ThreadMXBeanEx.BeanHelper.THREADING_MBEAN;
+                        return ThreadMXBeanEx.THREADING_MBEAN;
                     }
 
                     public int getPeakThreadCount() {

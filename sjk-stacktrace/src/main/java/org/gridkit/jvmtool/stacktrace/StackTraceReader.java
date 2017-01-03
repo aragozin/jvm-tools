@@ -10,6 +10,16 @@ public interface StackTraceReader {
 
     public boolean isLoaded();
 
+    /**
+     * File may include extra event besides thread dumps.
+     * E.g. memory dynamics or OS metrics could be included
+     * for further analysis.
+     * <p>
+     * Extra events are seconds class citizens so some readers
+     * may filter them out.
+     */
+//    public String getEventType();
+
     public long getThreadId();
 
     public long getTimestamp();

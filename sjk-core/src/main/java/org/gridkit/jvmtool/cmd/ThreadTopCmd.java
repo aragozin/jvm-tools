@@ -15,6 +15,8 @@
  */
 package org.gridkit.jvmtool.cmd;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -64,10 +66,10 @@ public class ThreadTopCmd implements CmdRef {
 		private long samplerIntervalMS = 500;
 		
 		@Parameter(names = {"-n", "--top-number"}, description = "Number of threads to show")
-		private int topNumber = Integer.MAX_VALUE;
+		private int topNumber = 20;
 		
 		@Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, ALLOC, NAME")
-		private List<String> sortOrder;
+		private List<String> sortOrder = new ArrayList<String>(Arrays.asList("CPU"));
 		
 		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter threads by name")
 		private String threadFilter;
@@ -98,6 +100,10 @@ public class ThreadTopCmd implements CmdRef {
     				    if (sm.isAvailable()) {
     				        tmon.setSafePointMonitor(sm);
     				    }
+//    				    NativeThreadMonitor tm = PlatformProcessInfoProvider.createMonitor(pid);
+//    				    if (tm != null) {
+//    				        tmon.setNativeThreadMonitor(tm);
+//    				    }
 				    }
 				    catch(Exception e) {
 				        // ignore
