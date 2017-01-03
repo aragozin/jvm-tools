@@ -1,5 +1,17 @@
 Next version
 ----
+- Thread dump archive reader performance improvement
+- New generic event reader and writer API
+- Binary format V4 with support for non thread dump events
+- Added JMX GC event subscriber
+
+0.4.4 - 2016 Dec 4
+----
+- Compressed heap dump processing majot performance improvement
+- Added `SingletonDetector` utility class
+
+0.4.3 - 2016 Aug 18
+----
 - Added notation for null arguments for MBean operations
 - Added few formating options for `mx` command
 
