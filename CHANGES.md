@@ -1,5 +1,8 @@
 Next version
 ----
+
+0.5 - 2017 Jan 29
+----
 - Thread dump archive reader performance improvement
 - New generic event reader and writer API
 - Binary format V4 with support for non thread dump events
