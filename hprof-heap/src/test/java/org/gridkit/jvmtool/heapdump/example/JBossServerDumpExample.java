@@ -50,7 +50,7 @@ public class JBossServerDumpExample {
     }
 
     /**
-     * jmap like class histogram
+     * Create "jmap -histo" like class histogram from dump
      */
     @Test
     public void printHistogram() {
@@ -121,7 +121,6 @@ public class JBossServerDumpExample {
                 ClusterDetails cluster = hca.feed(i);
                 ClassRecord classInfo = cluster.getHistogram().getClassInfo("org.infinispan.util.concurrent.BoundedConcurrentHashMap$HashEntry");
                 System.out.println(i.getInstanceId() + "\t" + name + "\t" + (classInfo == null ? "0" : classInfo.getInstanceCount()));
-//                System.out.println(cluster.getHistogram().formatTop(1000));
                 int n = histo.containsKey(name) ? histo.get(name) : 0;
                 histo.put(name, n + 1);
             }
@@ -133,6 +132,7 @@ public class JBossServerDumpExample {
 
     /**
      * This examples calculates retained set for active HTTP sessions.
+     * It also report top 50 entries of class histogram for each cluster.
      * 
      * @throws IOException
      */
@@ -147,6 +147,9 @@ public class JBossServerDumpExample {
         // this is a list of singleton objects we do not care
         loadSingletons(analyzer, "src/test/resources/singletons-list.txt");
         
+        // below we are configuring edges we want to ignore
+        // while traveling heap graph
+        // HeapPath notation is used to define edges
         analyzer.blackList("(+java.lang.Enum)");        
         analyzer.blackList("(**.StandardSession).manager");        
         analyzer.blackList("(**.LogImpl)");        
