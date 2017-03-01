@@ -32,7 +32,7 @@ myfield1.*.myfield3
 
 HeapPath will try to walk all possible paths. Paths wich cannot be traversed will be silently discarded.
 
-Class pedicates
+Class predicates
 ===============
 
 Path below would allow only MyClass instances to be selected.
