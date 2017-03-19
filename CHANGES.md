@@ -1,6 +1,11 @@
 Next version
 ----
 
+0.5.1 - 2017 Mar 19
+---
+- Minor improvements to ThreadDumpSampler
+- Added memory MBean sampler
+
 0.5 - 2017 Jan 29
 ----
 - Thread dump archive reader performance improvement

@@ -33,10 +33,10 @@ public class FilterParserMatchingTest {
         
         public Trace t(String trace) {
             if (trace.indexOf('(') > 0) {
-                frame.add(StackFrame.parseTrace(trace));
+                frame.add(StackFrame.parseFrame(trace));
             }
             else {
-                frame.add(StackFrame.parseTrace(trace + "(X.java)"));
+                frame.add(StackFrame.parseFrame(trace + "(X.java)"));
             }
             return this;
         }

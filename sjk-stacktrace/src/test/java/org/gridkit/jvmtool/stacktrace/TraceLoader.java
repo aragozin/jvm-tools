@@ -26,7 +26,7 @@ public class TraceLoader {
                         break;
                     }
                     if (line.trim().length() > 0)
-                    frames.add(StackFrame.parseTrace(line.trim()));
+                    frames.add(StackFrame.parseFrame(line.trim()));
                 }
             }
             return frames.toArray(new StackFrame[frames.size()]);
@@ -45,7 +45,7 @@ public class TraceLoader {
                     break;
                 }
                 if (line.trim().length() > 0)
-                    frames.add(StackFrame.parseTrace(line.trim()));
+                    frames.add(StackFrame.parseFrame(line.trim()));
             }
             return frames.toArray(new StackFrame[frames.size()]);
         } catch (IOException e) {

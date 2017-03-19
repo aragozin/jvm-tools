@@ -66,7 +66,7 @@ public abstract class AbstractStackFrameArray implements StackFrameList {
         }
         int nfrom = this.from() + from;
         int nto = this.from() + to;
-        if (nfrom >= this.to() || nfrom < this.from()) {
+        if (nfrom > this.to() || nfrom < this.from()) {
             throw new IndexOutOfBoundsException(nfrom + " > [" + this.from() + "," + this.to() + ")");
         }
         if (nto > this.to() || nto < this.from()) {

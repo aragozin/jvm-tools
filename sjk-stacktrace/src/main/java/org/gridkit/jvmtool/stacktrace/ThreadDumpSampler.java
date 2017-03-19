@@ -178,23 +178,41 @@ public class ThreadDumpSampler {
         }
         return bean;
     }
-    
+
+    boolean collectTraces = true;
 	boolean collectCpu = true;
 	boolean collectUserCpu = true;
 	boolean collectAllocation = true;
 	private ThreadMXBean threading;
 
-	private Pattern threadFilter;
+	private ThreadNameFilter threadFilter;
 	private long[] threadSet;
 	private List<CounterCollector> collectors = new ArrayList<CounterCollector>();
 
 	public ThreadDumpSampler() {
 	}
 
-	public void setThreadFilter(String pattern) {
-	    this.threadFilter = Pattern.compile(pattern);
+	public void setThreadFilter(final String pattern) {
+	    this.threadFilter = new ThreadNameFilter() {
+            
+	        final Matcher matcher = Pattern.compile(pattern).matcher(""); 
+	        
+            @Override
+            public boolean accept(String threadName) {
+                matcher.reset(threadName);
+                return matcher.matches();
+            }
+        };
 	}
 
+	public void setThreadFilter(final ThreadNameFilter filter) {
+	    this.threadFilter = filter;
+	}
+	
+	public void enableThreadStackTrace(boolean enable) {
+	    collectTraces = enable;
+	}
+	
 	public void enableThreadCpu(boolean enable) {
 	    collectCpu = true;
 	}
@@ -233,7 +251,7 @@ public class ThreadDumpSampler {
         for(ThreadInfo t:ti) {
             long tid = t.getThreadId();
             String name = t.getThreadName();
-            if (threadFilter == null || threadFilter.matcher(name).matches()) {
+            if (threadFilter == null || threadFilter.accept(name)) {
                 tids[n++] = tid;
             }
         }
@@ -245,10 +263,20 @@ public class ThreadDumpSampler {
 	    long timestamp = System.currentTimeMillis();
 	    ThreadInfo[] dump;
 	    if (threadSet != null) {
-	        dump = compactThreads(threading.getThreadInfo(threadSet, Integer.MAX_VALUE));
+	        if (collectTraces) {
+	            dump = compactThreads(threading.getThreadInfo(threadSet, Integer.MAX_VALUE));
+	        }
+	        else {
+	            dump = compactThreads(threading.getThreadInfo(threadSet));
+	        }
 	    }
 	    else {
-	        dump = filterThreads(threading.dumpAllThreads(false, false));
+	        if (collectTraces) {
+	            dump = filterThreads(threading.dumpAllThreads(false, false));
+	        }
+	        else {
+	            dump = filterThreads(threading.getThreadInfo(threading.getAllThreadIds()));
+	        }
 
 	    }
 	    long[] ids = new long[dump.length];
@@ -307,12 +335,10 @@ public class ThreadDumpSampler {
 	        return compactThreads(dumpAllThreads);
 	    }
 	    else {
-	        Matcher m = threadFilter.matcher("");
             int n = 0;
             for(int i = 0; i != dumpAllThreads.length; ++i) {
                 if (dumpAllThreads[i] != null) {
-                    m.reset(dumpAllThreads[i].getThreadName());
-                    if (m.matches()) {
+                    if (threadFilter.accept(dumpAllThreads[i].getThreadName())) {
                         ++n;
                     }
                     else {

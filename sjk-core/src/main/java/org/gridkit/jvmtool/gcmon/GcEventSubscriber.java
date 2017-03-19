@@ -24,9 +24,21 @@ public class GcEventSubscriber extends GcEventPoller {
             }
             catch(Exception e) {
                 ok = false;
+                unsubscribe();
+                break;
             }
         }
         return ok;
+    }
+    
+    public void unsubscribe() {
+        for(GcTracker tracker: trackers) {
+            try {
+                mserver.removeNotificationListener(tracker.name, LISTENER, null, tracker);
+            }
+            catch(Exception e) {
+            }
+        }      
     }
 
     protected void subscribeTracker(GcTracker tracker) throws IOException, JMException {
