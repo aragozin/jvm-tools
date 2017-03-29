@@ -224,9 +224,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			        EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
 			        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 			        fmt.setTimeZone(timeZone());
+			        StringBuilder threadHeader = new StringBuilder();
+			        StringBuilder stackFrameBuffer = new StringBuilder();
 			        for(ThreadSnapshotEvent e: reader) {
 			            String timestamp = fmt.format(e.timestamp());
-			            StringBuilder threadHeader = new StringBuilder();
 			            threadHeader
 			                .append("Thread [")
 			                .append(e.threadId())
@@ -241,9 +242,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 			            System.out.println(threadHeader);
 			            StackFrameList trace = e.stackTrace();
 			            for(StackFrame frame: trace) {
-			                System.out.println(frame);
+			            	frame.toString(stackFrameBuffer);
+			                System.out.println(stackFrameBuffer);
+			                stackFrameBuffer.setLength(0);
 			            }
 			            System.out.println();
+			            threadHeader.setLength(0);
 			        }
 				    
 				} catch (Exception e) {
