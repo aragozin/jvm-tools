@@ -37,7 +37,7 @@ class StackTraceEventWriterV4 implements UniversalEventWriter {
     }
     private TagDictionary tagSetDic = new TagDictionary(4 << 10);
     private TagDictionary counterSetDic = new TagDictionary(512);
-    private Map<StackTraceElement, Integer> frameDic = new HashMap<StackTraceElement, Integer>();
+    private Map<StackFrame, Integer> frameDic = new HashMap<StackFrame, Integer>();
 
     private TagEncoder encoder = new TagEncoder();
     private TagEncoder counterTagEncoder = new CounterTagEncoder();
@@ -117,7 +117,7 @@ class StackTraceEventWriterV4 implements UniversalEventWriter {
         if (snap.stackTrace() != null /*&& !snap.stackTrace().isEmpty()*/) {
             markThreadStackTrace();
             for(StackFrame ste: snap.stackTrace()) {
-                intern(ste.toStackTraceElement());
+                intern(ste);
             }
         }
 
@@ -193,7 +193,7 @@ class StackTraceEventWriterV4 implements UniversalEventWriter {
             }
             StackTraceCodec.writeVarInt(dos, n);
             for(StackFrame ste: trace) {
-                StackTraceCodec.writeVarInt(dos, intern(ste.toStackTraceElement()));
+                StackTraceCodec.writeVarInt(dos, intern(ste));
             }
         }
     }
@@ -226,14 +226,14 @@ class StackTraceEventWriterV4 implements UniversalEventWriter {
         return n;
     }
 
-    private int intern(StackTraceElement ste) throws IOException {
+    private int intern(StackFrame ste) throws IOException {
         if (!frameDic.containsKey(ste)) {
             String pkg = ste.getClassName();
             int c = pkg.lastIndexOf('.');
             String cn = c < 0 ? pkg : pkg.substring(c + 1);
             pkg = c < 0 ? null : pkg.substring(0, c);
             String mtd = ste.getMethodName();
-            String file = ste.getFileName();
+            String file = ste.getSourceFile();
             int line = ste.getLineNumber() + 2;
             if (line < 0) {
                 line = 0;

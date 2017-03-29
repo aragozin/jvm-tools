@@ -67,7 +67,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
         else {
             textLen = (short) len;
         }
-        hash = toString().hashCode();
+        hash = genHash();
     }
 
     private int calcLen() {
@@ -313,6 +313,39 @@ public class StackFrame implements CharSequence, GenericStackElement {
                 builder.append(fileName).append(':').append(lineNumber);
         }
         builder.append(')');
+    }
+
+    private int genHash() {
+        int hash = 1033;
+        if (classPrefix != null) {
+            hash = hashText(hash, classPrefix);
+            hash = 31 * hash + '.';
+        }
+        hash = hashText(hash, className);
+        hash = 31 * hash + '.';
+        hash = hashText(hash, methodName);
+        switch(lineNumberDigits) {
+            case NO_LINE_NUMBER:
+                hash = hashText(hash, fileName);
+                break;
+            case NO_SOURCE:
+                hash = 31 * hash + -1;
+                break;
+            case NATIVE:
+                hash = 31 * hash + -2;
+                break;
+            default:
+                hash = hashText(hash, fileName);
+                hash = 31 * hash + lineNumber;
+        }
+        return hash;
+    }
+    
+    private int hashText(int hash, String text) {
+        for(int i = 0; i != text.length(); ++i) {
+            hash = 31 * hash + text.charAt(i);
+        }
+        return hash;
     }
 
     private static String toString(CharSequence seq) {

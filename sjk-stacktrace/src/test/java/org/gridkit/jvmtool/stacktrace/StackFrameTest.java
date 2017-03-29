@@ -101,6 +101,7 @@ public class StackFrameTest {
 
         Assert.assertEquals(frame1, frame2);
         Assert.assertEquals(frame2, frame1);
+        Assert.assertEquals(frame1.hashCode(), frame2.hashCode());
     }
 
     @Test
@@ -110,6 +111,7 @@ public class StackFrameTest {
 
         Assert.assertEquals(frame1, frame2);
         Assert.assertEquals(frame2, frame1);
+        Assert.assertEquals(frame1.hashCode(), frame2.hashCode());
     }
 
     @Test
@@ -117,6 +119,8 @@ public class StackFrameTest {
         StackFrame frame1 = new StackFrame(null, "mypackage$MyClass", "myMethod", "MyClass.java", 15);
         StackFrame frame2 = new StackFrame("mypackage", "MyClass", "myMethod", "MyClass.java", 15);
 
+        Assert.assertNotEquals(frame1.hashCode(), frame2.hashCode());
+        
         zeroHash(frame1);
         zeroHash(frame2);
 

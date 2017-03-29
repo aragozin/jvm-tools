@@ -1,5 +1,6 @@
 Next version
 ----
+- Avoid unnecessary memory allocation to initialize hashCode on `StackFrame` object
 
 0.5.1 - 2017 Mar 19
 ---
