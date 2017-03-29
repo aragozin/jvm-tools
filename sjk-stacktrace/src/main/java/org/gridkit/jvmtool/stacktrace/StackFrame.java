@@ -25,7 +25,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
     private final short textLen;
     private final short lineNumberDigits;
 
-    private final int hash;
+    private int hash;
 
     public StackFrame(StackTraceElement ste) {
         this(null, ste.getClassName(), ste.getMethodName(), ste.getFileName(), ste.getLineNumber());
@@ -67,7 +67,6 @@ public class StackFrame implements CharSequence, GenericStackElement {
         else {
             textLen = (short) len;
         }
-        hash = toString().hashCode();
     }
 
     private int calcLen() {
@@ -216,7 +215,11 @@ public class StackFrame implements CharSequence, GenericStackElement {
 
     @Override
     public int hashCode() {
-        return hash;
+        int h = hash;
+        if (h == 0) {
+        	hash = h = toString().hashCode();
+        }
+        return h;
     }
 
     @Override
@@ -231,7 +234,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
             return false;
         }
         StackFrame other = (StackFrame) obj;
-        if (textLen != other.textLen || hash != other.hash) {
+        if (textLen != other.textLen || hashCode() != other.hashCode()) {
             return false;
         }
         if (fileName == null) {
