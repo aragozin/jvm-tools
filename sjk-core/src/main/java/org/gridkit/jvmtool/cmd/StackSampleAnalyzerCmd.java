@@ -423,7 +423,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
                     
                     if (csvOutput) {
-                        System.out.println(tt.formatToCSV());
+                        System.out.println(TextTable.formatCsv(tt));
                     }
                     else {
                         System.out.println(tt.formatTextTableUnbordered(Integer.MAX_VALUE));
@@ -505,7 +505,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     
                     if (n > 0) {
                         if (csvOutput) {
-                            System.out.println(tt.formatToCSV());
+                            System.out.println(TextTable.formatCsv(tt));
                         }
                         else {
                             System.out.println(tt.formatTextTableUnbordered(80));

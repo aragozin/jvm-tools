@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Alexey Ragozin
+ * Copyright 2014-2017 Alexey Ragozin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
  */
 package org.gridkit.util.formating;
 
-
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -29,13 +28,29 @@ import java.util.List;
  */
 public class TextTable {
 
+	public static String formatCsv(TextTable table) {
+		StringWriter writer = new StringWriter();
+		try {
+			table.formatCsv(writer);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return writer.toString();
+	}
+
+	public static String formatASCII(TextTable table) {
+		return table.formatTextTable(Integer.MAX_VALUE);
+	}
+
+    public static final Comparator<String> NUM_CMP = new NumberCmp();
+    
 	private List<String[]> rows = new ArrayList<String[]>();
 	private int colCount;
-	
+
 	public void transpone() {
 		int rc = rows.size();
 		int cc = colCount;
-		
+
 		List<String[]> nrows = new ArrayList<String[]>();
 		for(int i = 0; i != cc; ++i) {
 			String[] nrow = new String[cc];
@@ -44,11 +59,11 @@ public class TextTable {
 			}
 			nrows.add(nrow);
 		}
-		
+
 		rows = nrows;
 		colCount = rc;
 	}
-	
+
 	public void addRow(String... row) {
 		addRow(row, false);
 	}
@@ -73,20 +88,20 @@ public class TextTable {
 				throw new IllegalArgumentException("Row is longer than table");
 			}
 		}
-		rows.add(Arrays.copyOf(row, colCount));	
+		rows.add(Arrays.copyOf(row, colCount));
 	}
 
 	private void extendRows(int length) {
 		for(int i = 0; i != rows.size(); ++i) {
 			rows.set(i, Arrays.copyOf(rows.get(i), length));
-		}		
+		}
 		colCount = length;
 	}
 
 	public void addColumnRight(List<String> col) {
 		addColumnRight(col.toArray(new String[col.size()]));
 	}
-	
+
 	public void addColumnRight(String... col) {
 		if (col.length > rows.size()) {
 			throw new IllegalArgumentException("Column is taller than table");
@@ -105,8 +120,8 @@ public class TextTable {
 	public void addColumnLeft(List<String> col) {
 		addColumnLeft(col.toArray(new String[col.size()]));
 	}
-	
-	public void addColumnLeft(String[] col) {
+
+	public void addColumnLeft(String... col) {
 		if (col.length > rows.size()) {
 			throw new IllegalArgumentException("Column is taller than table");
 		}
@@ -121,29 +136,77 @@ public class TextTable {
 			rows.set(i, nrow);
 		}
 	}
+
+    public int rowCount() {
+        return rows.size();
+    }
 	
+	public void sort(int col, boolean exludeHeader, boolean descOrder, Comparator<String> cmp) {
+	    Comparator<String[]> rowcmp = new RowCmp(col, descOrder, cmp);
+	    if (exludeHeader) {
+	        Collections.sort(rows.subList(1, rows.size()), rowcmp);
+	    }
+	    else {
+	        Collections.sort(rows, rowcmp);
+	    }
+	}
+	
+	public void formatCsv(Appendable out) throws IOException {
+		for(String[] row: rows) {
+			for(int i = 0; i != row.length; ++i) {
+				if (i > 0) {
+					out.append(",");
+				}
+				formatCell(out, row[i]);
+			}
+			out.append("\n");
+		}
+	}
+	
+	private void formatCell(Appendable out, String row) throws IOException {
+		if (row == null || row.length() == 0) {
+			return;
+		}
+		if (isCsvSafe(row)) {
+			out.append(row);
+		}
+		else {
+			out.append('"');
+			for(int i = 0; i != row.length(); ++i) {
+				char c = row.charAt(i);
+				if (c == '"') {
+					out.append("\"\"");
+				}
+				else if (c == '\n') {
+					// replace line end with space
+					out.append(' ');
+				}
+				else {
+					out.append(c);
+				}
+			}
+			out.append('"');
+		}
+	}
+
+	private boolean isCsvSafe(String row) {
+		for(int i = 0; i != row.length(); ++i) {
+			char ch = row.charAt(i);
+			if (!Character.isJavaIdentifierPart(ch) && "._-".indexOf(ch) < 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public String formatTextTable(int maxCellWidth) {
 		return formatTable(rows, maxCellWidth, true);
 	}
 
-    public String formatToCSV() {
-        try {
-            StringWriter sw = new StringWriter();
-            CSVWriter writer = new CSVWriter(sw, ',', '"', '"', "\n");
-            for(String[] row: rows) {
-                writer.writeNext(row);
-            }
-            writer.close();
-            return sw.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 	public String formatTextTableUnbordered(int maxCellWidth) {
 		return formatTable(rows, maxCellWidth, false);
 	}
-	
+
 	private String formatTable(List<String[]> content, int maxCell, boolean table) {
 		int[] width = new int[content.get(0).length];
 		for(String[] row: content) {
@@ -179,10 +242,10 @@ public class TextTable {
 				sb.append('\n');
 			}
 		}
-		
+
 		return sb.toString();
 	}
-
+	
     protected int measureCell(String cell) {
         if (cell == null) {
             return 0;
@@ -249,87 +312,48 @@ public class TextTable {
         while(sb.length() > 0 && sb.charAt(sb.length() - 1) == ' ') {
             sb.setLength(sb.length() - 1);
         }
-    }
-    
-    class CSVWriter {
-        
-        private Writer rawWriter;
-        private PrintWriter pw;
-        private char separator;
-        private char quoteChar;
-        private char quoteEscapeChar;
-        private String lineEnd;
-
-        public CSVWriter(Writer writer, char separator, char quotechar, char escapechar, String lineEnd) {
-            this.rawWriter = writer;
-            this.pw = new PrintWriter(writer);
-            this.separator = separator;
-            this.quoteChar = quotechar;
-            this.quoteEscapeChar = escapechar;
-            this.lineEnd = lineEnd;
-        }
-        
-        public void writeNext(String[] nextLine) {
-            
-            if (nextLine == null)
-                return;
-            
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < nextLine.length; i++) {
-
-                if (i != 0) {
-                    sb.append(separator);
-                }
-
-                String nextElement = nextLine[i];
-                if (nextElement == null)
-                    continue;
-                if (quoteChar != 0)
-                    sb.append(quoteChar);
-                
-                sb.append(stringContainsSpecialCharacters(nextElement) ? processLine(nextElement) : nextElement);
-
-                if (quoteChar != 0)
-                    sb.append(quoteChar);
-            }
-            
-            sb.append(lineEnd);
-            pw.write(sb.toString());
-        }
-
-        private boolean stringContainsSpecialCharacters(String line) {
-            return line.indexOf(quoteChar) != -1 || line.indexOf(quoteEscapeChar) != -1;
-        }
-
-        protected StringBuilder processLine(String nextElement)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int j = 0; j < nextElement.length(); j++) {
-                char nextChar = nextElement.charAt(j);
-                if (quoteEscapeChar != 0 && nextChar == quoteChar) {
-                    sb.append(quoteEscapeChar).append(nextChar);
-                } else if (quoteEscapeChar != 0 && nextChar == quoteEscapeChar) {
-                    sb.append(quoteEscapeChar).append(nextChar);
-                } else {
-                    sb.append(nextChar);
-                }
-            }
-            
-            return sb;
-        }
-
-        public void flush() throws IOException {
-            pw.flush();
-        } 
-
-        public void close() throws IOException {
-            flush();
-            pw.close();
-            rawWriter.close();
-        }
-
-        public boolean checkError() {
-            return pw.checkError();
-        }
     }    
+	
+	private static class RowCmp implements Comparator<String[]> {
+
+	    private final int col;
+	    private final Comparator<String> cmp;
+	    private final boolean descOrder;
+	    
+        public RowCmp(int col, boolean descOrder, Comparator<String> cmp) {
+            this.col = col;
+            this.cmp = cmp;
+            this.descOrder = descOrder;
+        }
+
+        @Override
+        public int compare(String[] o1, String[] o2) {
+            String s1 = o1[col];
+            String s2 = o2[col];
+            if (cmp == null) {
+                return (descOrder ? -1 : 1) * s1.compareTo(s2);
+            }
+            else {
+                return (descOrder ? -1 : 1) * cmp.compare(s1, s2);
+            }
+        }
+	}
+	
+	private static class NumberCmp implements Comparator<String> {
+
+        @Override
+        public int compare(String o1, String o2) {
+            if (o1.length() == 0 || o2.length() == 0) {
+                return o1.compareTo(o2);
+            }
+            try {
+                Double v1 = Double.parseDouble(o1);
+                Double v2 = Double.parseDouble(o2);
+                return v1.compareTo(v2);
+            }
+            catch(NumberFormatException e) {
+                return o1.compareTo(o2);
+            }
+        }
+	}
 }

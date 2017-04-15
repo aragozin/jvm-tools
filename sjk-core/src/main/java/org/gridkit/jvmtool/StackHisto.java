@@ -176,7 +176,7 @@ public class StackHisto {
                 break;
             }
         }
-        return tt.formatToCSV();        
+        return TextTable.formatCsv(tt);        
     }
     
     private String formatPct(int num, int denom) {
