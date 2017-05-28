@@ -12,7 +12,7 @@ public class LegacyStackReader implements StackTraceReader {
 
     private EventReader<ThreadSnapshotEvent> events;
 
-    public LegacyStackReader(EventReader<Event> source) {
+    public LegacyStackReader(EventReader<? extends Event> source) {
         events = new ShieldedEventReader<ThreadSnapshotEvent>(source, ThreadSnapshotEvent.class);
     }
 

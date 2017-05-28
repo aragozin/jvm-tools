@@ -24,16 +24,16 @@ public class ShieldedEventReader<T extends Event> implements EventReader<T> {
         }
     };
 
-    private final EventReader<Event> nested;
+    private final EventReader<? extends Event> nested;
     private final Class<T> classFilter;
     private final ErrorHandler errorHandler;
     private T nextEvent;
 
-    public ShieldedEventReader(EventReader<Event> nested, Class<T> classFilter) {
+    public ShieldedEventReader(EventReader<? extends Event> nested, Class<T> classFilter) {
         this(nested, classFilter, THROW_HANDLER);
     }
 
-    public ShieldedEventReader(EventReader<Event> nested, Class<T> classFilter, ErrorHandler errorHandler) {
+    public ShieldedEventReader(EventReader<? extends Event> nested, Class<T> classFilter, ErrorHandler errorHandler) {
         this.nested = nested;
         this.classFilter = classFilter;
         this.errorHandler = errorHandler;
