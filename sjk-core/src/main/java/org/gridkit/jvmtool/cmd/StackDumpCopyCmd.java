@@ -20,16 +20,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.gridkit.jvmtool.GlobHelper;
+import org.gridkit.jvmtool.AbstractThreadDumpSource;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.jvmtool.stacktrace.LegacyStackReader;
 import org.gridkit.jvmtool.stacktrace.ReaderProxy;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameArray;
@@ -65,18 +62,18 @@ public class StackDumpCopyCmd implements CmdRef {
 
 		@ParametersDelegate
 		private CommandLauncher host;
+				
+		@ParametersDelegate
+		private DumpInput input;
 		
-		@Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
-		private List<String> inputFiles = new ArrayList<String>();
-		
-		@Parameter(names = {"-tf", "--thread-filter"}, description = "Filter threads by name (Java RegEx syntax)")
-		private String threadFilter = ".*";
+//		@Parameter(names = {"-tf", "--thread-filter"}, description = "Filter threads by name (Java RegEx syntax)")
+//		private String threadFilter = ".*";
 
 		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
 		private boolean retainEmptyTraces = false;
 
-		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
-		private List<String> frameFilter;
+//		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
+//		private List<String> frameFilter;
 
         @Parameter(names = { "--mask" }, variableArity = true, description = "One or more masking rules. E.g. com.mycompany:com.somecomplany")
         private List<String> maskingRules = new ArrayList<String>();
@@ -95,6 +92,7 @@ public class StackDumpCopyCmd implements CmdRef {
 		
 		public StCpy(CommandLauncher host) {
 			this.host = host;
+			this.input = new DumpInput(host);
 		}
 		
 		@Override
@@ -110,31 +108,16 @@ public class StackDumpCopyCmd implements CmdRef {
 			        masking.add(new MaskRule(parts[0], parts[1]));
 			    }
 			    
-			    AntPathMatcher matcher = new AntPathMatcher();
-			    matcher.setPathSeparator("/");
-			    
-			    List<String> inputs = new ArrayList<String>();
-			    
 			    System.out.println("Input files");
 			    
-			    for(String f: inputFiles) {
-			        f = f.replace('\\', '/');
-			        for(File ff: matcher.findFiles(new File("."), f)) {
-			            if (ff.isFile()) {
-			                inputs.add(ff.getPath());
-			                System.out.println("  " + ff.getPath());
-			            }
-			        }
+			    for(String f: input.sourceFiles()) {
+	                System.out.println("  " + f);
 			    }
 			    System.out.println();
 			    
-			    if (inputs.isEmpty()) {
-			        host.fail("Input file list is empty");
-			    }
-			    
 			    openWriter();
 			    
-			    final StackTraceReader rawReader = StackTraceCodec.newReader(inputs.toArray(new String[0]));
+			    final StackTraceReader rawReader = new LegacyStackReader(input.getFilteredReader());
 			    
 			    StackTraceReader reader = new StackTraceReader.StackTraceReaderDelegate() {
 
@@ -185,22 +168,12 @@ public class StackDumpCopyCmd implements CmdRef {
 
         private class StackWriterProxy implements StackTraceWriter {
 
-            private Map<String, Boolean> nameCache = new HashMap<String, Boolean>();
-            private Map<StackFrame, Boolean> elementCache = new HashMap<StackFrame, Boolean>();
-            private Matcher[] matchers;
-
             public StackWriterProxy() {
-                if (frameFilter != null) {
-                    matchers = new Matcher[frameFilter.size()];
-                    for(int i = 0; i != frameFilter.size(); ++i) {
-                        matchers[i] = GlobHelper.translate(frameFilter.get(i), ".").matcher("");
-                    }
-                }
             }
 
             @Override
             public void write(ThreadSnapshot snap) throws IOException {
-                if (snap.stackTrace().isEmpty() && !retainEmptyTraces) {
+                if ((snap.stackTrace() == null || snap.stackTrace().isEmpty()) && !retainEmptyTraces) {
                     return;
                 }
                 
@@ -208,57 +181,9 @@ public class StackDumpCopyCmd implements CmdRef {
                     // ignore sample
                     return;
                 }
-                
-                // thread name filter
-                if (threadFilter != null) {
-                    String tn = snap.threadName();
-                    tn = tn != null ? tn : "";
-                    Boolean r = nameCache.get(tn);
-                    if (r == null) {
-                        r = Pattern.matches(threadFilter, tn);
-                        nameCache.put(tn, r);
-                    }
-                    if (!r.booleanValue()) {
-                        return;
-                    }
-                }
-                
-                // test filter
-                if (frameFilter != null) {
-                    boolean match = false;
-                    for(StackFrame e: snap.stackTrace()) {
-                        if (match(e)) {
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (!match) {
-                        return;
-                    }
-                }
+                                
                 ++traceCounter;
                 writer.write(snap);
-
-            }
-
-            private boolean match(StackFrame e) {
-                Boolean cached = elementCache.get(e);
-                if (cached == null) {
-                    if (elementCache.size() > 4 << 10) {
-                        elementCache.clear();
-                    }
-                    boolean matched = false;
-                    for(Matcher m: matchers) {
-                        m.reset(e.toString());
-                        if (m.lookingAt()) {
-                            matched = true;
-                            break;
-                        }
-                    }
-                    elementCache.put(e, matched);
-                    return matched;
-                }
-                return cached;
             }
 
             @Override
@@ -309,5 +234,21 @@ public class StackDumpCopyCmd implements CmdRef {
 	        this.match = match;
 	        this.replace = replace;
 	    }
+	}
+	
+	static class DumpInput extends AbstractThreadDumpSource {
+		
+		@Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
+		private List<String> inputFiles = new ArrayList<String>();
+
+		public DumpInput(CommandLauncher host) {
+			super(host);
+		}
+
+		@Override
+		protected List<String> inputFiles() {
+
+			return inputFiles;
+		}
 	}
 }

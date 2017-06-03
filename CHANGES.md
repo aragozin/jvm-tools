@@ -1,6 +1,7 @@
 Next version
 ----
 - Avoid unnecessary memory allocation to initialize hashCode on `StackFrame` object
+- Unified input processing between SSA and STCPY (SSA got wildcard support, STCPY time range filtering and trace trimming)
 
 0.5.1 - 2017 Mar 19
 ---

@@ -236,6 +236,11 @@ public class CliCheck {
 	}
 
 	@Test
+	public void ssa_histo_wild_card() {
+		exec("ssa", "--histo", "-f", "target/*.stp", "-X");
+	}
+
+	@Test
 	public void ssa_histo_with_classes() {
 	    exec("ssa", "--histo", "-co", "-f", "target/test.stp", "-nc", "IO=java.net.SocketInputStream", "GridKit=org.gridkit", "-X");
 	}
