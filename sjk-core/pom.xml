@@ -43,6 +43,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>sjk-jfr</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.gridkit.lab</groupId>
             <artifactId>jvm-attach-api</artifactId>
             <version>1.2</version>
