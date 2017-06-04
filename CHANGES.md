@@ -1,5 +1,8 @@
 Next version
 ----
+
+0.6 - 2017 Jun 4
+----
 - Avoid unnecessary memory allocation to initialize hashCode on `StackFrame` object
 - Unified input processing between SSA and STCPY (SSA got wildcard support, STCPY time range filtering and trace trimming)
 - Parsing stack traces from Java Flight Recorder files
