@@ -2,6 +2,8 @@ package org.gridkit.util.formating;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.TimeZone;
+
 import org.junit.Test;
 
 public class SimpleNumberFormatterTest {
@@ -18,15 +20,15 @@ public class SimpleNumberFormatterTest {
         assertThat(snf.formatDouble(1)).isEqualTo("01");
         assertThat(snf.formatDouble(1.1)).isEqualTo("01.1");
         assertThat(snf.formatDouble(1.55)).isEqualTo("01.55");
-        assertThat(snf.formatDouble(1.555)).isEqualTo("01.56");
-        assertThat(snf.formatDouble(10.555)).isEqualTo("10.56");
+        assertThat(snf.formatDouble(1.5555)).isEqualTo("01.56");
+        assertThat(snf.formatDouble(10.5555)).isEqualTo("10.56");
         
     }
 
     @Test
     public void verify_date_format() {
         
-        SimpleNumberFormatter snf = new SimpleNumberFormatter("Tyyyy");
+        SimpleNumberFormatter snf = new SimpleNumberFormatter("Tyyyy", TimeZone.getTimeZone("UTC"));
         
         assertThat(snf.formatLong(0)).isEqualTo("1970");
         assertThat(snf.formatDouble(0d)).isEqualTo("1970");

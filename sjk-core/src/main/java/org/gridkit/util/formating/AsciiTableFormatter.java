@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 public class AsciiTableFormatter implements TableFormatter, TabularDataSink {
 
@@ -26,6 +27,15 @@ public class AsciiTableFormatter implements TableFormatter, TabularDataSink {
     protected List<String> header = new ArrayList<String>();
     protected List<String> displayHeader = new ArrayList<String>();
     protected List<NumberFormat> numberFormat = new ArrayList<NumberFormat>();
+    protected TimeZone timeZone;
+    
+    public AsciiTableFormatter() {
+    	this(TimeZone.getDefault());
+    }
+
+    public AsciiTableFormatter(TimeZone timeZone) {
+		this.timeZone = timeZone;
+	}
     
     @Override
 	public void addCol(String name) {
@@ -45,7 +55,7 @@ public class AsciiTableFormatter implements TableFormatter, TabularDataSink {
 	public void addCol(String name, String displayName, String format) {
         header.add(name);
         displayHeader.add(displayName);
-        numberFormat.add(new SimpleNumberFormatter(format));
+        numberFormat.add(new SimpleNumberFormatter(format, timeZone));
     }
     
     protected String formatDouble(String name, double v) {

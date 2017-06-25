@@ -18,6 +18,7 @@ package org.gridkit.util.formating;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * This is utility class capable for formating numbers as numbers and dates.
@@ -39,6 +40,10 @@ public class SimpleNumberFormatter implements NumberFormat {
     private final DoubleFormatter df;
     
     public SimpleNumberFormatter(String format) {
+    	this(format, TimeZone.getDefault());
+    }
+    
+    public SimpleNumberFormatter(String format, TimeZone tz) {
         if (format.length() == 0) {
             // default
             lf = new DefaultLongFormatter();
@@ -51,6 +56,7 @@ public class SimpleNumberFormatter implements NumberFormat {
         }
         else if (format.startsWith("T")) {
             SimpleDateFormat sdf = new SimpleDateFormat(format.substring(1));
+            sdf.setTimeZone(tz);
             lf = new SDFFormatter(sdf);
             df = new D2L(lf);
         }
