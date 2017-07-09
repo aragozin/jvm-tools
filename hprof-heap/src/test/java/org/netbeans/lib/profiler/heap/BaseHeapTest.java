@@ -22,6 +22,8 @@ import static org.gridkit.jvmtool.heapdump.HeapWalker.walkFirst;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -29,6 +31,7 @@ import java.util.TreeSet;
 import org.assertj.core.api.Assertions;
 import org.gridkit.jvmtool.heapdump.HeapPathHelper;
 import org.gridkit.jvmtool.heapdump.HeapWalker;
+import org.gridkit.jvmtool.heapdump.InboundAnalyzer;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -117,6 +120,25 @@ public abstract class BaseHeapTest {
     }
 
     @Test
+    public void verify_inbound_ref_reporter() {
+
+        Heap heap = getHeap();
+        
+        InboundAnalyzer ia = new InboundAnalyzer(heap);
+        ia.initRoots();
+        
+        Instance i = heap.getJavaClassByName(DummyB.class.getName()).getInstances().get(0);
+        ia.mark(i.getInstanceId());
+        
+        int d = 1;
+        while(!ia.isExhausted()) {
+        	System.out.println("\nDepth " + d);
+        	ia.report();
+        	++d;
+        }
+    }
+
+    @Test
     public void verify_heap_walker_for_dummyB_over_map() {
 
         Heap heap = getHeap();
@@ -156,7 +178,7 @@ public abstract class BaseHeapTest {
 
         assertThat(n).isEqualTo(50);
     }
-
+    
     @SuppressWarnings("unused")
     @Test
     public void verify_heap_walker_for_array_list() {
@@ -240,6 +262,16 @@ public abstract class BaseHeapTest {
         Assert.assertNull(HeapWalker.walkFirst(i, "nestedArray[0].value"));
         Assert.assertEquals("somevalue", HeapWalker.valueOf(HeapWalker.walkFirst(i, "nestedArray[*].value")));
     }
+
+    @Test
+    public void verify_heap_path_walker_inverted_predicate() {
+    	
+    	Heap heap = getHeap();
+    	
+    	assertSetsAreEqual(a("A", "B", "C", "D", "E"), scan(heap.getAllInstances(), "(**DummyP)key"));
+    	assertSetsAreEqual(a("A", "C", "E"), scan(heap.getAllInstances(), "(**DummyP)[value!=null]key"));
+    	assertSetsAreEqual(a("B", "D"), scan(heap.getAllInstances(), "(**DummyP)[value=null]key"));
+    }
     
     @Test
     public void verify_DummyC_field_access() {
@@ -296,6 +328,53 @@ public abstract class BaseHeapTest {
         assertThat(HeapWalker.valueOf(i, "structArray[*].textField")).isEqualTo("this is struct #1");
     }
 
+    
+    private Object[] scan(Iterable<Instance> instances, String path) {
+    	List<Object> val = new ArrayList<Object>();
+    	for(Instance i : instances) {
+    		Object v = HeapWalker.valueOf(i, path);
+    		if (v != null) {
+    			val.add(v);
+    		}
+    	}
+    	return val.toArray(new Object[0]);
+    }
+    
+    private static Object[] a(Object... a) {
+    	return a;
+    }
+    
+    private static void assertSetsAreEqual(Object[] expected, Object[] actual) {
+    	Set<Object> e = new HashSet<Object>(Arrays.asList(expected));
+    	Set<Object> a = new HashSet<Object>(Arrays.asList(actual));
+    	
+    	StringBuilder miss = new StringBuilder();
+    	StringBuilder extra = new StringBuilder();
+    	
+    	for(Object x: e) {
+    		if (a.contains(x)) {
+    			a.remove(x);
+    		}
+    		else {
+    			if (miss.length() > 0) {
+    				miss.append(", ");
+    			}
+    			miss.append(x);
+    		}
+    	}
+    	for(Object y: a) {
+			if (extra.length() > 0) {
+				extra.append(", ");
+			}
+			extra.append(y);    		
+    	}
+    	
+    	if (miss.length() > 0 || extra.length() > 0) {
+    		// for better message is IDE
+    		Assert.assertEquals("", "Missing: " + miss + " Unexpected: " + extra);;
+    	}
+    }
+    
     private static void assertArrayEquals(Object expected, Object actual) {
         if (expected instanceof boolean[]) {
             assertThat(Arrays.toString((boolean[])actual)).isEqualTo(Arrays.toString((boolean[])expected));

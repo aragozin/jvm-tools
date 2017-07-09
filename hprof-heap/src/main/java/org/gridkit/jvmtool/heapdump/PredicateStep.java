@@ -28,8 +28,9 @@ public class PredicateStep extends PathStep {
     private PathStep[] path;
     private FieldStep lastStep;
     private String matcher;
+    private boolean inverted;
 
-    public PredicateStep(PathStep[] path, String matcher) {
+    public PredicateStep(PathStep[] path, String matcher, boolean inverted) {
         if (path.length > 0 && path[path.length - 1] instanceof FieldStep) {
             this.path = Arrays.copyOf(path, path.length - 1);
             this.lastStep = (FieldStep) path[path.length - 1];
@@ -38,6 +39,7 @@ public class PredicateStep extends PathStep {
             this.path = path;
         }
         this.matcher = matcher;
+        this.inverted = inverted;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class PredicateStep extends PathStep {
                 for(FieldValue fv: i.getFieldValues()) {
                     if ((fname == null && fv.getField().isStatic())
                             || (fname.equals(fv.getField().getName()))) {
-                        Object obj;
+                        Object obj;//HeapWalker.valueOf(i, "key")
                         if (fv instanceof ObjectFieldValue) {
                             obj = HeapWalker.valueOf(((ObjectFieldValue) fv).getInstance());
                         }
@@ -78,7 +80,7 @@ public class PredicateStep extends PathStep {
                         if (!(obj instanceof Instance)) {
                             String str = String.valueOf(obj);
                             if (str.equals(matcher)) {
-                                return true;
+                                return !inverted;
                             }
                         }
                     }
@@ -89,12 +91,12 @@ public class PredicateStep extends PathStep {
                 if (!(obj instanceof Instance)) {
                     String str = String.valueOf(obj);
                     if (str.equals(matcher)) {
-                        return true;
+                        return !inverted;
                     }
                 }
             }
         }
-        return false;
+        return inverted;
     }
 
     public String toString() {
@@ -109,7 +111,7 @@ public class PredicateStep extends PathStep {
         if (sb.length() > 1) {
             sb.setLength(sb.length() - 2);
         }
-        sb.append("=").append(matcher).append("]");
+        sb.append(inverted ? "!=" : "=").append(matcher).append("]");
         return sb.toString();
     }
 }

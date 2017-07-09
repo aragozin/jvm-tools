@@ -42,7 +42,7 @@ public class HeapDumpProcuder {
         File file = new File(HEAP_DUMP_PATH);
         if (!file.exists()) {
             System.out.println("Generating heap dump: " + HEAP_DUMP_PATH);
-            initTestHeap();
+            holder.initTestHeap();
             System.out.println(HeapDumper.dumpLive(PID, HEAP_DUMP_PATH, 120000));
         }
         return file;
@@ -78,30 +78,43 @@ public class HeapDumpProcuder {
         new File(HEAP_DUMP_GZ_PATH).delete();
     }
 
-    static List<DummyA> dummyA = new ArrayList<DummyA>();
-    static List<DummyB> dummyB = new ArrayList<DummyB>();
-    static DummyC dummyC = new DummyC();
-    static DummyD dummyD = new DummyD();
-    static {
-        dummyD.nestedArray = new DummyD.Sub[2];
-        dummyD.nestedArray[1] = new DummyD.Sub();
-        dummyD.nestedArray[1].value = "somevalue";
-    }
-
-    public static void initTestHeap() {
-
-        for(int i = 0; i != 50; ++i) {
-            dummyA.add(new DummyA());
-        }
-
-        for(int i = 0; i != 50; ++i) {
-            DummyB dmb = new DummyB();
-            dmb.seqNo = String.valueOf(i);
-            for(int j = 0; j != i; ++j) {
-                dmb.list.add(String.valueOf(j));
-                dmb.map.put("k" + String.valueOf(j), "v" + String.valueOf(j));
-            }
-            dummyB.add(dmb);
-        }
+    static Holder holder = new Holder();
+    
+    static class Holder { 
+    
+	    List<DummyA> dummyA = new ArrayList<DummyA>();
+	    List<DummyB> dummyB = new ArrayList<DummyB>();
+	    DummyC dummyC = new DummyC();
+	    DummyD dummyD = new DummyD();
+	    {
+	        dummyD.nestedArray = new DummyD.Sub[2];
+	        dummyD.nestedArray[1] = new DummyD.Sub();
+	        dummyD.nestedArray[1].value = "somevalue";
+	    }
+	    
+	    DummyP[] dummyP = {
+	    		new DummyP("A", "X"),
+	    		new DummyP("B", null),
+	    		new DummyP("C", 1),
+	    		new DummyP("D", null),
+	    		new DummyP("E", new Object[0]),
+	    };
+	
+	    public void initTestHeap() {
+	
+	        for(int i = 0; i != 50; ++i) {
+	            dummyA.add(new DummyA());
+	        }
+	
+	        for(int i = 0; i != 50; ++i) {
+	            DummyB dmb = new DummyB();
+	            dmb.seqNo = String.valueOf(i);
+	            for(int j = 0; j != i; ++j) {
+	                dmb.list.add(String.valueOf(j));
+	                dmb.map.put("k" + String.valueOf(j), "v" + String.valueOf(j));
+	            }
+	            dummyB.add(dmb);
+	        }
+	    }
     }
 }

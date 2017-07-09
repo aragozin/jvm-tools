@@ -50,6 +50,7 @@ public class HeapPathParserTest {
         addCase(result, "inputsByName.table?entrySet[key=123].value(**.String)", true, "[inputsByName, table, ?entrySet, [key=123], value, (**.String)]");
         addCase(result, "inputsByName.table?entrySet[key=abc].value(**.String)", true, "[inputsByName, table, ?entrySet, [key=abc], value, (**.String)]");
         addCase(result, "inputsByName.table[*][key=null].value(**.String)", true, "[inputsByName, table, [*], [key=null], value, (**.String)]");
+        addCase(result, "inputsByName.table[*][key!=null].value(**.String)", true, "[inputsByName, table, [*], [key!=null], value, (**.String)]");
         addCase(result, "(**.String)", true, "[(**.String)]");
         addCase(result, "(**.String)", false, "[(**.String)]");
         addCase(result, "(**.String).value", true, "[(**.String), value]");

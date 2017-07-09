@@ -86,10 +86,15 @@ class HeapPath {
                         // try to parse predicate
                         int c = index.lastIndexOf('=');
                         if (c > 0) {
-                            String subpath = index.substring(0, c);
+                        	boolean inv = false;
+                        	String subpath = index.substring(0, c);
+                            if (subpath.endsWith("!")) {
+                            	inv = true;
+                            	subpath = subpath.substring(0, subpath.length() - 1);
+                            }
                             String matcher = index.substring(c + 1, index.length());
                             PathStep[] steps = parsePath(subpath, true);
-                            result.add(new PredicateStep(steps, matcher));
+                            result.add(new PredicateStep(steps, matcher, inv));
                         }
                         else {
                             throw new IllegalArgumentException("Invalid path spec: " + path, e);
