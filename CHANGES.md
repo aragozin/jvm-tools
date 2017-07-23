@@ -1,6 +1,11 @@
 Next version
 ----
 
+0.7 - 2017 Jul 23
+----
+- Parsing stack traces from NetBeans / VisualVM profiler snapshot format
+- Added command to export tags/counter from dump file to CSV or ASCII table
+
 0.6 - 2017 Jun 4
 ----
 - Avoid unnecessary memory allocation to initialize hashCode on `StackFrame` object
