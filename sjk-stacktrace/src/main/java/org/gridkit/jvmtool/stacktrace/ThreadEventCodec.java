@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 
 import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotExpander;
 import org.gridkit.jvmtool.event.Event;
@@ -12,6 +13,13 @@ import org.gridkit.jvmtool.event.UniversalEventWriter;
 
 public class ThreadEventCodec {
 
+	public static List<String> listSupportedFormats() {
+		return Arrays.asList(
+				"SJK Thread Dump (Magic: TRACEDUMP_1, TRACEDUMP_2)",
+				"SJK Genereic Event Dump (Magic: EVENTDUMP_1)"
+				);
+	}
+	
     public static UniversalEventWriter createEventWriter(OutputStream os) throws IOException {
         os.write(StackTraceCodec.MAGIC4);
         StackTraceEventWriterV4 writer = new StackTraceEventWriterV4(os);

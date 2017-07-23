@@ -14,7 +14,7 @@ public class ShieldedEventReader<T extends Event> implements EventReader<T> {
     private static final ErrorHandler THROW_HANDLER = new ErrorHandler() {
 
         @Override
-        public void onException(Exception e) {
+        public boolean onException(Exception e) {
             if (e instanceof RuntimeException) {
                 throw (RuntimeException)e;
             }
@@ -53,9 +53,12 @@ public class ShieldedEventReader<T extends Event> implements EventReader<T> {
         try {
             while(nested.hasNext()) {
                 Event e = nested.next();
-                if (e instanceof SimpleErrorEvent) {
+                if (e instanceof ErrorEvent) {
                     // forward to error handler
-                    errorHandler.onException(((SimpleErrorEvent) e).exception());
+                    if (errorHandler.onException(((ErrorEvent) e).exception())) {
+                    	// suppress
+                    	continue;
+                    }
                 }
                 if (classFilter.isInstance(e)) {
                     nextEvent = classFilter.cast(e);
