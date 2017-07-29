@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gridkit.jvmtool.heapdump.PathStep.Move;
@@ -455,25 +454,7 @@ public class HeapClusterAnalyzer {
     private final class DeepPathListener implements PathListener {
         @Override
         public void onPath(Instance root, String path, Instance shared) {
-            PathStep[] chain = HeapPath.parsePath(path, true);
-            StringBuilder sb = new StringBuilder();
-            Instance o = root;
-            for(int i = 0; i != chain.length; ++i) {
-                if (chain[i] instanceof TypeFilterStep) {
-                    continue;
-                }
-                sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
-                try {
-                Move m = chain[i].track(o).next();
-                sb.append(m.pathSpec);
-                o = m.instance;
-            }
-                catch(NoSuchElementException e) {
-                    sb.append("{failed: " + chain[i] + "}");
-                }
-            }
-
-            System.err.println("DEEP REF: " + root.getInstanceId() + " " + sb);
+            System.err.println("DEEP REF: " + root.getInstanceId() + " " + HeapWalker.explainPath(root, path));
         }
     }
 

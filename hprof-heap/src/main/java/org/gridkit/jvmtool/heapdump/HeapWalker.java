@@ -214,8 +214,8 @@ public class HeapWalker {
             String fieldName = lastStep.getFieldName();
             for(Instance i: HeapPath.collect(obj, shortPath)) {
                 for(FieldValue fv: i.getFieldValues()) {
-                    if ((fieldName == null && fv.getField().isStatic())
-                            || (fieldName.equals(fv.getField().getName()))) {
+                    if ((fieldName == null && (!fv.getField().isStatic()))
+                            || (fv.getField().getName().equals(fieldName))) {
                         if (fv instanceof ObjectFieldValue) {
                             return valueOf(((ObjectFieldValue) fv).getInstance());
                         }
@@ -398,18 +398,41 @@ public class HeapWalker {
             if (chain[i] instanceof TypeFilterStep) {
                 continue;
             }
-            sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
+                        
             try {
                 Move m = chain[i].track(o).next();
+//                JavaClass hostType = hostType(o.getJavaClass(), m.pathSpec);
+//                hostType = hostType == null ? o.getJavaClass() : hostType;
+                
+//                sb.append("(" + shortName(hostType.getName()) + ")");
+                sb.append("(" + shortName(o.getJavaClass().getName()) + ")");
                 sb.append(m.pathSpec);
                 o = m.instance;
             }
             catch(NoSuchElementException e) {
                 sb.append("{failed: " + chain[i] + "}");
+                break;
             }
         }
         return sb.toString();
     }
+    
+    @SuppressWarnings("unused")
+	private static JavaClass hostType(JavaClass type, String pathSpec) {
+        if (pathSpec.startsWith(".")) {
+            pathSpec = pathSpec.substring(1);
+        }
+        for(Field f: type.getFields()) {
+            if (!f.isStatic() && f.getName().equals(pathSpec)) {
+                return f.getDeclaringClass();
+            }
+        }
+        if (type.getSuperClass() != null) {
+            return hostType(type.getSuperClass(), pathSpec);
+        }
+        return null;
+    }
+
     
     public static Set<JavaClass> filterTypes(String filter, Iterable<JavaClass> types) {
         PathStep[] steps = HeapPath.parsePath("(" + filter + ")", true);

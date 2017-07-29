@@ -100,6 +100,20 @@ public class HeapDumpProcuder {
 	    		new DummyP("E", new Object[0]),
 	    };
 	
+	    Object[] dummyN;
+	    {
+	    	DummyN a = new DummyN("dummyA");
+	    	DummyN b = new DummyN("dummyB");
+	    	
+	    	dummyN = new Object[] {
+	    		a.newInner("A.1"),
+	    		a.newInner("A.2"),
+	    		a.newInner("A.3"),
+	    		b.newInner("B.1"),
+	    		a.newInner("A.4"),
+	    	};
+	    }
+	    
 	    public void initTestHeap() {
 	
 	        for(int i = 0; i != 50; ++i) {

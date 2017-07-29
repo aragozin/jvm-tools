@@ -328,6 +328,36 @@ public abstract class BaseHeapTest {
         assertThat(HeapWalker.valueOf(i, "structArray[*].textField")).isEqualTo("this is struct #1");
     }
 
+    @Test
+    public void verify_asterisk_paths() {
+
+        Heap heap = getHeap();
+        JavaClass jclass = heap.getJavaClassByName(DummyN.MyInnerClass.class.getName());
+
+        List<Instance> set = jclass.getInstances();
+		assertThat(set).hasSize(5);
+
+    	
+    	assertSetsAreEqual(a("dummyA", "dummyB"), scan(set, "*(**DummyN).dummyName"));
+    	assertSetsAreEqual(a("dummyA", "dummyB"), scan(set, "*(**DummyN).*"));
+    	assertSetsAreEqual(a("dummyA", "dummyB"), scan(set, "*.dummyName"));
+    	assertSetsAreEqual(a("dummyA"), scan(set, "[innerName=A.1]*(**DummyN).dummyName"));
+    	assertSetsAreEqual(a("dummyB"), scan(set, "[innerName=B.1]*(**DummyN).dummyName"));
+    	assertSetsAreEqual(a("dummyB"), scan(set, "[innerName=B.1]*(**DummyN).*"));
+    	assertSetsAreEqual(a("dummyA"), scan(set, "[innerName=A.4]*.dummyName"));
+    }
+
+    @Test
+    public void verify_single_asterisk_path() {
+    	
+    	Heap heap = getHeap();
+    	JavaClass jclass = heap.getJavaClassByName(DummyA.class.getName());
+    	
+    	List<Instance> set = jclass.getInstances();
+    	
+    	
+    	assertThat(scan(set, "*")).hasSize(50);
+    }
     
     private Object[] scan(Iterable<Instance> instances, String path) {
     	List<Object> val = new ArrayList<Object>();
@@ -344,7 +374,7 @@ public abstract class BaseHeapTest {
     	return a;
     }
     
-    private static void assertSetsAreEqual(Object[] expected, Object[] actual) {
+    private static void assertSetsAreEqual(Object[] expected, Object... actual) {
     	Set<Object> e = new HashSet<Object>(Arrays.asList(expected));
     	Set<Object> a = new HashSet<Object>(Arrays.asList(actual));
     	
