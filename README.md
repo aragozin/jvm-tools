@@ -1,16 +1,29 @@
-Swiss Java Knife
+Swiss Java Knife (SJK)
 =========
 [![Build Status](https://travis-ci.org/aragozin/jvm-tools.png?branch=master)](https://travis-ci.org/aragozin/jvm-tools)
 
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
 SJK exploits standard diagnostic interfaces of JVM (such as JMX, JVM attach and perf counters) and add some more logic on top 
-to be useful for common troubleshooting case.
+to be useful for common troubleshooting case. SJK is also can be used as library for building application specific diagnostic tools
+or to enhance your code with self monitoring features.
 
+What you can do with SJK?
+----
 
-Prebuild binaries for version 0.6 are below
-- [sjk.jar - all commands without mxdump](https://repo1.maven.org/maven2/org/gridkit/jvmtool/sjk/0.6/sjk-0.6.jar)
-- [sjk-plus.jar - all commands](https://repo1.maven.org/maven2/org/gridkit/jvmtool/sjk/0.6/sjk-plus-0.6.jar)
+ - [Monitor Java threads in real time][ttop]
+ - [Analyze head dynamics with advanced class histograms][hh]
+ - [Access MBean attributes and operation from command line][mx]
+ - Create [flame graphs] and over reports from snapshots created VisualVM, Java Flight Recorder or [SJK's own sampler][stcap]
+ 
+See [full command reference](sjk-core/COMMANDS.md).
+
+Download
+----
+
+Latest prebuild binaries [![Last Version](https://img.shields.io/maven-central/v/org.gridkit.jvmtool/sjk.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.gridkit.jvmtool%22)
+- [sjk.jar - all commands without mxdump](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk&v=LATEST)
+- [sjk-plus.jar - all commands](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk-plus&v=LATEST)
 
 
 Starting sjk
@@ -111,3 +124,4 @@ Dumps all MBeans of target java process to JSON.
  [stcpy]: sjk-core/COMMANDS.md#stcpy-command
  [ssa]: sjk-core/COMMANDS.md#ssa-command
  [sophisticated filtering]: sjk-core/src/main/resources/org/gridkit/jvmtool/cmd/ssa-help.md
+ [flame graphs]: http://blog.ragozin.info/2016/01/flame-graphs-vs-cold-numbers.html
