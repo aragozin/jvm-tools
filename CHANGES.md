@@ -1,6 +1,11 @@
 Next version
 ----
 
+0.8 - 2017 Aug 6
+----
+- Fixed transitive dependencies issues for JFR and NPS parsers
+- Fixed HeapPath bug for single asterisk path
+
 0.7 - 2017 Jul 23
 ----
 - Parsing stack traces from NetBeans / VisualVM profiler snapshot format
