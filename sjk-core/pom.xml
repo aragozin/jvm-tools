@@ -45,12 +45,12 @@
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-jfr</artifactId>
-            <version>0.2</version>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-nps</artifactId>
-            <version>0.2</version>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>org.gridkit.lab</groupId>
