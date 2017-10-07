@@ -9,6 +9,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -150,16 +151,23 @@ public class DumpExportCmd implements CmdRef {
 			long maxTs = Long.MIN_VALUE;
 			long count = 0;
 			Histo histo = new Histo();
+			SchemaHisto schemaHisto = new SchemaHisto();
 			
 			for(CommonEvent e: openReader) {
 				count++;
 				minTs = Math.min(e.timestamp(), minTs);
 				maxTs = Math.max(e.timestamp(), maxTs);
 				histo.count(e);
+				schemaHisto.count(e);
 			}			
+			
+			schemaHisto.collapse();
 			
 			List<TagStat> tags = new ArrayList<TagStat>(histo.histo.values());
 			Collections.sort(tags, new TagStatComparator());
+			
+			List<SchemaStat> schemas = new ArrayList<SchemaStat>(schemaHisto.histo.values());
+			Collections.sort(schemas, new SchemaStatComparator());
 			
 			PrintWriter pw = new PrintWriter(writer);
 			
@@ -169,6 +177,7 @@ public class DumpExportCmd implements CmdRef {
 			else {
 				pw.println("Event count: " + count);			
 				pw.println("Time range: " + fdate(minTs) + " - " + fdate(maxTs));
+				pw.println("\nTag summary");
 				for(TagStat ts: tags) {
 					pw.print(" @" + ts.key + " - " + ts.count);
 					if (ts.values != null) {
@@ -178,7 +187,13 @@ public class DumpExportCmd implements CmdRef {
 						}
 						pw.print("  " + vals);
 					}
-					pw.println();
+					pw.println();					
+				}
+				pw.println("\nSchema summary");
+				for(SchemaStat ss: schemas) {
+					String[] hdr = ss.schema.toArray(new String[0]);
+					Arrays.sort(hdr);
+					pw.println(" " + ss.count + " - " + Arrays.toString(hdr));
 				}
 			}			
 			pw.flush();
@@ -312,6 +327,76 @@ public class DumpExportCmd implements CmdRef {
 			}
 		}
 	}
+
+	private static class SchemaHisto {
+		
+		Map<Set<String>, SchemaStat> histo = new HashMap<Set<String>, SchemaStat>();
+		
+		public void count(CommonEvent ce) {
+			Set<String> tagset = new HashSet<String>();
+			
+			collectTags(ce.tags(), tagset);
+			collectCounter(ce.counters(), tagset);
+			
+			SchemaStat ss = histo.get(tagset);
+			if (ss == null) {
+				ss = new SchemaStat(tagset);
+				histo.put(ss.schema, ss);
+			}
+			ss.count++;
+			
+		}
+
+		public void collapse() {
+			
+			reiterate:
+			while(true) {
+				for(SchemaStat ss: histo.values()) {
+					if (mergeIn(ss)) {
+						continue reiterate;
+					}
+				}
+				break;
+			}			
+		}
+
+		private boolean mergeIn(SchemaStat ss) {
+			SchemaStat match = null;
+			for(SchemaStat cdt: histo.values()) {
+				if (ss != cdt) {
+					if (cdt.schema.containsAll(ss.schema)) {
+						if (match == null) {
+							match = cdt;
+						}
+						else {
+							// ambiguous
+							return false;
+						}
+					}
+				}
+			}
+			if (match != null) {
+				match.count += ss.count;
+				histo.remove(ss.schema);
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		private void collectTags(TagCollection tags, Set<String> tagset) {
+			for(String key: tags) {
+				tagset.add(key);
+			}			
+		}
+		
+		private void collectCounter(CounterCollection counters, Set<String> tagset) {
+			for(String key: counters) {
+				tagset.add(key);
+			}
+		}
+	}
 	
 	private static class TagStat {
 		
@@ -333,6 +418,16 @@ public class DumpExportCmd implements CmdRef {
 			}			
 		}
 	}
+
+	private static class SchemaStat {
+		
+		Set<String> schema;
+		long count;
+		
+		public SchemaStat(Set<String> schema) {
+			this.schema = schema;
+		}
+	}
 	
 	static class TagStatComparator implements Comparator<TagStat> {
 
@@ -346,6 +441,22 @@ public class DumpExportCmd implements CmdRef {
 			}
 			else {
 				return o1.key.compareTo(o2.key);
+			}
+		}
+	}
+
+	static class SchemaStatComparator implements Comparator<SchemaStat> {
+		
+		@Override
+		public int compare(SchemaStat o1, SchemaStat o2) {
+			if (o1.count < o2.count) {
+				return 1;
+			}
+			else if (o1.count > o2.count) {
+				return -1;
+			}
+			else {
+				return 0;
 			}
 		}
 	}

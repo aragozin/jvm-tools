@@ -320,7 +320,17 @@ public class CliCheck {
         exec("ssa", "--ssa-help");
     }
 	
-	private void exec(String... cmd) {
+    @Test
+    public void dexp_help() {
+    	exec("dexp", "--help");
+    }
+
+    @Test
+    public void dexp_tags() {
+    	exec("dexp", "--tags", "-f",  "target/test.stp");
+    }
+
+    private void exec(String... cmd) {
 	    SJK sjk = new SJK();
 		sjk.suppressSystemExit();
 		StringBuilder sb = new StringBuilder();
