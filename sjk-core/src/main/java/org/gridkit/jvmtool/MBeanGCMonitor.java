@@ -24,6 +24,7 @@ import javax.management.JMException;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 
 /**
  * GC monitor.
@@ -140,7 +141,7 @@ public class MBeanGCMonitor {
 					lastGC = getLastGcInfo();
 				}
 				
-				if (count == lastCount) {
+				if (count == lastCount) { 
 					return "";
 				}
 				else {
@@ -168,8 +169,8 @@ public class MBeanGCMonitor {
 							continue;
 						}
 						Object[] poolKey = new Object[]{poolName};
-						CompositeData mbefore = (CompositeData) beforeGC.get(poolKey).get("value"); 
-						CompositeData mafter = (CompositeData) afterGC.get(poolKey).get("value"); 
+						CompositeData mbefore = (CompositeData) ((TabularData)beforeGC).get(poolKey).get("value"); 
+						CompositeData mafter = (CompositeData) ((TabularData)afterGC).get(poolKey).get("value"); 
 						long before = (Long) mbefore.get("used");
 						long after = (Long) mafter.get("used");
 						long max = (Long) mbefore.get("max");
