@@ -26,6 +26,10 @@ public interface ThreadDumpAggregatorFactory {
             return new CpuAggregatorFactory();
         }
 
+        public ThreadDumpAggregatorFactory sysCpu() {
+        	return new SysCpuAggregatorFactory();
+        }
+
         public ThreadDumpAggregatorFactory alloc() {
             return new AllocAggregatorFactory();
         }

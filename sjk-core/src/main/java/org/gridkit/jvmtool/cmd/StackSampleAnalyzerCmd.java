@@ -525,7 +525,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 if ("NAME".equals(si)) {
                     add("Name", COMMON.name());
                 }
-                if (si.startsWith("NAME") && si.indexOf('=') < 0) {
+                else if (si.startsWith("NAME") && si.indexOf('=') < 0) {
                     int n = Integer.valueOf(si.substring(4));
                     add("Name", COMMON.name(n));
                 }
@@ -540,6 +540,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 }
                 else if ("CPU".equals(si)) {
                     add("On CPU", COMMON.cpu(), new PercentFormater());
+                }
+                else if ("SYS".equals(si)) {
+                	add("System", COMMON.sysCpu(), new PercentFormater());
                 }
                 else if ("ALLOC".equals(si)) {
                     add("Alloc ", COMMON.alloc(), new MemRateFormater());
@@ -582,6 +585,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         "  TSMIN",
                         "  TSMAX",
                         "  CPU",
+                        "  SYS",
                         "  ALLOC",
                         "  NATIVE",
                         "  FREQ",

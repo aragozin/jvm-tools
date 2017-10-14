@@ -307,7 +307,7 @@ public class CliCheck {
 
 	@Test
 	public void ssa_thread_info_2() {
-	    exec("ssa", "--thread-info", "-si", "NAME", "FREQ", "FREQ_HM", "GAP_CHM", "TSMIN", "TSMAX", "-f", "target/test.stp", "-X");
+	    exec("ssa", "--thread-info", "-si", "NAME", "FREQ", "FREQ_HM", "GAP_CHM", "TSMIN", "TSMAX", "CPU", "SYS", "-f", "target/test.stp", "-X");
 	}
 
 	@Test
