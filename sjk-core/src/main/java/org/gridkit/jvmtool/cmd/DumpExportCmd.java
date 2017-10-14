@@ -193,12 +193,23 @@ public class DumpExportCmd implements CmdRef {
 				for(SchemaStat ss: schemas) {
 					String[] hdr = ss.schema.toArray(new String[0]);
 					Arrays.sort(hdr);
-					pw.println(" " + ss.count + " - " + Arrays.toString(hdr));
+					pw.println(" " + ss.count + " - " + formatHeader(hdr));
 				}
 			}			
 			pw.flush();
 		}
 		
+		private String formatHeader(String[] hdr) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("[");
+			for(String col: hdr) {
+				sb.append(col).append(" ");
+			}
+			sb.setLength(sb.length() - 1);
+			sb.append("]");
+			return sb.toString();
+		}
+
 		private String fdate(long ts) {
 			if (ts == Long.MAX_VALUE || ts == Long.MIN_VALUE) {
 				return "";
