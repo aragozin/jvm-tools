@@ -238,10 +238,16 @@ public class DumpExportCmd implements CmdRef {
 			for(CommonEvent ce: openReader) {
 				boolean hasValue = false;
 				for(String col: fcols) {
-					String v = ce.tags().firstTagFor(col);
-					if (v != null) {
-						c.setCell(col, v);
-						hasValue = true;
+					if (ce.tags().firstTagFor(col) != null) {
+						StringBuilder sb = new StringBuilder();
+						for(String val: ce.tags().tagsFor(col)) {
+							if (sb.length() != 0) {
+								sb.append(" ");
+							}
+							sb.append(val);
+						}
+						c.setCell(col, sb.toString());
+						hasValue = true;						
 					}
 					long lv = ce.counters().getValue(col);
 					if (lv >= 0) {
