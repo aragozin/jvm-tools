@@ -1,6 +1,11 @@
 Next version
 ----
 
+0.8.1 - 2017 Nov 12
+----
+- Added SYS cpu time summary to `ssa --thread-info` command
+- Few improvements for `dexp` command
+
 0.8 - 2017 Aug 6
 ----
 - Fixed transitive dependencies issues for JFR and NPS parsers

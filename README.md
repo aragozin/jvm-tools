@@ -1,6 +1,6 @@
 Swiss Java Knife (SJK)
 =========
-[![Build Status](https://travis-ci.org/aragozin/jvm-tools.png?branch=master)](https://travis-ci.org/aragozin/jvm-tools)
+<!-- [![Build Status](https://travis-ci.org/aragozin/jvm-tools.png?branch=master)](https://travis-ci.org/aragozin/jvm-tools) -->
 
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
