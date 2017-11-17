@@ -18,8 +18,13 @@ package org.gridkit.jvmtool;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 
-import junit.framework.Assert;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -34,6 +39,44 @@ public class CliCheck {
 	static {
 		PID = ManagementFactory.getRuntimeMXBean().getName();
 		PID = PID.substring(0, PID.indexOf('@'));
+	}
+	
+	private String call1arg1;
+	private String call2arg1;
+	private String call2arg2;
+	private String[] call3args;
+	
+	{
+		try {
+			ObjectName name = new ObjectName("test:bean=TestBean");
+			DummyMBean bean = new DummyMBean() {
+				
+				@Override
+				public void callStringArrayArg(String[] args) {
+					call3args = args;
+				}
+				
+				@Override
+				public void callSingleStringArg(String arg) {
+					call1arg1 = arg;				
+				}
+				
+				@Override
+				public void callDoubleStringArg(String arg1, String arg2) {
+					call2arg1 = arg1;
+					call2arg2 = arg2;				
+				}
+			};
+			ManagementFactory.getPlatformMBeanServer().registerMBean(bean, name);
+		} catch (MalformedObjectNameException e) {
+			throw new RuntimeException(e);
+		} catch (InstanceAlreadyExistsException e) {
+			throw new RuntimeException(e);
+		} catch (MBeanRegistrationException e) {
+			throw new RuntimeException(e);
+		} catch (NotCompliantMBeanException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Test
@@ -163,6 +206,38 @@ public class CliCheck {
     @Test
     public void mx_get_resetPeakUsage_all() {
         exec("mx", "-p", PID, "--call", "-all", "--bean", "*:type=MemoryPool,*", "-op", "resetPeakUsage");
+    }
+
+    @Test
+    public void mx_call_method1() {
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callSingleStringArg", "-a", "testParam");
+    	Assert.assertEquals("testParam", call1arg1);
+
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callSingleStringArg", "-a", "testParam1,testParam2", "-X");
+    	Assert.assertEquals("testParam1,testParam2", call1arg1);
+    }
+
+    @Test
+    public void mx_call_method2() {
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callDoubleStringArg", "-a", "testParam1", "testParam2");
+    	Assert.assertEquals("testParam1", call2arg1);
+    	Assert.assertEquals("testParam2", call2arg2);
+    	
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callDoubleStringArg", "-a", "testParam1", "a,b");
+    	Assert.assertEquals("testParam1", call2arg1);
+    	Assert.assertEquals("a,b", call2arg2);
+    }
+
+    @Test
+    public void mx_call_method3() {
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callStringArrayArg", "-a", "testParam");
+    	Assert.assertArrayEquals(new String[] {"testParam"}, call3args);
+    	
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callStringArrayArg", "-a", "testParam1,testParam2");
+    	Assert.assertArrayEquals(new String[] {"testParam1", "testParam2"}, call3args);
+
+    	exec("mx", "-p", PID, "--call", "--bean", "test:bean=TestBean", "-op", "callStringArrayArg", "-a", "");
+    	Assert.assertNull(call3args);
     }
 	
 	@Test

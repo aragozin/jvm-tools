@@ -133,7 +133,7 @@ public class MxCmd implements CmdRef {
 			@Parameter(names={"-op", "--operation"}, description="MBean operation name to be called")
 			String operation = null;
 
-			@Parameter(names={"-a", "--arguments"}, variableArity=true, description="Arguments for MBean operation invocation")
+			@Parameter(names={"-a", "--arguments"}, variableArity=true, splitter = Unsplitter.class, description="Arguments for MBean operation invocation")
 			List<String> arguments = new ArrayList<String>();
 
 			@Override
