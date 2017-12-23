@@ -415,6 +415,11 @@ public class CliCheck {
         exec("dexp", "--tags", "-f",  "target/test.stp");
     }
 
+    @Test
+    public void mprx() {
+    	exec("mprx", "-p", PID,  "-b", "14000");
+    }
+
     private void exec(String... cmd) {
         SJK sjk = new SJK();
         sjk.suppressSystemExit();
