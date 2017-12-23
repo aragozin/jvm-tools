@@ -85,7 +85,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
         @Parameter(names={"-nc", "--named-class"}, required = false, variableArity = true, description="May be used with some commands to define name stack trace classes\nUse <name>=<filter expression> notation")
         private List<String> namedClasses = new ArrayList<String>();
         
-        @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps")
+        @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps and time ranges")
         private String timeZone = "UTC";
 
         @Parameter(names={"-co", "--csv-output"}, required = false, description="Output data in CSV format")

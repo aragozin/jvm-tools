@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 
 import org.gridkit.jvmtool.AbstractThreadDumpSource;
 import org.gridkit.jvmtool.cli.CommandLauncher;
@@ -66,14 +67,8 @@ public class StackDumpCopyCmd implements CmdRef {
 		@ParametersDelegate
 		private DumpInput input;
 		
-//		@Parameter(names = {"-tf", "--thread-filter"}, description = "Filter threads by name (Java RegEx syntax)")
-//		private String threadFilter = ".*";
-
 		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
 		private boolean retainEmptyTraces = false;
-
-//		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
-//		private List<String> frameFilter;
 
         @Parameter(names = { "--mask" }, variableArity = true, description = "One or more masking rules. E.g. com.mycompany:com.somecomplany")
         private List<String> maskingRules = new ArrayList<String>();
@@ -84,6 +79,8 @@ public class StackDumpCopyCmd implements CmdRef {
         @Parameter(names = {"-ss", "--subsample"}, required = false, description = "If below 1.0 some frames will be randomly throwen away. E.g. 0.1 - every 10th will be retained")
         private double subsample = 1d;
 
+        @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps and time ranges")
+        private String timeZone = "UTC";
 	    
 	    private int traceCounter;
         private StackTraceWriter writer;
@@ -99,6 +96,9 @@ public class StackDumpCopyCmd implements CmdRef {
 		public void run() {
 			
 			try {
+				
+				TimeZone tz = TimeZone.getTimeZone(timeZone);
+				input.setTimeZone(tz);				
 			    
 			    for(String rule: maskingRules) {
 			        String[] parts = rule.split("[:]");
