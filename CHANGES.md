@@ -1,6 +1,12 @@
 Next version
 ----
 
+0.9 - 2017 Dec 24
+----
+- Fixed undesired splitting of JMX call arguments by comma
+- Fixed time range filtering for `stcpy` command
+- Added `mprx` command, open JMX port for target process
+
 0.8.1 - 2017 Nov 12
 ----
 - Added SYS cpu time summary to `ssa --thread-info` command
