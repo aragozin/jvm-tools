@@ -314,7 +314,17 @@ public class HeapClusterAnalyzer {
                             if (!ignoreRefs.get(ref) && !details.objects.get(ref)) {
                                 path.setLength(len);
                                 path.append('[').append(n).append(']');
-                                walk(details, heap.getInstanceByID(ref), path, depth + 1, reportShared, accountShared);
+                                Instance inst = null;
+                                try {
+					inst = heap.getInstanceByID(ref);
+                                }
+                                catch(IllegalInstanceIDException e) {
+					System.err.println("Missing instance #" + ref);
+					ignoreRefs.set(ref, true);
+                                }
+                                if (inst != null) {
+					walk(details, inst, path, depth + 1, reportShared, accountShared);
+                                }
                             }
                         }
                         ++n;
@@ -332,7 +342,14 @@ public class HeapClusterAnalyzer {
                             if (!ignoreRefs.get(id)) {
                                 path.setLength(len);
                                 path.append('.').append(fieldName);
-                                walk(details, of.getInstance(), path, depth + 1, reportShared, accountShared);
+                                try {
+					Instance val = of.getInstance();
+					walk(details, val, path, depth + 1, reportShared, accountShared);
+                                }
+                                catch(IllegalInstanceIDException e) {
+					System.err.println("Missing instance #" + id);
+					ignoreRefs.set(id, true);
+                                }
                             }
                         }
                     }
@@ -374,6 +391,11 @@ public class HeapClusterAnalyzer {
 
                 try {
                     Instance i = heap.getInstanceByID(id);
+                    if (i == null) {
+			ignoreRefs.set(id, true);
+			System.err.println("Missing instance #" + id);
+			continue;
+                    }
                     if (blacklist.contains(i.getJavaClass().getName())) {
                         ignoreRefs.set(id, true);
                         continue;

@@ -57,7 +57,13 @@ public class StringCollector {
         arrays.set(0, false); // skip null reference
         for(Long id: arrays.ones()) {
             try {
-                totalSize += heap.getInstanceByID(id).getSize();
+                Instance s = heap.getInstanceByID(id);
+                if (s != null) {
+			totalSize += s.getSize();
+                }
+                else {
+			System.err.println("Missing instance #" + id);
+                }
             }
             catch(IllegalInstanceIDException e) {
                 // ignore
@@ -89,6 +95,6 @@ public class StringCollector {
     }
 
     public boolean containsInstance(Instance i) {
-        return strings.get(i.getInstanceId()) || arrays.get(i.getInstanceId()); 
+        return strings.get(i.getInstanceId()) || arrays.get(i.getInstanceId());
     }
 }

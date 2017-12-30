@@ -72,7 +72,7 @@ class HeapOffsetMap {
     private int maxPage = 0; // last scanned ID
     private boolean nestedScan = false;
     private boolean scanComplete = false;
-    
+
     public HeapOffsetMap(HprofHeap heap) {
         this.heap = heap;
         this.dumpBuffer = heap.dumpBuffer;
@@ -111,7 +111,7 @@ class HeapOffsetMap {
 
     long offsetForCompressed(long cid) {
         if (cid < cidOffset ) {
-            // this map happen if sub regions of heap are not orderer 
+            // this map happen if sub regions of heap are not orderer
             // by physical memory addresses
             while(!scanComplete) {
                 // try to scan forward until matching sub region is mapped
@@ -129,7 +129,7 @@ class HeapOffsetMap {
                 if (cid >= cidOffset) {
                     break;
                 }
-            }            
+            }
         }
         long ref = compressID(cid << allignmentBits); // restore original value
         int page = (int) (ref / pageSize);
@@ -165,13 +165,13 @@ class HeapOffsetMap {
                 readPage(((long)n) * pageSize, offsetMap[n], cachePageData[cslot]);
             }
             catch(MalformedInstanceIdException e) {
-                // this one is tricky, we have encountered an address region outside of current bounds, 
+                // this one is tricky, we have encountered an address region outside of current bounds,
                 // so bounds should be extended.
-                
+
                 long ptr = pointer[0];
                 long iid = dumpBuffer.getID(ptr + 1);
                 long ciid = iid >>> allignmentBits;
-                
+
                 // number of pages to be added up front
                 int ps = (int) (((cidOffset - ciid + pageSize - 1) / (pageSize)));
                 long oldCidBase = cidOffset;
@@ -221,7 +221,7 @@ class HeapOffsetMap {
                         for(int i = n + 1; i <= page; ++i) {
                             offsetMap[i] = -1; // no ids in range
                         }
-                        return page;                            
+                        return page;
                     }
                     else if (maxPage == page) {
                         return page;
@@ -293,7 +293,7 @@ class HeapOffsetMap {
         pointer[0] = offset;
         Arrays.fill(cachePage, -1);
 
-        while(pointer[0] < bounds.endOffset) {
+        while(pointer[0] < bounds.endOffset && pointer[0] >= 0) {
             long ptr = pointer[0];
             int tag = heap.readDumpTag(pointer);
 
@@ -318,7 +318,7 @@ class HeapOffsetMap {
                 else if (rel < 0) {
                     // this part of page belongs to different offset map entry
                     pointer[0] = ptr;
-                    break;                    
+                    break;
                 }
                 long shift = ptr - offset;
                 if (shift > Integer.MAX_VALUE) {
@@ -354,7 +354,7 @@ class HeapOffsetMap {
         }
         return (origId >>> allignmentBits) - cidOffset;
     }
-    
+
     public static class MalformedInstanceIdException extends IllegalArgumentException {
 
         private static final long serialVersionUID = 20140907L;
