@@ -1,6 +1,10 @@
 Next version
 ----
 
+0.9.1 - 2018 Jan 9
+----
+- Fixed few issues with hprof heap parser
+
 0.9 - 2017 Dec 24
 ----
 - Fixed undesired splitting of JMX call arguments by comma
