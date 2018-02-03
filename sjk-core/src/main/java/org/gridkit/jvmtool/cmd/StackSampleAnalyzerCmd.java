@@ -265,6 +265,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             @Parameter(names={"--histo"}, description="Print frame histogram")
             boolean run;
 
+            @Parameter(names={"--by-term"}, description="Sort frame histogram by terminal count")
+            boolean sortByTerm = false;
+
             @Override
             public boolean isSelected() {
                 return run;
@@ -287,6 +290,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         ++n;
                     }
                     
+                    if (sortByTerm) {
+			histo.setHistoOrder(StackHisto.BY_TERMINAL);
+                    }
+
                     if (n > 0) {
                         if (csvOutput) {
                             System.out.println(histo.formatHistoToCSV());

@@ -321,6 +321,11 @@ public class CliCheck {
     }
 
     @Test
+    public void ssa_histo_term_sort() {
+	exec("ssa", "--histo", "-f", "target/test.stp", "--by-term", "-X");
+    }
+
+    @Test
     public void ssa_histo_wild_card() {
         exec("ssa", "--histo", "-f", "target/*.stp", "-X");
     }

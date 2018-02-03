@@ -34,20 +34,23 @@ import org.gridkit.util.formating.TextTable;
 
 /**
  * Stack frame histogram.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class StackHisto {
 
     public static Comparator<SiteInfo> BY_HITS = new HitComparator();
     public static Comparator<SiteInfo> BY_OCCURENCE = new OccurenceComparator();
-    
+    public static Comparator<SiteInfo> BY_TERMINAL = new TerminalComparator();
+
     private String[] conditionNames = new String[0];
     private ThreadSnapshotFilter[] conditionFilters = new ThreadSnapshotFilter[0];
-    
+
     private Map<StackFrame, SiteInfo> histo = new HashMap<StackFrame, SiteInfo>();
     private int traceCount = 0;
-    
+
+    private Comparator<SiteInfo> histoOrder = BY_OCCURENCE;
+
     public void addCondition(String name, ThreadSnapshotFilter filter) {
         int n = conditionNames.length;
         conditionNames = Arrays.copyOf(conditionNames, n + 1);
@@ -55,7 +58,7 @@ public class StackHisto {
         conditionNames[n] = name;
         conditionFilters[n] = filter;
     }
-    
+
     public void feed(StackFrameList trace) {
         ++traceCount;
         if (trace.depth() == 0) {
@@ -79,6 +82,10 @@ public class StackHisto {
         getSiteInfo(last).terminalCount++;
     }
 
+    public void setHistoOrder(Comparator<SiteInfo> comparator) {
+	this.histoOrder = comparator;
+    }
+
     private boolean[] matchVector(StackFrameList trace) {
         boolean[] vec = new boolean[conditionNames.length];
         for(int i = 0; i != vec.length; ++i) {
@@ -98,7 +105,7 @@ public class StackHisto {
         }
         return si;
     }
-    
+
     public String formatHisto() {
         return formatHisto(Integer.MAX_VALUE);
     }
@@ -116,11 +123,11 @@ public class StackHisto {
         for(String name: conditionNames) {
             String cf = "  [\t" + name + "\t]";
             row.add(cf);
-        }            
+        }
         row.add("  Frame");
         tt.addRow(row);
         List<SiteInfo> h = new ArrayList<SiteInfo>(histo.values());
-        Collections.sort(h, BY_OCCURENCE);
+        Collections.sort(h, histoOrder);
         int n = 0;
         for(SiteInfo si: h) {
             row.clear();
@@ -133,8 +140,8 @@ public class StackHisto {
             for(String name: conditionNames) {
                 String cf = "  \t" + si.getConditionalCount(name) + " " + formatPct(si.getConditionalCount(name), si.getOccurences());
                 row.add(cf);
-            }            
-            row.add("  " + si.getSite());            
+            }
+            row.add("  " + si.getSite());
             tt.addRow(row);
             if (limit <= ++n) {
                 break;
@@ -142,7 +149,7 @@ public class StackHisto {
         }
         return tt.formatTextTableUnbordered(200);
     }
-    
+
     public String formatHistoToCSV(int limit) {
         TextTable tt = new TextTable();
         List<String> row = new ArrayList<String>();
@@ -152,11 +159,11 @@ public class StackHisto {
         for(String name: conditionNames) {
             String cf = "[" + name + "]";
             row.add(cf);
-        }            
+        }
         row.add("Frame");
         tt.addRow(row);
         List<SiteInfo> h = new ArrayList<SiteInfo>(histo.values());
-        Collections.sort(h, BY_OCCURENCE);
+        Collections.sort(h, histoOrder);
         int n = 0;
         for(SiteInfo si: h) {
             row.clear();
@@ -169,30 +176,30 @@ public class StackHisto {
             for(String name: conditionNames) {
                 String cf = "" + si.getConditionalCount(name);
                 row.add(cf);
-            }            
-            row.add("" + si.getSite());            
+            }
+            row.add("" + si.getSite());
             tt.addRow(row);
             if (limit <= ++n) {
                 break;
             }
         }
-        return TextTable.formatCsv(tt);        
+        return TextTable.formatCsv(tt);
     }
-    
+
     private String formatPct(int num, int denom) {
         return String.format("%3d%%", (100 * num)/denom);
     }
-    
+
     public static class SiteInfo {
-        
+
         StackFrame site;
         int hitCount;
-        int occurences;        
+        int occurences;
         int terminalCount;
-        
+
         String[] conditionNames;
         int[] conditionalCounts;
-        
+
         public StackFrame getSite() {
             return site;
         }
@@ -200,7 +207,7 @@ public class StackHisto {
         public int getHitCount() {
             return hitCount;
         }
-        
+
         public int getTerminalCount() {
             return terminalCount;
         }
@@ -208,7 +215,7 @@ public class StackHisto {
         public int getOccurences() {
             return occurences;
         }
-        
+
         public int getConditionalCount(String condition) {
             if (conditionNames == null) {
                 return 0;
@@ -221,7 +228,7 @@ public class StackHisto {
             return 0;
         }
     }
-    
+
     private static class HitComparator implements Comparator<SiteInfo> {
 
         @Override
@@ -236,5 +243,16 @@ public class StackHisto {
         public int compare(SiteInfo o1, SiteInfo o2) {
             return ((Integer)o2.occurences).compareTo(o1.occurences);
         }
+    }
+
+    private static class TerminalComparator implements Comparator<SiteInfo> {
+
+	@Override
+	public int compare(SiteInfo o1, SiteInfo o2) {
+		int term1 = o1.terminalCount;
+		int term2 = o2.terminalCount;
+		int c = ((Integer)term2).compareTo(term1);
+		return c != 0 ? c : ((Integer)o2.occurences).compareTo(o1.occurences);
+	}
     }
 }
