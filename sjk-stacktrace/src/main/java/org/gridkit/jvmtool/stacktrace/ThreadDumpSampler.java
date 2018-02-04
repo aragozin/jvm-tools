@@ -199,8 +199,13 @@ public class ThreadDumpSampler {
 	        
             @Override
             public boolean accept(String threadName) {
-                matcher.reset(threadName);
-                return matcher.matches();
+            	if (threadName != null) {
+	                matcher.reset(threadName);
+	                return matcher.matches();
+            	}
+            	else {
+            		return false;
+            	}
             }
         };
 	}
