@@ -179,8 +179,23 @@ public class CliCheck {
     }
 
     @Test
+    public void mx_get_diagnostic_ops_csv() {
+    	exec("mx", "-p", PID, "--get", "--csv", "--bean", "*:type=HotSpotDiagnostic", "-f", "DiagnosticOptions");
+    }
+
+    @Test
+    public void mx_get_system_properties_csv() {
+    	exec("mx", "-p", PID, "--get", "--csv", "--bean", "*:type=Runtime", "-f", "SystemProperties");
+    }
+
+    @Test
     public void mx_get_usage_threshold() {
         exec("mx", "-p", PID, "--get", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "CollectionUsageThreshold");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_csv() {
+    	exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage");
     }
 
     @Test

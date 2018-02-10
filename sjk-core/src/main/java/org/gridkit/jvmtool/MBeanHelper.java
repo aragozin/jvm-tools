@@ -75,6 +75,66 @@ public class MBeanHelper {
 		return text;
 	}
 
+	public void getAsTable(ObjectName bean, String attr, MTable table) throws Exception {
+		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
+		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
+		if (ai == null) {
+			throw new IllegalArgumentException("No such attribute '" + attr + "'");
+		}
+		if (!ai.isReadable()) {
+			throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+		}
+		Object v = mserver.getAttribute(bean, attr);
+		
+		if (v instanceof CompositeData[]) {
+			CompositeData[] td = (CompositeData[]) v;
+			if (td.length == 0) {
+				return;
+			}
+			List<String> header = new ArrayList<String>();
+			for(String f: td[0].getCompositeType().keySet()) {
+				if (!header.contains(f)) {
+					header.add(f);
+				}
+			}
+			String[] hdr = header.toArray(new String[0]);
+			for(Object row: td) {
+				table.append(hdr, formatRow((CompositeData)row, header));
+			}
+			return;
+		}
+		else if (v instanceof CompositeData) {
+			CompositeData cd = (CompositeData) v;
+			List<String> header = new ArrayList<String>();
+			for(String f: cd.getCompositeType().keySet()) {
+				if (!header.contains(f)) {
+					header.add(f);
+				}
+			}
+			String[] hdr = header.toArray(new String[0]);
+			table.append(hdr, formatRow(cd, header));
+			return;
+		}
+		else if (v instanceof TabularData) {
+			TabularData td = (TabularData) v;
+			td.getTabularType().getIndexNames();
+			List<String> header = new ArrayList<String>(td.getTabularType().getIndexNames());
+			for(String f: td.getTabularType().getRowType().keySet()) {
+				if (!header.contains(f)) {
+					header.add(f);
+				}
+			}
+			String[] hdr = header.toArray(new String[0]);
+			for(Object row: td.values()) {
+				table.append(hdr, formatRow((CompositeData)row, header));
+			}
+			return;
+		}
+		else {
+			throw new IllegalArgumentException("Attribute is not tabular");
+		}
+	}
+
 	public void set(ObjectName bean, String attr, String value) throws Exception {
 		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
 		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);

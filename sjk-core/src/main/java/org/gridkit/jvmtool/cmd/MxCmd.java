@@ -24,8 +24,10 @@ import javax.management.ObjectName;
 
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.MBeanHelper;
+import org.gridkit.jvmtool.MTable;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.util.formating.TextTable;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -163,6 +165,9 @@ public class MxCmd implements CmdRef {
 			@Parameter(names={"-mg", "--get"}, description="Retrieves value of MBean attribute")
 			boolean run;
 
+			@Parameter(names={"--csv"}, description="Used with --get command, result would be formatted as CSV")
+			boolean csv; 
+			
 			@Override
 			public void run() {
 				try {
@@ -172,13 +177,29 @@ public class MxCmd implements CmdRef {
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
-					helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, maxWidth);
-                    for (ObjectName name : names) {
-                        if (!quiet) {
-                            System.out.println(name);
-                        }
-					    System.out.println(helper.get(name, attrib));
-                    }
+					if (csv) {
+						MTable table = new MTable();
+	                    for (ObjectName name : names) {
+						    helper.getAsTable(name, attrib, table);
+	                    }
+	                    if (table.isEmpty()) {
+	                    	System.out.println("No data");
+	                    }
+	                    else {
+	                    	TextTable tt = new TextTable();
+	                    	table.export(tt);
+	                    	System.out.println(TextTable.formatCsv(tt));
+	                    }
+					}
+					else {
+						helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, maxWidth);
+	                    for (ObjectName name : names) {
+	                        if (!quiet) {
+	                            System.out.println(name);
+	                        }
+						    System.out.println(helper.get(name, attrib));
+	                    }
+					}
 				} catch (Exception e) {
 					host.fail(e.toString(), e);
 				}
