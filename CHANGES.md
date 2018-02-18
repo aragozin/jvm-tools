@@ -1,6 +1,14 @@
 Next version
 ----
 
+...
+
+0.9.2 - 2018 Feb 18
+----
+- Frame histogram can be sorted by terminal count (default sort is by occurance count)
+- Export of tabular MBean attributes to CSV
+- Fixed NPE in thread dump collector
+
 0.9.1 - 2018 Jan 9
 ----
 - Fixed few issues with hprof heap parser
