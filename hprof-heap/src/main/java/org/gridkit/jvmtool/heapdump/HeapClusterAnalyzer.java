@@ -33,34 +33,34 @@ import org.netbeans.lib.profiler.heap.ObjectFieldValue;
 
 public class HeapClusterAnalyzer {
 
-    private final Heap heap;
+    protected final Heap heap;
 
-    private int recursionThreshold = 30;
-    private boolean keepClusters = true;
-    private boolean keepClusterMembership = false;
-    private boolean useBreadthSearch = false;
+    protected int recursionThreshold = 30;
+    protected boolean keepClusters = true;
+    protected boolean keepClusterMembership = false;
+    protected boolean useBreadthSearch = false;
 
-    private List<TypeFilterStep> interestingTypes = new ArrayList<TypeFilterStep>();
-    private List<TypeFilterStep> blacklistedTypes = new ArrayList<TypeFilterStep>();
-    private List<PathStep[]> blacklistedMethods = new ArrayList<PathStep[]>();
+    protected List<TypeFilterStep> interestingTypes = new ArrayList<TypeFilterStep>();
+    protected List<TypeFilterStep> blacklistedTypes = new ArrayList<TypeFilterStep>();
+    protected List<PathStep[]> blacklistedMethods = new ArrayList<PathStep[]>();
 
-    private Set<String> rootClasses = new HashSet<String>();
-    private List<EntryPoint> entryPoints = new ArrayList<EntryPoint>();
-    private Set<String> blacklist = new HashSet<String>();
+    protected Set<String> rootClasses = new HashSet<String>();
+    protected List<EntryPoint> entryPoints = new ArrayList<EntryPoint>();
+    protected Set<String> blacklist = new HashSet<String>();
 
-    private PathListener tooDeepListener = new DeepPathListener();
+    protected PathListener tooDeepListener = new DeepPathListener();
 
-    private PathListener sharedPathListener = null;
+    protected PathListener sharedPathListener = null;
 
-    private RefSet ignoreRefs = new RefSet();
-    private RefSet knownRefs = new RefSet();
-    private RefSet sharedRefs = new RefSet();
+    protected RefSet ignoreRefs = new RefSet();
+    protected RefSet knownRefs = new RefSet();
+    protected RefSet sharedRefs = new RefSet();
 
-    private List<Cluster> clusters = new ArrayList<Cluster>();
-    private Cluster last;
+    protected List<Cluster> clusters = new ArrayList<Cluster>();
+    protected Cluster last;
 
-    private HeapHistogram sharedSummary = new HeapHistogram();
-    private long sharedErrorMargin = 0;
+    protected HeapHistogram sharedSummary = new HeapHistogram();
+    protected long sharedErrorMargin = 0;
 
     public HeapClusterAnalyzer(Heap heap) {
         this.heap = heap;
@@ -70,6 +70,14 @@ public class HeapClusterAnalyzer {
         return clusters;
     }
 
+    public RefSet getSharedRefSet() {
+    	return sharedRefs;
+    }
+
+    public RefSet getIgnoredRefSet() {
+    	return ignoreRefs;
+    }
+    
     public HeapHistogram getSharedSummary() {
         return sharedSummary;
     }
@@ -133,6 +141,10 @@ public class HeapClusterAnalyzer {
      */
     public void markShared(long instanceId) {
         sharedRefs.set(instanceId, true);
+    }
+
+    public void markShared(RefSet refs) {
+    	sharedRefs.add(refs);
     }
 
     public void markIgnored(long instanceId) {
@@ -202,7 +214,7 @@ public class HeapClusterAnalyzer {
         return null;
     }
 
-    private void updateKnownMap(Cluster cluster) {
+    protected void updateKnownMap(Cluster cluster) {
         RefSet marked = cluster.objects;
         for(Long id: marked.ones()) {
             if (knownRefs.getAndSet(id, true)) {
@@ -221,7 +233,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private void analyze(Cluster details) {
+    protected void analyze(Cluster details) {
         if (!useBreadthSearch) {
             StringBuilder path = new StringBuilder();
             for(EntryPoint ep: entryPoints) {
@@ -244,7 +256,7 @@ public class HeapClusterAnalyzer {
     }
 
     @SuppressWarnings("unused")
-    private void reportSharedPaths(Cluster details) {
+    protected void reportSharedPaths(Cluster details) {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
             path.setLength(0);
@@ -256,7 +268,7 @@ public class HeapClusterAnalyzer {
     }
 
     @SuppressWarnings("unused")
-    private void calculateShared(Cluster details) {
+    protected void calculateShared(Cluster details) {
         StringBuilder path = new StringBuilder();
         for(EntryPoint ep: entryPoints) {
             path.setLength(0);
@@ -267,7 +279,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private void walk(Cluster details, Instance i, StringBuilder path, int depth, boolean reportShared, boolean accountShared) {
+    protected void walk(Cluster details, Instance i, StringBuilder path, int depth, boolean reportShared, boolean accountShared) {
         int len = path.length();
         try {
             if (i == null) {
@@ -365,7 +377,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private void widthWalk(Cluster details, Instance root, boolean accountShared) {
+    protected void widthWalk(Cluster details, Instance root, boolean accountShared) {
         RefSet queue = new RefSet();
         queue.set(root.getInstanceId(), true);
         @SuppressWarnings("unused")
@@ -453,17 +465,17 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private boolean isBlackListedArray(JavaClass type) {
+    protected boolean isBlackListedArray(JavaClass type) {
         String tn = type.getName() + "[*]";
         return blacklist.contains(tn);
     }
 
-    private boolean isBlackListed(Field field) {
+    protected boolean isBlackListed(Field field) {
         String tn = field.getDeclaringClass().getName() + "#" + field.getName();
         return blacklist.contains(tn);
     }
 
-    private static final String shortName(String name) {
+    protected static final String shortName(String name) {
         int c = name.lastIndexOf('.');
         if (c >= 0) {
             return "**." + name.substring(c + 1);
@@ -473,7 +485,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private final class DeepPathListener implements PathListener {
+    protected final class DeepPathListener implements PathListener {
         @Override
         public void onPath(Instance root, String path, Instance shared) {
             System.err.println("DEEP REF: " + root.getInstanceId() + " " + HeapWalker.explainPath(root, path));
@@ -516,7 +528,7 @@ public class HeapClusterAnalyzer {
         
     }
     
-    private static class Cluster implements ClusterDetails {
+    protected static class Cluster implements ClusterDetails {
 
         Instance root;
         RefSet objects;
@@ -542,7 +554,7 @@ public class HeapClusterAnalyzer {
         }
     }
 
-    private static class EntryPoint {
+    protected static class EntryPoint {
         String path;
         PathStep[] locator;
 
@@ -551,5 +563,4 @@ public class HeapClusterAnalyzer {
             this.locator = locator;
         }
     }
-
 }

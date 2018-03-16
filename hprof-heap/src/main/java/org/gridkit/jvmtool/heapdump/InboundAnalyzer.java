@@ -3,6 +3,7 @@ package org.gridkit.jvmtool.heapdump;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.GCRoot;
 import org.netbeans.lib.profiler.heap.Heap;
+import org.netbeans.lib.profiler.heap.IllegalInstanceIDException;
 import org.netbeans.lib.profiler.heap.Instance;
 import org.netbeans.lib.profiler.heap.JavaClass;
 import org.netbeans.lib.profiler.heap.ObjectArrayInstance;
@@ -35,7 +36,12 @@ public class InboundAnalyzer {
 			}
 		}
 		for(GCRoot gcr: heap.getGCRoots()) {
-			gcRoots.set(gcr.getInstance().getInstanceId(), true);
+			try {
+				gcRoots.set(gcr.getInstance().getInstanceId(), true);
+			}
+			catch(IllegalInstanceIDException e) {
+				// ignore
+			}
 		}
 	}
 	
@@ -51,12 +57,18 @@ public class InboundAnalyzer {
 			
 			if (i instanceof ObjectArrayInstance) {
 				ObjectArrayInstance oai = (ObjectArrayInstance) i;
-				for(Instance ii: oai.getValues()) {
-					if (ii != null && ii.getInstanceId() != 0) {
-						if (target.get(ii.getInstanceId())) {
-							report(i, "[]",  ii.getInstanceId());
-							break;
+				for(Long n: oai.getValueIDs()) {
+					try {
+						Instance ii = heap.getInstanceByID(n);
+						if (ii != null && ii.getInstanceId() != 0) {
+							if (target.get(ii.getInstanceId())) {
+								report(i, "[]",  ii.getInstanceId());
+								break;
+							}
 						}
+					}
+					catch(Exception e) {
+						//ignore;
 					}
 				}
 			}

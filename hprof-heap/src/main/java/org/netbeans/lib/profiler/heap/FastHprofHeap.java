@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gridkit.jvmtool.heapdump.MissingInstance;
+
 /**
  *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
@@ -34,6 +36,7 @@ public class FastHprofHeap extends HprofHeap {
 
     private Map<Long, ClassEntry> classes;
     private HeapOffsetMap offsetMap;
+    private boolean missingStubsEnabled;
 
     /**
      * Please use {@link HeapFactory}
@@ -53,6 +56,9 @@ public class FastHprofHeap extends HprofHeap {
         offsetMap = new HeapOffsetMap(this);
     }
 
+    public void enableMissingInstanceStubs(boolean enabled) {
+    	this.missingStubsEnabled = enabled;
+    }
     
     @Override
     protected LongMap initIdMap() throws FileNotFoundException, IOException {
@@ -86,8 +92,6 @@ public class FastHprofHeap extends HprofHeap {
         }
     }
 
-
-
     @Override
     void addClassEntry(long instanceId, long offset, int index) {
         ClassEntry ce = new ClassEntry();
@@ -97,55 +101,64 @@ public class FastHprofHeap extends HprofHeap {
     }
 
     public Instance getInstanceByID(long instanceID) {
-        if (instanceID == 0L) {
-            return null;
-        }
+        try {
+			if (instanceID == 0L) {
+			    return null;
+			}
 
-        computeInstances();
+			computeInstances();
 
-        ClassDump classDump;
-        ClassDumpSegment classDumpBounds = getClassDumpSegment();
-        int idSize = dumpBuffer.getIDSize();
-        int classIdOffset = 0;
+			ClassDump classDump;
+			ClassDumpSegment classDumpBounds = getClassDumpSegment();
+			int idSize = dumpBuffer.getIDSize();
+			int classIdOffset = 0;
 
-        long start = idToDumpOffset(instanceID);
-        assert start != 0L;
+			long start = idToDumpOffset(instanceID);
+			assert start != 0L;
 
-        long[] offset = new long[] { start };
+			long[] offset = new long[] { start };
 
-        int tag = readDumpTag(offset);
+			int tag = readDumpTag(offset);
 
-        if (tag == INSTANCE_DUMP) {
-            classIdOffset = idSize + 4;
-        } else if (tag == OBJECT_ARRAY_DUMP) {
-            classIdOffset = idSize + 4 + 4;
-        } else if (tag == PRIMITIVE_ARRAY_DUMP) {
-            classIdOffset = idSize + 4 + 4;
-        }
+			if (tag == INSTANCE_DUMP) {
+			    classIdOffset = idSize + 4;
+			} else if (tag == OBJECT_ARRAY_DUMP) {
+			    classIdOffset = idSize + 4 + 4;
+			} else if (tag == PRIMITIVE_ARRAY_DUMP) {
+			    classIdOffset = idSize + 4 + 4;
+			}
 
-        if (tag == PRIMITIVE_ARRAY_DUMP) {
-            classDump = classDumpBounds.getPrimitiveArrayClass(dumpBuffer.get(start + 1 + classIdOffset));
+			if (tag == PRIMITIVE_ARRAY_DUMP) {
+			    classDump = classDumpBounds.getPrimitiveArrayClass(dumpBuffer.get(start + 1 + classIdOffset));
 
-            return new PrimitiveArrayDump(classDump, start);
-        } else {
-            long classId = dumpBuffer.getID(start + 1 + classIdOffset);
-            classDump = classDumpBounds.getClassDumpByID(classId);
+			    return new PrimitiveArrayDump(classDump, start);
+			} else {
+			    long classId = dumpBuffer.getID(start + 1 + classIdOffset);
+			    classDump = classDumpBounds.getClassDumpByID(classId);
 
-            if (classDump == null) {
-                throw new IllegalInstanceIDException("Missing instance type (" + classId + ") ID: " + instanceID);
-            }
-        }
+			    if (classDump == null) {
+			        throw new IllegalInstanceIDException("Missing instance type (" + classId + ") ID: " + instanceID);
+			    }
+			}
 
-        
-        if (tag == INSTANCE_DUMP) {
-            return new InstanceDump(classDump, start);
-        } else if (tag == OBJECT_ARRAY_DUMP) {
-            return new ObjectArrayDump(classDump, start);
-        } else if (tag == CLASS_DUMP) {
-            return new ClassDumpInstance(classDump);
-        } else {
-            throw new IllegalInstanceIDException("Illegal tag " + tag + " ID: " + instanceID); // NOI18N
-        }
+			
+			if (tag == INSTANCE_DUMP) {
+			    return new InstanceDump(classDump, start);
+			} else if (tag == OBJECT_ARRAY_DUMP) {
+			    return new ObjectArrayDump(classDump, start);
+			} else if (tag == CLASS_DUMP) {
+			    return new ClassDumpInstance(classDump);
+			} else {
+			    throw new IllegalInstanceIDException("Illegal tag " + tag + " ID: " + instanceID); // NOI18N
+			}
+		} catch (IllegalInstanceIDException e) {
+			if (missingStubsEnabled) {
+				return new MissingInstance(instanceID);
+			}
+			else {
+				throw e;
+			}
+		}
     }
 
     @Override
