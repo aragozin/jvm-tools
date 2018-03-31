@@ -3,6 +3,11 @@ Next version
 
 ...
 
+
+0.9.3 - 2018 Mar 31
+----
+- Few minor changes in heap parser
+
 0.9.2 - 2018 Feb 18
 ----
 - Frame histogram can be sorted by terminal count (default sort is by occurance count)
