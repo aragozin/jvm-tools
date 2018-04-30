@@ -2,8 +2,8 @@ var data = {
     frames: [
         "(WAITING)",
         "(BLOCKED)",
-        "(RUNNING)",
-        "(SLEEP)",
+        "(RUNNABLE)",
+        "(TIMED_WAITING)",
         "(IO)",
         "Thread.run", // 5
         "Object.wait",
@@ -30,7 +30,9 @@ var data = {
             name: "Main",
             traces: [
                 { trace: [5, 6, 0], samples: 100 },
-                { trace: [5, 7], samples: 30 },
+                { trace: [5, 7, 1], samples: 10 },
+                { trace: [5, 7, 2], samples: 10 },
+                { trace: [5, 7, 3], samples: 10 },
                 { trace: [5, 7, 8, 2], samples: 15},
                 { trace: [5, 7, 9, 2], samples: 15},
                 { trace: [10, 7, 9, 2], samples: 25},

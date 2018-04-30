@@ -24,6 +24,18 @@ public class ShieldedEventReader<T extends Event> implements EventReader<T> {
         }
     };
 
+    private static final ErrorHandler SILENT_ERROR_HANDLER = new ErrorHandler() {
+    	
+    	@Override
+    	public boolean onException(Exception e) {
+    		return true; // suppress
+    	}
+    };
+
+    public static <T extends Event> EventReader<T> shield(EventReader<? super T> reader, Class<T> event, boolean suppressErrors) {
+    	return new ShieldedEventReader<T>(reader, event, suppressErrors ? SILENT_ERROR_HANDLER : THROW_HANDLER);
+    }
+    
     private final EventReader<? extends Event> nested;
     private final Class<T> classFilter;
     private final ErrorHandler errorHandler;

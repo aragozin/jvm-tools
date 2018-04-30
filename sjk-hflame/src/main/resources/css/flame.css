@@ -3,7 +3,7 @@ div.flameFrame {
     border-width: 1px;
     padding: 0.5em;
     margin: 0.2em;
-    min-width: 450px;
+    min-width: 300px;
     overflow-x: auto;
 }
 
@@ -28,16 +28,17 @@ div.flameRow {
     flex-flow: row;
     flex-wrap: nowrap;
     flex-basis: 100%;
+    overflow: hidden;
 }
 
 div.execNode {
     border: solid;
-    border-color: #333;
-    border-width: 1px;
+    border-color: transparent;
+    border-width: 2px;
     width: 100%;
-    margin: 0.5px;
-    padding: 1px 1px 1px 4px;
-    border-radius: 3px;
+    margin: 0;
+    padding: 0px 0px 0px 3px;
+    border-radius: 1px;
     background-color: antiquewhite;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -45,9 +46,7 @@ div.execNode {
 }
 
 div.execNode:hover {
-    border-width: 2px;
-    border-color: #755;
-    padding: 0px 0px 0px 3px;
+    border-color: #511;
     font-weight: bold;
 }
 
@@ -56,7 +55,8 @@ div.sleepSmoke {
     border-width: 1px;
     width: 100%;
     margin: 0.5px;
-    padding-top: 0.4em;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
     border-radius: 3px;
     background-color: #aaa;
 }
@@ -70,7 +70,8 @@ div.waitSmoke {
     border-width: 1px;
     width: 100%;
     margin: 0.5px;
-    padding-top: 0.4em;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
     border-radius: 3px;
     background-color: #aaa;
 }
@@ -84,7 +85,8 @@ div.hotSmoke {
     border-width: 1px;
     width: 100%;
     margin: 0.5px;
-    padding-top: 0.4em;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
     border-radius: 3px;
     background-color: #d33;
 }
@@ -98,7 +100,8 @@ div.blockSmoke {
     border-width: 1px;
     width: 100%;
     margin: 0.5px;
-    padding-top: 0.4em;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
     border-radius: 3px;
     background-color: #d33;
 }
@@ -112,13 +115,29 @@ div.ioSmoke {
     border-width: 1px;
     width: 100%;
     margin: 0.5px;
-    padding-top: 0.4em;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
     border-radius: 3px;
     background-color: #d33;
 }
 
 div.ioSmoke:hover {
     background-color: #711;
+}
+
+div.termSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.7px;
+    padding-top: 0.3em;
+    margin-bottom: 0.3em;
+    border-radius: 3px;
+    background-color: #111;
+}
+
+div.termSmoke:hover {
+    background-color: #555;
 }
 
 div.flameHover {

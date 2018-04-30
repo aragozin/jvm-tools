@@ -44,6 +44,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>sjk-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>        
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>1.6.0</version>

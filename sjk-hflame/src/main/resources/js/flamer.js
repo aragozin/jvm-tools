@@ -146,37 +146,43 @@ function createFlameChart(hostId, data) {
         }
         else if (treeNode.frame == "(WAITING)") {
             var wnode = document.createElement("div");
-            wnode.className = "waitSmoke";
+            wnode.className = "waitSmoke flameNode";
             wnode.id = treeNode.path + "_node";
             return wnode;
         }
-        else if (treeNode.frame == "(SLEEP)") {
+        else if (treeNode.frame == "(TIMED_WAITING)") {
             var wnode = document.createElement("div");
-            wnode.className = "sleepSmoke";
+            wnode.className = "sleepSmoke flameNode";
             wnode.id = treeNode.path + "_node";
             return wnode;
         }
         else if (treeNode.frame == "(BLOCKED)") {
             var bnode = document.createElement("div");
-            bnode.className = "blockSmoke";
+            bnode.className = "blockSmoke flameNode";
             bnode.id = treeNode.path + "_node";
             return bnode;        
         }
-        else if (treeNode.frame == "(RUNNING)") {
+        else if (treeNode.frame == "(RUNNABLE)") {
             var rnode = document.createElement("div");
-            rnode.className = "hotSmoke";
+            rnode.className = "hotSmoke flameNode";
             rnode.id = treeNode.path + "_node";
             return rnode;        
         }
         else if (treeNode.frame == "(IO)") {
             var ionode = document.createElement("div");
-            ionode.className = "ioSmoke";
+            ionode.className = "ioSmoke flameNode";
             ionode.id = treeNode.path + "_node";
             return ionode;        
         }
+        else if (treeNode.frame == "(???)") {
+            var tnode = document.createElement("div");
+            tnode.className = "termSmoke flameNode";
+            tnode.id = treeNode.path + "_node";
+            return tnode;        
+        }
         else {
             var fnode = document.createElement("div");
-            fnode.className = "execNode " + ns + "fr" + treeNode.frameNo ;
+            fnode.className = "execNode flameNode " + ns + "fr" + treeNode.frameNo ;
             fnode.id = treeNode.path + "_node";
             fnode.textContent = treeNode.frame;
             return fnode;        
@@ -234,28 +240,13 @@ function createFlameChart(hostId, data) {
         var totalSamples = sampleCount(dataSet, []);
         var graphWidth = domNode.innerWidth();
         var tree = collectTree(dataSet);
-        var threshold = 6 * totalSamples / graphWidth;
+        var threshold = 3 * totalSamples / graphWidth;
         var graph = createTreeElement(ns, tree, 100, threshold);
         graph.id = domNode.id;
 
         domNode.replaceWith(graph);
 
         installTooltips(hostId, tree, dataSet);
-    }
-
-    function getElementForHover(elements) {
-        for(var i = 0; i < elements.length; ++i) {
-            var el = elements[i];
-            if (   el.classList.contains("execNode") 
-                || el.classList.contains("waitSmoke")
-                || el.classList.contains("sleepSmoke")
-                || el.classList.contains("blockSmoke")
-                || el.classList.contains("hotSmoke")
-                || el.classList.contains("ioSmoke")) {
-                return el;
-            }
-        }
-        return null;
     }
 
     function installTooltips(hostId, tree, dataSet) {
@@ -266,22 +257,24 @@ function createFlameChart(hostId, data) {
 
         $("#" + hostId + ">div.flameHover").hide();
 
-        $("#" + hostId).mouseleave(function(){
+        $("#" + hostId + " .flameNode").mouseleave(function(){
             $("#" + hostId + ">div.flameHover").hide();
         });
 
-        $("#" + hostId).mousemove(
+        $("#" + hostId + " .flameNode").mousemove(
             function(e) {
+                console.log("mouse", e.pageX, e.pageY, this);
                 var elements = document.elementsFromPoint(e.pageX, e.pageY);
-                var node = getElementForHover(elements);
+                var node = this;
                 if (node == null) {
                     $("#" + hostId + ">div.flameHover").hide();
                     lastTooltip = "";
                 }
                 else {
+                    $("#" + hostId + ">div.flameHover").show();
                     if (lastTooltip !=  node.id) {
                         lastTooltip = node.id;
-                        $("#" + hostId + ">div.flameHover").show();                    
+                                     
                         updateHoverText($("#" + hostId + ">div.flameHover"), toPrefix(node.id), tree, dataSet);
                     }
                 }            
@@ -309,16 +302,42 @@ function createFlameChart(hostId, data) {
         hover.css({ top: hovery, left: hoverx });
     }
 
+    function fmtPercent(val) {
+        return Number(val * 100).toFixed(2) + "%";
+    }
+    
+    function toState(frame) {
+        if (frame == "(???)") {
+            return "Terminal";
+        }
+        else {
+            return frame.slice(1, frame.length - 1);
+        }
+    }
+    
     function updateHoverText(node, prefix, tree, dataSet) {
         node.empty();
         var fid = prefix[prefix.length - 1];
         var fnode = selectByPath(tree, prefix);
         var frame = fnode.frame;
+        if (frame.startsWith("(")) {
+            // this is terminator frame, display last frame
+            var state = toState(frame);
+            var stCount = fnode.samples;
+            fid = prefix[prefix.length - 2];
+            fnode = selectByPath(tree, prefix.slice(0, -1));
+            frame = fnode.frame;
+        }
+        var totalSamples = sampleCount(dataSet, []);
         var nodeSampleCount = fnode.samples;
         var globalCount = sampleCountForFrame(dataSet, fid);
         $('<p class="hoverFrame"></p>').text(frame).appendTo(node);
-        $('<p class="hoverStats"></p>').text("Sample count: " + nodeSampleCount).appendTo(node);
-        $('<p class="hoverStats"></p>').text("Global frame frequency: " + globalCount).appendTo(node);
+        if (state !== undefined) {
+            var lbl = state + ": " + stCount + " (" + fmtPercent(stCount / totalSamples) + ")";
+            $('<p class="hoverStats"></p>').text(lbl).appendTo(node);   
+        }
+        $('<p class="hoverStats"></p>').text("Sample count: " + nodeSampleCount + " (" + fmtPercent(nodeSampleCount / totalSamples) + ")").appendTo(node);
+        $('<p class="hoverStats"></p>').text("Global frame frequency: " + globalCount + " (" + fmtPercent(globalCount / totalSamples) + ")").appendTo(node);
     }                
     
     
