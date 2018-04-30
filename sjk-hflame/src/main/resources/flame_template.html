@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/flame.css"/>
+        <script id="import_jquery" src="js/jquery-3.1.1.min.js"></script>
+        <script id="import_flamer" src="js/flamer.js"></script>
+        <script id="import_data_fg1" src="../../test/resources/js/dummy_data_tiny.js"></script>
+    </head>
+    <body>
+        <div>
+            This is part outside of graph.
+        </div>
+        <div id="fg1" class="flameFrame">
+            <div>This is flame frame</div>
+            <div class="flameHover" style="display: none">This is flame hover</div>
+            <div class="flameRoot">
+                <div class="flameBox" style="flex-basis: 100%;">
+                   <div class="flameRow">
+                       <div class="flameBox" style="flex-basis: 15%;">
+                           <div class="flameRow">
+                               <div class="flameBox" style="flex-basis: 50%;">
+                                   <div class="execNode">MyClass.b</div>
+                               </div>
+                           </div>
+                           <div class="execNode">MyClass.a</div>
+                       </div>
+                       <div class="flameBox" style="flex-basis: 85%;">
+                           <div class="hotSmoke"></div>
+                           <div class="execNode">Object.wait</div>
+                       </div>
+                   </div>
+                   <div class="execNode">Thread.run</div>
+                </div>
+            </div>
+        </div>
+        <script>
+            updateChart("fg1", data);
+        </script>
+    </body>
+</html>

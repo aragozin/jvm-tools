@@ -1,0 +1,152 @@
+div.flameFrame {
+    border: solid;
+    border-width: 1px;
+    padding: 0.5em;
+    margin: 0.2em;
+    min-width: 450px;
+    overflow-x: auto;
+}
+
+div.flameRoot {
+    #background-color: aqua;
+    font-size: 11px;
+    font-family: monospace;
+}
+
+div.flameBox {
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    flex-grow: 0;
+    align-self: flex-end;
+    overflow: hidden;
+}
+
+div.flameRow {
+    display: flex;
+    flex-flow: row;
+    flex-wrap: nowrap;
+    flex-basis: 100%;
+}
+
+div.execNode {
+    border: solid;
+    border-color: #333;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding: 1px 1px 1px 4px;
+    border-radius: 3px;
+    background-color: antiquewhite;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+div.execNode:hover {
+    border-width: 2px;
+    border-color: #755;
+    padding: 0px 0px 0px 3px;
+    font-weight: bold;
+}
+
+div.sleepSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding-top: 0.4em;
+    border-radius: 3px;
+    background-color: #aaa;
+}
+
+div.sleepSmoke:hover {
+    background-color: #333;
+}
+
+div.waitSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding-top: 0.4em;
+    border-radius: 3px;
+    background-color: #aaa;
+}
+
+div.waitSmoke:hover {
+    background-color: #333;
+}
+
+div.hotSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding-top: 0.4em;
+    border-radius: 3px;
+    background-color: #d33;
+}
+
+div.hotSmoke:hover {
+    background-color: #711;
+}
+
+div.blockSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding-top: 0.4em;
+    border-radius: 3px;
+    background-color: #d33;
+}
+
+div.blockSmoke:hover {
+    background-color: #711;
+}
+
+div.ioSmoke {
+    border: none;
+    border-width: 1px;
+    width: 100%;
+    margin: 0.5px;
+    padding-top: 0.4em;
+    border-radius: 3px;
+    background-color: #d33;
+}
+
+div.ioSmoke:hover {
+    background-color: #711;
+}
+
+div.flameHover {
+    display: none;
+    position: absolute;
+	border:1px solid #333;
+	background-color: antiquewhite;
+	border-radius: 4px;
+	padding: 4px;
+	color: #000;
+    font-size: 11px;
+    font-family: monospace;
+    white-space: nowrap;
+    min-width: 20em;
+}
+
+div.flameHover > p.hoverFrame {
+    margin: 0;
+    font-weight: bold;
+}
+
+div.flameHover > p.hoverStats {
+    margin: 0;
+    padding-left: 1em;
+}
+
+
+.block-title div {
+    padding: 0 0.5em 0 0.5em;
+    text-align: center;
+}
