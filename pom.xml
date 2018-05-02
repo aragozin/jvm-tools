@@ -36,6 +36,7 @@
   <modules>
     <module>sjk-cli</module>
     <module>sjk-stacktrace</module>
+    <module>sjk-hflame</module>
     <module>sjk-win32</module>
     <module>sjk-core</module>
     <module>mxdump</module>

@@ -155,6 +155,21 @@ public abstract class AbstractEventDumpSource {
 		}
 	}
 
+    private String getParserString() {
+    	StringBuilder sb = new StringBuilder();
+    	for(String parser: ThreadEventCodec.listSupportedFormats()) {
+    		sb.append(parser).append(", ");
+    	}
+    	ServiceLoader<EventDumpParser> loader = ServiceLoader.load(EventDumpParser.class);
+		for(EventDumpParser edp: loader) {
+			sb.append(edp).append(", ");
+		}
+		if (sb.length() > 0) {
+			sb.setLength(sb.length() - 2);
+		}
+		return sb.toString();
+	}
+
 	protected EventReader<Event> openGenericDump(String file) {
 		ServiceLoader<EventDumpParser> loader = ServiceLoader.load(EventDumpParser.class);
 		FileSource fs = new FileSource(file);
@@ -172,6 +187,9 @@ public abstract class AbstractEventDumpSource {
 				ee.printStackTrace();
 				// ignore
 			}
+		}
+		if (new File(file).isFile() && new File(file).length() > 0) {
+			host.logError("Unable to parse file '" + file + "'. Parser config: " + getParserString());
 		}
 		return null;
     }

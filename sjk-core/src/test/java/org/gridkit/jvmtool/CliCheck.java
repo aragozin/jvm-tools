@@ -424,6 +424,11 @@ public class CliCheck {
     public void ssa_help() {
         exec("ssa", "--ssa-help");
     }
+
+    @Test
+    public void flame() {
+    	exec("flame", "-f", "target/test.stp", "-o", "target/flame.html");
+    }
     
     @Test
     public void dexp_help() {

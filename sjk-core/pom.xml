@@ -44,6 +44,11 @@
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>sjk-hflame</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-jfr</artifactId>
             <version>0.3</version>
         </dependency>
