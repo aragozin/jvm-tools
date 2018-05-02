@@ -2,6 +2,8 @@
 
 function createFlameChart(hostId, data) {
 
+    var $ = window.$; // I'm lazy to configure linting
+    
     var fullData = data;
     var threadFilter = {};
     
@@ -13,9 +15,8 @@ function createFlameChart(hostId, data) {
             }
         }
         var id = hostId + "_frameColors";
-        var stBlock = document.createElement("style");
-        stBlock.id = id;
-        stBlock.textContent = pal;
+        var stBlock = $("<style id='" + id + "'></style>");
+        stBlock.text(pal);
 
         if ($("#" + id).length == 0) {
             $("html>head").append(stBlock);
@@ -139,70 +140,63 @@ function createFlameChart(hostId, data) {
 
     function createInfoElement(ns, treeNode) {
         if (treeNode.frame === undefined) {
-            var stub = document.createElement("div");
-            stub.style="display: none";
-            stub.textContent="no frame";
+            var stub = $("<div></div>");
+            stub.css({display: "none"});
+            stub.text("no frame");
             return stub;        
         }
         else if (treeNode.frame == "(WAITING)") {
-            var wnode = document.createElement("div");
-            wnode.className = "waitSmoke flameNode";
-            wnode.id = treeNode.path + "_node";
+            var wnode = $("<div class='waitSmoke flameNode'></div>");
+            wnode.attr("id", treeNode.path + "_node");
             return wnode;
         }
         else if (treeNode.frame == "(TIMED_WAITING)") {
-            var wnode = document.createElement("div");
-            wnode.className = "sleepSmoke flameNode";
-            wnode.id = treeNode.path + "_node";
-            return wnode;
+            var twnode = $("<div class='twaitSmoke flameNode'></div>");
+            twnode.attr("id", treeNode.path + "_node");
+            return twnode;
         }
         else if (treeNode.frame == "(BLOCKED)") {
-            var bnode = document.createElement("div");
-            bnode.className = "blockSmoke flameNode";
-            bnode.id = treeNode.path + "_node";
+            var bnode = $("<div class='blockSmoke flameNode'></div>");
+            bnode.attr("id", treeNode.path + "_node");
             return bnode;        
         }
         else if (treeNode.frame == "(RUNNABLE)") {
-            var rnode = document.createElement("div");
-            rnode.className = "hotSmoke flameNode";
-            rnode.id = treeNode.path + "_node";
+            var rnode = $("<div class='hotSmoke flameNode'></div>");
+            rnode.attr("id", treeNode.path + "_node");
             return rnode;        
         }
         else if (treeNode.frame == "(IO)") {
-            var ionode = document.createElement("div");
-            ionode.className = "ioSmoke flameNode";
-            ionode.id = treeNode.path + "_node";
+            var ionode = $("<div class='ioSmoke flameNode'></div>");
+            ionode.attr("id", treeNode.path + "_node");
             return ionode;        
         }
         else if (treeNode.frame == "(???)") {
-            var tnode = document.createElement("div");
-            tnode.className = "termSmoke flameNode";
-            tnode.id = treeNode.path + "_node";
+            var tnode = $("<div class='termSmoke flameNode'></div>");
+            tnode.attr("id", treeNode.path + "_node");
             return tnode;        
         }
         else {
-            var fnode = document.createElement("div");
-            fnode.className = "execNode flameNode " + ns + "fr" + treeNode.frameNo ;
-            fnode.id = treeNode.path + "_node";
-            fnode.textContent = treeNode.frame;
+            var fnode = $("<div class='execNode flameNode'></div>");
+            fnode.addClass(ns + "fr" + treeNode.frameNo)
+            fnode.attr("id", treeNode.path + "_node");
+            fnode.text(treeNode.frame);
             return fnode;        
         }
     }
 
     function createTreeElement(ns, treeNode, weight, threshold) {
         if (treeNode.samples < threshold) {
-            var stub = document.createElement("div");
-            stub.style="display: none";
-            stub.textContent="samll element stub";
+            var stub = $("<div></div");
+            stub.css({display: "none"});
+            stub.text("samll element stub");
             return stub;
         }
         else {
-            var div = document.createElement("div");
+            var div = $("<div class='flameBox'></div>");
             if (treeNode.path !== undefined) {
-                div.id = ns + treeNode.path + "_box";            
+                div.attr("id", ns + treeNode.path + "_box");            
             }
-            div.className = "flameBox";
-            div.style = "flex-basis: " + weight + "%;"
+            div.css({flexBasis: (weight + "%")});
             var children = [];
             for(var prop in treeNode) {
                 if (prop.startsWith("f")) {
@@ -211,22 +205,21 @@ function createFlameChart(hostId, data) {
             }
 
             if (children.length == 1 && children[0].samples == treeNode.samples) {
-                div.appendChild(createTreeElement(ns, children[0], 100, threshold));
+                div.append(createTreeElement(ns, children[0], 100, threshold));
             }
             else if (children.length > 0) {
                 children.sort(function(a, b) {a.samples - b.samples});
-                var row = document.createElement("div");
-                row.className = "flameRow";
+                var row = $("<div class='flameRow'></div>");
                 for(var i = 0; i < children.length; ++i) {
                     var cw = 100 * children[i].samples / treeNode.samples;
                     var node = createTreeElement(ns, children[i], cw, threshold);
-                    row.appendChild(node);
+                    row.append(node);
                 }
                 div.append(row);
             }
 
             var finfo = createInfoElement(ns, treeNode);
-            div.appendChild(finfo);
+            div.append(finfo);
             return div;
         }    
     }
@@ -236,15 +229,15 @@ function createFlameChart(hostId, data) {
         updateFramePallete(hostId, dataSet);
 
         var ns = hostId + "_";
-        var domNode = $("#" + hostId + ">div.flameRoot>div.flameBox");
+        var rootNode = $("#" + hostId + ">div.flameRoot");
         var totalSamples = sampleCount(dataSet, []);
-        var graphWidth = domNode.innerWidth();
+        var graphWidth = rootNode.innerWidth();
         var tree = collectTree(dataSet);
         var threshold = 3 * totalSamples / graphWidth;
         var graph = createTreeElement(ns, tree, 100, threshold);
-        graph.id = domNode.id;
 
-        domNode.replaceWith(graph);
+        rootNode.empty();
+        rootNode.append(graph);
 
         installTooltips(hostId, tree, dataSet);
     }
@@ -263,8 +256,6 @@ function createFlameChart(hostId, data) {
 
         $("#" + hostId + " .flameNode").mousemove(
             function(e) {
-                console.log("mouse", e.pageX, e.pageY, this);
-                var elements = document.elementsFromPoint(e.pageX, e.pageY);
                 var node = this;
                 if (node == null) {
                     $("#" + hostId + ">div.flameHover").hide();
@@ -284,11 +275,14 @@ function createFlameChart(hostId, data) {
     }
 
     function placeHover(container, hover, event) {
-        var hoverx = event.pageX;
-        var hovery = event.pageY + 10;
+        var hoverx = event.pageX + 10;
+        var hovery = event.pageY + 15;
         var hw = hover.width();
+        var hh = hover.height();
         var cx = container.position().left;
         var cw = container.outerWidth();
+        var cy = container.position().top;
+        var ch = container.outerHeight();
 
         if (hoverx + hw > cx + cw) {
             if (hw > cw) {
@@ -297,6 +291,10 @@ function createFlameChart(hostId, data) {
             else {
                 hoverx = cx + cw - hw;
             }
+        }
+        
+        if (hovery + hh > cy + ch) {
+            hovery = event.pageY - hh -15; 
         }
 
         hover.css({ top: hovery, left: hoverx });

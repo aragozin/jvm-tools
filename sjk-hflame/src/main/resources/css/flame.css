@@ -50,7 +50,7 @@ div.execNode:hover {
     font-weight: bold;
 }
 
-div.sleepSmoke {
+div.twaitSmoke {
     border: none;
     border-width: 1px;
     width: 100%;
@@ -58,11 +58,11 @@ div.sleepSmoke {
     padding-top: 0.3em;
     margin-bottom: 0.3em;
     border-radius: 3px;
-    background-color: #aaa;
+    background-color: #86B;
 }
 
-div.sleepSmoke:hover {
-    background-color: #333;
+div.twaitSmoke:hover {
+    background-color: #b8F;
 }
 
 div.waitSmoke {
@@ -73,11 +73,11 @@ div.waitSmoke {
     padding-top: 0.3em;
     margin-bottom: 0.3em;
     border-radius: 3px;
-    background-color: #aaa;
+    background-color: #694;
 }
 
 div.waitSmoke:hover {
-    background-color: #333;
+    background-color: #bf8;
 }
 
 div.hotSmoke {

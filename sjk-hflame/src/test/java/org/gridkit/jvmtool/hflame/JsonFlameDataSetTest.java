@@ -18,7 +18,7 @@ import org.gridkit.jvmtool.stacktrace.ThreadEventCodec;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class JsonFlameDumpTest {
+public class JsonFlameDataSetTest {
 
 	public static String testDump;
 	
@@ -48,7 +48,7 @@ public class JsonFlameDumpTest {
 		EventReader<Event> reader = ThreadEventCodec.createEventReader(new FileInputStream(testDump));
 		EventReader<ThreadSnapshotEvent> traceReader = ShieldedEventReader.shield(reader.morph(new ThreadSnapshotExpander()), ThreadSnapshotEvent.class, true);
 		
-		JsonFlameDump dump = new JsonFlameDump();
+		JsonFlameDataSet dump = new JsonFlameDataSet();
 		
 		dump.feed(traceReader);
 		
@@ -58,11 +58,11 @@ public class JsonFlameDumpTest {
 	}
 	
 	@Test
-	public void smoke_flame_dump_hz1() throws FileNotFoundException, IOException {
+	public void smoke_flame_dump_hz1_visualvm() throws FileNotFoundException, IOException {
 		EventReader<Event> reader = ThreadEventCodec.createEventReader(new FileInputStream("src/test/resources/hz1_jvisualvm.sjk"));
 		EventReader<ThreadSnapshotEvent> traceReader = ShieldedEventReader.shield(reader.morph(new ThreadSnapshotExpander()), ThreadSnapshotEvent.class, true);
 		
-		JsonFlameDump dump = new JsonFlameDump();
+		JsonFlameDataSet dump = new JsonFlameDataSet();
 		
 		dump.feed(traceReader);
 		
@@ -71,4 +71,18 @@ public class JsonFlameDumpTest {
 		System.out.println(sb.toString());		
 	}
 	
+	@Test
+	public void smoke_flame_dump_hz1_stcap() throws FileNotFoundException, IOException {
+		
+		EventReader<Event> reader = ThreadEventCodec.createEventReader(new FileInputStream("src/test/resources/hz1_dump.sjk"));
+		EventReader<ThreadSnapshotEvent> traceReader = ShieldedEventReader.shield(reader.morph(new ThreadSnapshotExpander()), ThreadSnapshotEvent.class, true);
+		
+		JsonFlameDataSet dump = new JsonFlameDataSet();
+		
+		dump.feed(traceReader);
+		
+		StringBuilder sb = new StringBuilder();
+		dump.exportJson(sb);
+		System.out.println(sb.toString());		
+	}
 }

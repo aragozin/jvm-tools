@@ -10,7 +10,7 @@ import java.util.Map;
 import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEvent;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
 
-public class JsonFlameDump {
+public class JsonFlameDataSet {
 
 	private final Map<String, Integer> frameSet = new LinkedHashMap<String, Integer>();
 	private final Map<String, ThreadDump> threads = new LinkedHashMap<String, ThreadDump>();
@@ -18,7 +18,7 @@ public class JsonFlameDump {
 	private FrameColorChooser colorer;
 	private FrameFormater formater;
 	
-	public JsonFlameDump() {
+	public JsonFlameDataSet() {
 		this.colorer = new DefaultFrameColorChooser();
 		this.formater = new DefaultFrameFormater();
 		intern(State.RUNNABLE);
