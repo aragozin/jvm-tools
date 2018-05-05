@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEvent;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
@@ -28,7 +29,7 @@ import org.gridkit.jvmtool.stacktrace.StackFrameList;
 public class JsonFlameDataSet {
 
 	private final Map<String, Integer> frameSet = new LinkedHashMap<String, Integer>();
-	private final Map<String, ThreadDump> threads = new LinkedHashMap<String, ThreadDump>();
+	private final Map<String, ThreadDump> threads = new TreeMap<String, ThreadDump>();
 	private final List<String> pallete = new ArrayList<String>();
 	private FrameColorChooser colorer;
 	private FrameFormater formater;

@@ -111,6 +111,10 @@ public class FlameGraphGeneratorCmd implements CmdRef {
 			    
 			    System.out.println(traceCounter + " samples processed");
 			    
+			    if (traceCounter == 0) {
+			    	System.out.println("No data omit report generation");
+			    }
+			    
 			    tproc.setDataSet("fg1", dataSet);
 			    
 			    OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF8"));

@@ -7,6 +7,10 @@ function createFlameChart(hostId, data) {
     var fullData = data;
     var threadFilter = {};
     
+    function text(t) {
+        return document.createTextNode(t);
+    }
+    
     function updateFramePallete(hostId, dataSet) {
         var pal = "";
         for(var i = 0; i < dataSet.frameColors.length; ++i) {
@@ -15,15 +19,20 @@ function createFlameChart(hostId, data) {
             }
         }
         var id = hostId + "_frameColors";
+        
+        updateStyleSection(id, pal);
+    }
+    
+    function updateStyleSection(id, styleSheet) {
         var stBlock = $("<style id='" + id + "'></style>");
-        stBlock.text(pal);
+        stBlock.text(styleSheet);
 
         if ($("#" + id).length == 0) {
             $("html>head").append(stBlock);
         }
         else {
             $("#" + id).replaceWith(stBlock);
-        }
+        }        
     }
 
     function sampleCount(dataSet, prefix) {
@@ -229,7 +238,7 @@ function createFlameChart(hostId, data) {
         updateFramePallete(hostId, dataSet);
 
         var ns = hostId + "_";
-        var rootNode = $("#" + hostId + ">div.flameRoot");
+        var rootNode = $("#" + hostId + " div.flameRoot");
         var totalSamples = sampleCount(dataSet, []);
         var graphWidth = rootNode.innerWidth();
         var tree = collectTree(dataSet);
@@ -338,12 +347,179 @@ function createFlameChart(hostId, data) {
         $('<p class="hoverStats"></p>').text("Global frame frequency: " + globalCount + " (" + fmtPercent(globalCount / totalSamples) + ")").appendTo(node);
     }                
     
+    function installFlameFilter(hostId) {
+        
+        for(var i = 0; i < fullData.threads.length; ++i) {
+            threadFilter[i] = true;
+        }
+        threadFilter.length = fullData.threads.length;
+        
+        updateThreadFilterState(hostId);
+        
+        initThreadFilter();
+    }
+                   
+    function initThreadFilter() {
+        $("#" + hostId + " div.flameThreadFilter a.flameThreadCloseBtn").click(function() {
+           hideThreadFilter();
+        });
+
+        var tfbtn = $("#" + hostId + " div.flameThreadFilterBtn");
+
+        tfbtn.click(function() {
+            var filter = $("#" + hostId + " div.flameThreadFilter");
+            if (filter.is(":visible")) {
+                hideThreadFilter();
+            }
+            else {
+                filter.show();
+            }
+        });
+        
+        var list = $("#" + hostId + " div.flameThreadFilter .threadList");
+        list.empty();
+        
+        for(var i = 0; i < fullData.threads.length; ++i) {
+            createThreadCheckbox(i).appendTo(list);
+        }
+        
+        var sbox = $("#" + hostId + " div.flameThreadFilter .search input");
+        
+        sbox.keyup(function() {
+            updateVisibleThreads(this.value);
+        });
+
+        sbox.change(function() {
+            updateVisibleThreads(this.value);
+        });
+
+        $("#" + hostId + " div.flameThreadFilter .search a.all").click(function(){checkVisibleThreads(true)});
+        
+        $("#" + hostId + " div.flameThreadFilter .search a.none").click(function(){checkVisibleThreads(null)});
+    }
+    
+    function hideThreadFilter() {        
+        $("#" + hostId + " div.flameThreadFilter .search input").val("");
+        updateVisibleThreads("");
+        $("#" + hostId + " div.flameThreadFilter").hide();
+    }
+    
+    function updateVisibleThreads(txt) {
+        var list = $("#" + hostId + " div.flameThreadFilter .threadList > p");
+        var vc = 0;
+        for(var i = 0; i < list.length; ++i) {
+            var tname = $(list[i]).text();
+            if (txt.length == 0 || tname.indexOf(txt) >= 0) {
+                $(list[i]).show();
+                vc++;
+            }
+            else {
+                $(list[i]).hide();
+            }
+        }
+        if (vc == 0) {
+            $("#" + hostId + " div.flameThreadFilter p.empty").show();
+        }
+        else {
+            $("#" + hostId + " div.flameThreadFilter p.empty").hide();            
+        }
+    }
+    
+    var bulkThreadFilterUpdate = false;
+    
+    function checkVisibleThreads(val) {
+        bulkThreadFilterUpdate = true;
+        
+        var list = $("#" + hostId + " div.flameThreadFilter .threadList > p");
+        var modified = false;
+        for(var i = 0; i < list.length; ++i) {
+            if ($(list[i]).is(":visible")) {
+                if (threadFilter[i] != val) {
+                    threadFilter[i] = val;
+                    $(list[i]).find("input").prop("checked", val == true);
+                    modified = true;
+                } 
+            }   
+        }        
+        if (modified) {
+            applyFilterChanges();
+        }
+        bulkThreadFilterUpdate = false;
+    }
+    
+    function createThreadCheckbox(threadNo) {
+        var li = $("<p></p>");
+        var cb = $("<input type='checkbox' checked/>");
+        var tname = text(fullData.threads[threadNo].name);
+        li.append(cb);        
+        li.append(tname);
+        cb.change(function() {
+            if (!bulkThreadFilterUpdate) {
+                if (this.checked) {
+                    threadFilter[threadNo] = true;                
+                } 
+                else {
+                    threadFilter[threadNo] = null;
+                }
+                applyFilterChanges();
+            }
+        });
+        return li;
+    }
+    
+    function updateThreadFilterState() {
+
+        var btn = $("#" + hostId + " div.flameThreadFilterBtn");
+        btn.empty();
+
+        var vtc = 0;
+        for(var i = 0; i < fullData.threads.length; ++i) {
+            if (threadFilter[i] == true) {
+                ++vtc;
+            }
+        }        
+        
+        if (fullData.threads.length == 1) {
+            btn.hide()
+        }
+        else {
+            var ttc = fullData.threads.length;
+            if (ttc == vtc) {
+                $("<a>" + ttc + " threads</a>").appendTo(btn);     
+            }
+            else {
+                $("<a>" + vtc + " of " + ttc + " threads</a>").appendTo(btn);
+            }            
+            btn.show();
+        }
+    }
+    
+    function applyFilterChanges() {
+        updateThreadFilterState();
+        var data = {};
+        data.frames = fullData.frames;
+        data.frameColors = fullData.frameColors;
+        data.threads = [];
+        for(var i = 0; i < fullData.threads.length; ++i) {
+            if (threadFilter[i] == true) {
+                data.threads.push(fullData.threads[i]);
+            }
+        }
+        
+        if (data.threads.length == 0) {
+            // TODO produce placeholder
+        }
+        else {
+            updateChart(hostId, data);
+        }
+    }
     
     var flameChart = {
         
         originalData: data,
         initFlameChart: function() {
-            updateChart(hostId, fullData);   
+            updateChart(hostId, fullData);  
+            installFlameFilter(hostId);
         }        
     };
     

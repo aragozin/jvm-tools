@@ -8,9 +8,9 @@ div.flameFrame {
 }
 
 div.flameRoot {
-    #background-color: aqua;
     font-size: 11px;
     font-family: monospace;
+    min-height: 10em;
 }
 
 div.flameBox {
@@ -152,6 +152,7 @@ div.flameHover {
     font-family: monospace;
     white-space: nowrap;
     min-width: 20em;
+    z-index: 10000;
 }
 
 div.flameHover > p.hoverFrame {
@@ -164,8 +165,89 @@ div.flameHover > p.hoverStats {
     padding-left: 1em;
 }
 
+div.flameThreadFilterBtn {
+    padding: 0.2em;
+}
 
-.block-title div {
-    padding: 0 0.5em 0 0.5em;
-    text-align: center;
+div.flameThreadFilter {
+    font-family: sans-serif;
+    font-size: 9pt;
+    border: 1px solid;
+    margin: 0;
+    padding: 0.5em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color:  beige;
+    overflow-y: auto;
+    max-height: 20em;
+}
+
+div.flameThreadFilter p {
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.flameThreadFilter div.threadList input {
+}
+
+div.flameThreadFilter div.threadList p {
+}
+
+div.flameThreadFilter div.search {
+    margin-bottom: 0.5em;
+    display: flex;
+    flex-direction: row;
+}
+
+div.flameThreadFilter div.search input {
+    padding: 0px;
+    flex-grow: 1;
+}
+
+div.flameThreadFilter div.search a {
+    color: #44F;
+    cursor: pointer;
+    font-size: 10pt;
+    margin: 0 0.2em 0 0.2em;
+}
+
+div.flameThreadFilter div.search a:hover {
+    text-decoration: underline;
+}
+
+div.flameThreadFilter p.empty {
+    color: #888;
+    padding: 0.5em 2em 0 2em;
+    font-style: italic;
+}
+
+div.flameThreadFilter a.flameThreadCloseBtn {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-family: sans-serif;
+    font-weight: 900;
+    font-size: 10pt;
+    padding-left: 3px;
+    padding-right: 3px;
+    color: #888;
+}
+
+div.flameThreadFilter a.flameThreadCloseBtn:hover {
+    background-color: #000;    
+    color: #fff;
+}
+
+
+div.flameThreadFilterBtn a {
+    color: #44F;
+    cursor: pointer;
+}
+
+div.flameThreadFilterBtn a:hover {
+    text-decoration: underline;
 }

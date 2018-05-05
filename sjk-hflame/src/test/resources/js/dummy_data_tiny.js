@@ -34,8 +34,19 @@ var data = {
                 { trace: [5, 7, 2], samples: 10 },
                 { trace: [5, 7, 3], samples: 10 },
                 { trace: [5, 7, 8, 2], samples: 15},
-                { trace: [5, 7, 9, 2], samples: 15},
-                { trace: [10, 7, 9, 2], samples: 25},
+                { trace: [5, 7, 9, 2], samples: 15}
+            ]
+        },
+        {
+            name: "MyThread1",
+            traces: [
+                { trace: [10, 7, 9, 2], samples: 25}
+            ]
+        },
+        {
+            name: "MyThread2",
+            traces: [
+                { trace: [10, 7, 9, 8, 2], samples: 25}
             ]
         }
     ]

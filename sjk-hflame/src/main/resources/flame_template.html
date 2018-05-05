@@ -11,19 +11,34 @@
         <link id="importcss_flame" rel="stylesheet" type="text/css" href="css/flame.css"/>
         <script id="importjs_jquery" src="js/jquery-3.1.1.min.js"></script>
         <script id="importjs_flamer" src="js/flamer.js"></script>
-        <script src="../../test/resources/js/dummy_data_tiny.js"></script>
+        <script src="../../test/resources/js/dummy_data_stub.js"></script>
         <script>
-//            $(document).ready(function() {createFlameChart("fg1", data).initFlameChart()});
+            $(document).ready(function() {createFlameChart("fg1", data).initFlameChart()});
         </script>
     </head>
     <body>
         <div id="fg1" class="flameFrame">
             <div class="flameHover" style="display: none">This is flame hover</div>
-            <div class="flameRoot">
-                <div style="display: flex; flex-direction: column">
-                <div style="align-self: center; font-size: 2em; padding-left: 1.5em;">Flame chart is loading ...</div>
-                <div style="align-self: center">You need JavaScript enbaled for flame chart to function</div>
-                <div style="align-self: center">It may take couple of minutes</div>
+            <div style="display: flex; flex-direction: row; justify-content: space-between">
+                <div> </div>
+                <div class="flameThreadFilterBtn"><a>threads</a></div>
+            </div>
+            <div style="position: relative">
+                <div class="flameThreadFilter" style="display: none">
+                    <a class="flameThreadCloseBtn">X</a>
+                    <div class="search"><input type="text"/><a class="all">all</a><a class="none">none</a></div>
+                    <div class="threadList">
+                        <p><input type="checkbox" checked="true"/>Main</p>
+                        <p><input type="checkbox"/>MyThread</p>
+                    </div>
+                    <p class="empty" style="display: none">no threads matching</p>
+                </div>
+                <div class="flameRoot">
+                    <div style="display: flex; flex-direction: column">
+                    <div style="align-self: center; font-size: 2em; padding-left: 1.5em;">Flame chart is loading ...</div>
+                    <div style="align-self: center">You need JavaScript enbaled for flame chart to function</div>
+                    <div style="align-self: center">It may take couple of minutes</div>
+                    </div>
                 </div>
             </div>
         </div>
