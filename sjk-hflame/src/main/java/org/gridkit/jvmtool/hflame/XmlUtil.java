@@ -27,8 +27,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
@@ -89,13 +91,40 @@ public class XmlUtil {
 	}
 	
 	public static String id(Element el) {
-		String id = el.getAttribute("id");
-		if (id == null || id.length() == 0) {
-			id = el.getAttribute("ID");
+		return attr(el, "id");
+	}
+	
+	public static String href(Element el) {
+		return attr(el, "src", "href");
+	}
+	
+	public static boolean isStyleSheet(Element el) {
+		if (el.getNodeName().equalsIgnoreCase("link")) {
+			return "stylesheet".equalsIgnoreCase(attr(el, "rel"));
 		}
-		if (id == null || id.length() == 0) {
-			id = el.getAttribute("Id");
+		else if (el.getNodeName().equalsIgnoreCase("style")) {
+			return true;
 		}
-		return id;
+		return false;
+	}
+	
+	public static boolean isScript(Element el) {
+		return el.getNodeName().equalsIgnoreCase("script");
+	}
+	
+	public static String attr(Element el, String... attr) {
+		NamedNodeMap nnm = el.getAttributes();
+		for(int i = 0; i != nnm.getLength(); ++i) {
+			Node node = nnm.item(i);
+			if (node instanceof Attr) {
+				Attr a = (Attr) node;
+				for(String at: attr) {
+					if (a.getName().equalsIgnoreCase(at)) {
+						return a.getValue();
+					}
+				}
+			}
+ 		}
+		return null;
 	}
 }

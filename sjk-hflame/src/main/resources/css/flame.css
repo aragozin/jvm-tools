@@ -13,6 +13,14 @@ div.flameRoot {
     min-height: 10em;
 }
 
+div.flameRoot div.empty {
+    text-align: center;
+    font-family: monospace;
+    font-size: 2em;
+    padding-top: 1.5em;
+    padding-bottom: 1.5em;
+}
+
 div.flameBox {
     display: flex;
     flex-flow: row;
@@ -165,22 +173,64 @@ div.flameHover > p.hoverStats {
     padding-left: 1em;
 }
 
-div.flameThreadFilterBtn {
-    padding: 0.2em;
+// Thread filter
+
+div.flameStateFilter {
+    position: relative;    
 }
 
-div.flameThreadFilter {
+div.flameStateFilter div.panel {
     font-family: sans-serif;
     font-size: 9pt;
     border: 1px solid;
     margin: 0;
     padding: 0.5em;
     position: absolute;
-    top: 0;
+    top: 100%;
+    left: 0;
+    background-color:  beige;
+    overflow-y: auto;
+    max-height: 20em;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+div.flameStateFilter p {
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.flameStateFilter > a {
+    color: #44F;
+    cursor: pointer;    
+}
+
+div.flameStateFilter > a:hover {
+    text-decoration: underline;
+}
+
+// Thread filter
+
+div.flameThreadFilter {
+    position: relative;
+}
+
+div.flameThreadFilter div.panel {
+    font-family: sans-serif;
+    font-size: 9pt;
+    border: 1px solid;
+    margin: 0;
+    padding: 0.5em;
+    position: absolute;
+    top: 100%;
     right: 0;
     background-color:  beige;
     overflow-y: auto;
     max-height: 20em;
+    white-space: nowrap;
+    z-index: 1000;
 }
 
 div.flameThreadFilter p {
@@ -190,10 +240,13 @@ div.flameThreadFilter p {
     text-overflow: ellipsis;
 }
 
-div.flameThreadFilter div.threadList input {
+div.flameThreadFilter > a {
+    color: #44F;
+    cursor: pointer;    
 }
 
-div.flameThreadFilter div.threadList p {
+div.flameThreadFilter > a:hover {
+    text-decoration: underline;
 }
 
 div.flameThreadFilter div.search {
@@ -203,15 +256,16 @@ div.flameThreadFilter div.search {
 }
 
 div.flameThreadFilter div.search input {
-    padding: 0px;
+    padding: 0.1em;
     flex-grow: 1;
+    font-size: 0.9em;
 }
 
 div.flameThreadFilter div.search a {
     color: #44F;
     cursor: pointer;
     font-size: 10pt;
-    margin: 0 0.2em 0 0.2em;
+    margin: 0.1em 0.2em 0 0.2em;
 }
 
 div.flameThreadFilter div.search a:hover {
@@ -224,30 +278,19 @@ div.flameThreadFilter p.empty {
     font-style: italic;
 }
 
-div.flameThreadFilter a.flameThreadCloseBtn {
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-family: sans-serif;
-    font-weight: 900;
-    font-size: 10pt;
-    padding-left: 3px;
-    padding-right: 3px;
-    color: #888;
+
+/* !!THROW AWAY BELOW!! */
+
+#debug_console {
+    overflow-y: scroll;
+    max-height: 20em;
 }
 
-div.flameThreadFilter a.flameThreadCloseBtn:hover {
-    background-color: #000;    
-    color: #fff;
+#debug_console p {
+    margin: 0;
+    font-family: monospace;
 }
 
-
-div.flameThreadFilterBtn a {
-    color: #44F;
-    cursor: pointer;
-}
-
-div.flameThreadFilterBtn a:hover {
-    text-decoration: underline;
+#debug_console1 {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 50 50'><path style='fill:%23aaaaaa;stroke:none;fill-opacity:1' d='M 0,25 25,0 50,0 0,50 Z'/><path style='fill:%23aaaaaa;stroke:none;fill-opacity:1' d='M 50,25 25,50 50,50 Z'/></svg>");
 }

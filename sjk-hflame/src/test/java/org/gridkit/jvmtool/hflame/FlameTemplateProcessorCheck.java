@@ -33,7 +33,7 @@ import org.gridkit.jvmtool.stacktrace.ThreadEventCodec;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
-public class FlameTemplateProcessorTest {
+public class FlameTemplateProcessorCheck {
 
 	@Test
 	public void simple_template_smoke_test() throws IOException {
@@ -51,6 +51,8 @@ public class FlameTemplateProcessorTest {
 		OutputStreamWriter fw  = new OutputStreamWriter(new FileOutputStream("target/test.html"), "UTF8");
 		fw.append(sw.toString());
 		fw.close();	
+		
+		HtmlTestHelper.openBrowser(sw.toString());
 	}
 
 	private JsonFlameDataSet loadDataSet(String name) throws IOException {

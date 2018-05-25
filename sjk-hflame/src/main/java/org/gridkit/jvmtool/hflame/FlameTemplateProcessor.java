@@ -16,14 +16,16 @@
 package org.gridkit.jvmtool.hflame;
 
 import static org.gridkit.jvmtool.hflame.XmlUtil.elementsOf;
+import static org.gridkit.jvmtool.hflame.XmlUtil.href;
 import static org.gridkit.jvmtool.hflame.XmlUtil.id;
+import static org.gridkit.jvmtool.hflame.XmlUtil.isScript;
+import static org.gridkit.jvmtool.hflame.XmlUtil.isStyleSheet;
 import static org.gridkit.jvmtool.hflame.XmlUtil.textOf;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -54,9 +56,7 @@ public class FlameTemplateProcessor {
 	}	
 	
 	private void initDefaultScripts() {
-		imports.put("js:jquery", "js/jquery-3.1.1.min.js");
-		imports.put("js:flamer", "js/flamer.js");
-		imports.put("css:flame", "css/flame.css");
+		// nothing
 	}
 
 	public void setDataSet(String name, JsonFlameDataSet dataSet) {
@@ -92,17 +92,33 @@ public class FlameTemplateProcessor {
 	private void transformHead(Element head) throws IOException {
 		for(Element e: elementsOf(head)) {
 			String id = id(e);
-			if (id != null && id.startsWith("importcss_")) {
-				String cssName = id.substring("importcss_".length());
-				Element re = head.getOwnerDocument().createElement("style");
-				head.replaceChild(re, e);
-				importCss(cssName, re);
+			String href = href(e);
+			if (isStyleSheet(e) || isScript(e)) {
+				if (id == null) {
+					if (href != null && !href.startsWith("..")) {
+						if (isStyleSheet(e)) {
+							// inline stylesheet
+							Element re = head.getOwnerDocument().createElement("style");
+							head.replaceChild(re, e);
+							importCss(href, re);
+						}
+						else {
+							// inline script
+							e.removeAttribute("src");
+							importJs(href, e);							
+						}
+					}
+					else {
+						// remove elements with ../ source
+						head.removeChild(e);
+					}
+				}
+				else {
+					// keep "identified" elements as is
+				}
 			}
-			else if (id != null && id.startsWith("importjs_")) {
-				String jsName = id.substring("importjs_".length());
-				e.removeAttribute("id");
-				e.removeAttribute("src");
-				importJs(jsName, e);
+			if (id != null && id.startsWith("debug_")) {
+				head.removeChild(e);
 			}
 			else if (id != null && id.startsWith("importflame_")) {
 				String flameName = id.substring("importflame_".length());
@@ -110,27 +126,14 @@ public class FlameTemplateProcessor {
 				e.removeAttribute("src");
 				importDataSet(flameName, e);
 			}
-			else {
-				if ("script".equalsIgnoreCase(e.getNodeName())) {
-					if (id == null || !id.startsWith("polyfill")) {
-						head.removeChild(e);
-					}
-					else {
-						e.removeAttribute("id");
-					}
-				}
-			}			
 		}		
 	}
 	
 	private void transformBody(Element node) throws IOException {
 		for(Element e: elementsOf(node)) {
 			String id = id(e);
-			if (id != null && id.startsWith("importjs_")) {
-				String jsName = id.substring("importjs_".length());
-				e.removeAttribute("id");
-				e.removeAttribute("src");
-				importJs(jsName, e);
+			if (id != null && id.startsWith("debug_")) {
+				node.removeChild(e);
 			}
 			else if (id != null && id.startsWith("importflame_")) {
 				String flameName = id.substring("importflame_".length());
@@ -144,20 +147,36 @@ public class FlameTemplateProcessor {
 		}				
 	}
 
+	private InputStream openResource(String res) throws IOException {
+		return Thread.currentThread().getContextClassLoader().getResourceAsStream(res);
+	}
+	
 	private void importCss(String cssName, Element e) throws IOException {
-		String res = imports.get("css:" + cssName);
-		if (res == null) {
-			throw new IllegalArgumentException("Unknown CSS name: " + cssName);
+		InputStream is = openResource(cssName);
+		if (is == null) {
+			String res = imports.get("css:" + cssName);
+			if (res != null) {
+				is = openResource(res);
+			}
 		}
-		loadContent(e, res);
+		if (is == null) {
+			throw new IllegalArgumentException("Unknown CSS resource: " + cssName);
+		}
+		loadContent(e, is);
 	}
 
 	private void importJs(String jsName, Element e) throws IOException {
-		String res = imports.get("js:" + jsName);
-		if (res == null) {
+		InputStream is = openResource(jsName);
+		if (is == null) {
+			String res = imports.get("js:" + jsName);
+			if (res != null) {
+				is = openResource(res);
+			}
+		}
+		if (is == null) {
 			throw new IllegalArgumentException("Unknown script name: " + jsName);
 		}
-		loadContent(e, res);
+		loadContent(e, is);
 	}
 
 	private void importDataSet(String flameName, Element e) {
@@ -178,21 +197,30 @@ public class FlameTemplateProcessor {
 		e.appendChild(text);
 	}
 
-	private void loadContent(Element e, String res) throws IOException {
-		InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(res);
-		Reader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF8")));
+	private void loadContent(Element e, InputStream is) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF8")));
 		StringBuilder sb = new StringBuilder();
 		while(true) {
-			int ch = reader.read();
-			if (ch < 0) {
+			String line = reader.readLine();
+			if (line == null) {
 				break;
 			}
-			if (ch == '\r') {
-				// ignore
+			if (line.contains("!!THROW AWAY BELOW!!")) {
+				break;
+			}
+			if (line.contains("debug(") && line.contains(");")) {
+				// filtering out debug
 				continue;
 			}
-			sb.append((char)ch);
+			for(int i = 0; i != line.length(); ++i) {
+				char ch = line.charAt(i);
+				if (ch != '\r' ) {
+					sb.append(ch);
+				}
+			}
+			sb.append('\n');
 		}
+		reader.close();
 		
 		for(Text t: textOf(e)) {
 			e.removeChild(t);
