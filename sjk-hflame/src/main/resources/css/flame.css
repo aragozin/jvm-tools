@@ -7,10 +7,15 @@ div.flameFrame {
     overflow-x: auto;
 }
 
+div.flameArea {
+    display: flex;
+    flex-direction: column-reverse;
+    min-height: 20em;
+}
+
 div.flameRoot {
     font-size: 11px;
     font-family: monospace;
-    min-height: 10em;
 }
 
 div.flameRoot div.empty {
@@ -173,7 +178,97 @@ div.flameHover > p.hoverStats {
     padding-left: 1em;
 }
 
-// Thread filter
+div.flameHover div.toolbar {
+    margin-top: 0.2em;
+    text-align: right;
+    font-size: 1.2em;
+}
+
+div.flameHover div.toolbar span {
+    margin-right: 0.2em;
+}
+
+div.flameHover div.toolbar a {
+    margin-left: 0.2em;
+    margin-right: 0.2em;
+    color: #44F;
+    cursor: pointer;
+}
+
+div.flameHover div.toolbar a:hover {
+    text-decoration: underline;
+}
+
+div.flameHover div.trace {
+    margin: 0.2em 1em 0.2em 1em;
+    overflow-y: auto;
+    overflow-x: auto;
+    max-height: 6em;
+}
+
+div.flameHover div.trace p {
+    margin: 0;
+    font-size: 0.8em;
+    font-family: monospace;
+}
+
+div.flameHover div.trace p.ff {
+    color: #888;
+}
+
+
+div.flameHover div.trace p:before {
+    content: '- ';
+}
+
+div.flameHover div.trace p.ff:before {
+    content: '(';
+    padding-left: 0.6em;
+}
+
+div.flameHover div.trace p.ff:after {
+    content: ')';
+}
+
+/* zoom bar */
+
+div.flameRoot div.zoomBar {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 0.2em;
+}
+
+div.flameRoot div.zoomFrame {
+    border: solid;
+    border-color: transparent;
+    border-width: 2px;
+    margin: 0;
+    padding: 0px 0px 0px 3px;
+    border-radius: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;    
+}
+
+
+div.flameRoot div.zoomBar p {
+    margin: 0;
+}
+
+div.flameRoot div.zoomBar p.doUnzoom {
+    display: none;
+}
+
+div.flameRoot div.zoomBar:hover p.zoomInfo {
+    display: none;
+}
+
+div.flameRoot div.zoomBar:hover p.doUnzoom {
+    display: block;
+}
+
+/* State filter */
 
 div.flameStateFilter {
     position: relative;    
@@ -211,7 +306,7 @@ div.flameStateFilter > a:hover {
     text-decoration: underline;
 }
 
-// Thread filter
+/* Thread filter */
 
 div.flameThreadFilter {
     position: relative;
@@ -280,6 +375,12 @@ div.flameThreadFilter p.empty {
 
 
 /* !!THROW AWAY BELOW!! */
+
+div.execNode.fg1_fr8_x {
+    background-color: #FAF;
+    border-color: #511;
+    font-weight: bold;
+}
 
 #debug_console {
     overflow-y: scroll;

@@ -121,38 +121,38 @@
         }
         else if (treeNode.frame == "(WAITING)") {
             var wnode = $("<div class='waitSmoke flameNode'/>");
-            wnode.attr("id", treeNode.path + "_node");
+            wnode.attr("id", ns + treeNode.path + "_node");
             return wnode;
         }
         else if (treeNode.frame == "(TIMED_WAITING)") {
             var twnode = $("<div class='twaitSmoke flameNode'/>");
-            twnode.attr("id", treeNode.path + "_node");
+            twnode.attr("id", ns + treeNode.path + "_node");
             return twnode;
         }
         else if (treeNode.frame == "(BLOCKED)") {
             var bnode = $("<div class='blockSmoke flameNode'/>");
-            bnode.attr("id", treeNode.path + "_node");
+            bnode.attr("id", ns + treeNode.path + "_node");
             return bnode;        
         }
         else if (treeNode.frame == "(RUNNABLE)") {
             var rnode = $("<div class='hotSmoke flameNode'/>");
-            rnode.attr("id", treeNode.path + "_node");
+            rnode.attr("id", ns + treeNode.path + "_node");
             return rnode;        
         }
         else if (treeNode.frame == "(IO)") {
             var ionode = $("<div class='ioSmoke flameNode'/>");
-            ionode.attr("id", treeNode.path + "_node");
+            ionode.attr("id", ns + treeNode.path + "_node");
             return ionode;        
         }
         else if (treeNode.frame == "(???)") {
             var tnode = $("<div class='termSmoke flameNode'/>");
-            tnode.attr("id", treeNode.path + "_node");
+            tnode.attr("id", ns + treeNode.path + "_node");
             return tnode;        
         }
         else {
             var fnode = $("<div class='execNode flameNode'/>");
             fnode.addClass(ns + "fr" + treeNode.frameNo)
-            fnode.attr("id", treeNode.path + "_node");
+            fnode.attr("id", ns + treeNode.path + "_node");
             fnode.text(treeNode.frame);
             return fnode;        
         }
@@ -162,7 +162,7 @@
         if (treeNode.samples < threshold) {
             var stub = $("<div/>");
             stub.css({display: "none"});
-            stub.text("samll element stub");
+            stub.text("small element stub");
             return stub;
         }
         else {
@@ -237,35 +237,114 @@
         }
     }
 
-    function updateHoverText(node, prefix, tree, dataSet) {
-        node.empty();
-        debug("updateHoverText: " + prefix);
-        var fid = prefix[prefix.length - 1];
-        var fnode = selectByPath(tree, prefix);
-        var frame = fnode.frame;
-        if (frame.startsWith("(")) {
-            // this is terminator frame, display last frame
-            var state = toState(frame);
-            var stCount = fnode.samples;
-            fid = prefix[prefix.length - 2];
-            fnode = selectByPath(tree, prefix.slice(0, -1));
-            frame = fnode.frame;
-        }
-        var totalSamples = sampleCount(dataSet, []);
-        var nodeSampleCount = fnode.samples;
-        var globalCount = sampleCountForFrame(dataSet, fid);
-        $('<p class="hoverFrame"/>').text(frame).appendTo(node);
-        if (state !== undefined) {
-            var lbl = state + ": " + stCount + " (" + fmtPercent(stCount / totalSamples) + ")";
-            $('<p class="hoverStats"/>').text(lbl).appendTo(node);   
-        }
-        $('<p class="hoverStats"/>').text("Sample count: " + nodeSampleCount + " (" + fmtPercent(nodeSampleCount / totalSamples) + ")").appendTo(node);
-        $('<p class="hoverStats"/>').text("Global frame frequency: " + globalCount + " (" + fmtPercent(globalCount / totalSamples) + ")").appendTo(node);
-    }                
-    
     function createFrameGraph(host$, flameModel) {
 
         var hostId = host$.attr("id");
+
+        function updateHoverText(node, prefix, tree, dataSet) {
+            node.empty();
+            debug("updateHoverText: " + prefix);
+            var fid = prefix[prefix.length - 1];
+            var fnode = selectByPath(tree, prefix);
+            var frame = fnode.frame;
+            if (frame.startsWith("(")) {
+                // this is terminator frame, display last frame
+                var state = toState(frame);
+                var stCount = fnode.samples;
+                fid = prefix[prefix.length - 2];
+                fnode = selectByPath(tree, prefix.slice(0, -1));
+                frame = fnode.frame;
+            }
+            var totalSamples = sampleCount(dataSet, []);
+            var nodeSampleCount = fnode.samples;
+            var globalCount = sampleCountForFrame(dataSet, fid);
+            $('<p class="hoverFrame"/>').text(frame).appendTo(node);
+            if (state !== undefined) {
+                var lbl = state + ": " + stCount + " (" + fmtPercent(stCount / totalSamples) + ")";
+                $('<p class="hoverStats"/>').text(lbl).appendTo(node);   
+            }
+            $('<p class="hoverStats"/>').text("Sample count: " + nodeSampleCount + " (" + fmtPercent(nodeSampleCount / totalSamples) + ")").appendTo(node);
+            $('<p class="hoverStats"/>').text("Global frame frequency: " + globalCount + " (" + fmtPercent(globalCount / totalSamples) + ")").appendTo(node);
+            if (flameModel.filters.zoom) {
+                var unzoomedCount = sampleCountForFrame(flameModel.filteredData, fid);
+                $('<p class="hoverStats"/>').text("Unzoomed frame count: " + unzoomedCount).appendTo(node); 
+            }            
+        }                
+        
+        function zoomFrame(frame) {
+            if (flameModel.filters.zoom) {
+                flameModel.filters.zoom.push(frame);
+            }
+            else {
+                flameModel.filters.zoom = [-1, frame];
+            }
+            debug("New zoom path: " + flameModel.filters.zoom);
+            flameModel.update();
+        }
+        
+        function zoomPath(path) {
+            flameModel.filters.zoom = path;
+            debug("New zoom path: " + path);
+            flameModel.update();
+        }
+        
+        function unzoom() {
+            flameModel.filters.zoom = null;
+            flameModel.update();
+        }
+
+        function createStackTrace(prefix, tree, dataSet) {
+            var box$ = $("<div class='trace'/>");
+            var i, fname;
+            var ff = false;
+            if (flameModel.filters.zoom) {
+                var zoom = flameModel.filters.zoom;
+                if (zoom[0] < 0) {
+                    for(i = 1; i < zoom.length; ++i) {
+                        fname = dataSet.frames[zoom[i]];
+                        $("<p class='ff'/>").text(fname).prependTo(box$);
+                    }
+                    ff = true;
+                }
+                else {
+                    for(i = 0; i < zoom.length - 1; ++i) {
+                        fname = dataSet.frames[zoom[i]];
+                        $("<p/>").text(fname).prependTo(box$);
+                    }                    
+                }
+            }
+            for(i = ff ? 1 : 0; i < prefix.length; ++i) {
+                fname = dataSet.frames[prefix[i]];
+                $("<p/>").text(fname).prependTo(box$);
+            }        
+            return box$;
+        }
+        
+        function updatePopupText(node, prefix, tree, dataSet) {
+            updateHoverText(node, prefix, tree, dataSet);
+            debug("updatePopupText: " + prefix);
+            createStackTrace(prefix, tree, dataSet).appendTo(node);
+            var buttons = $("<div class='toolbar'/>");
+            buttons.appendTo(node);
+            $("<span/>").text("zoom by").appendTo(buttons);
+            
+            var zoom = flameModel.filters.zoom;
+            
+            if (!zoom || zoom[0] < 0) {
+                var zoomByFrame = function() {
+                    zoomFrame(prefix[prefix.length - 1]);
+                }
+            
+                $("<a/>").text("frame").click(zoomByFrame).appendTo(buttons);
+            }            
+            if (!zoom || zoom[0] >= 0) {
+                var path = (zoom ? zoom.slice(0, -1) : []).concat(prefix);
+                var zoomByPath = function() {
+                    zoomPath(path);
+                }                
+                $("<a/>").text("trace").click(zoomByPath).appendTo(buttons);
+            }
+        }
         
         function updateFramePallete(dataSet) {
             var pal = "";
@@ -292,37 +371,158 @@
         }
         
         function installTooltips(tree, dataSet) {
-            $("#" + hostId).unbind("mouseleave");
-            $("#" + hostId).unbind("mousemove");
+            host$.unbind("mouseleave");
+            host$.unbind("mousemove");
+            host$.unbind("click");
 
+            var lastHightlight = null;
             var lastTooltip = "";
+            var pinTooltip = false;
 
-            $("#" + hostId + ">div.flameHover").hide();
+            var hover$ = $("#" + hostId + ">div.flameHover");
+            
+            hover$.hide();
+            
+            updateStyleSection(hostId + "_highlight", "");
 
             $("#" + hostId + " .flameNode").mouseleave(function(){
-                $("#" + hostId + ">div.flameHover").hide();
+                if (!pinTooltip) {
+                    $("#" + hostId + ">div.flameHover").hide();
+                }
             });
 
             $("#" + hostId + " .flameNode").mousemove(
                 function(e) {
-                    var node = this;
-                    if (node == null) {
-                        $("#" + hostId + ">div.flameHover").hide();
-                        lastTooltip = "";
+                    if (!pinTooltip) {
+                        var node = this;
+                        if (node == null) {
+                            hover$.hide();
+                            lastTooltip = "";
+                        }
+                        else {
+                            hover$.show();
+                            if (lastTooltip !=  node.id) {
+                                lastTooltip = node.id;
+
+                                updateHoverText(hover$, toPrefix(node.id), tree, dataSet);
+                            }
+                        }            
+                        placeHover($("#" + hostId), hover$, e);
+                    }
+                }
+            );
+            
+            function clickHandler(e) {
+                e.stopImmediatePropagation();
+                var highlight = null;
+                var path = null;
+                var node = this;
+                var id = node.id;
+                if (id && id.indexOf("_node")>=0) {
+                    path = toPrefix(id);                       
+                    node = selectByPath(tree, path);
+                    debug("click on " + id);
+                    if (node.frame.startsWith("(")) {
+                        // status node not clickable
                     }
                     else {
-                        $("#" + hostId + ">div.flameHover").show();
-                        if (lastTooltip !=  node.id) {
-                            lastTooltip = node.id;
-
-                            updateHoverText($("#" + hostId + ">div.flameHover"), toPrefix(node.id), tree, dataSet);
-                        }
-                    }            
-                    placeHover($("#" + hostId), $("#" + hostId + ">div.flameHover"), e);
+                        debug("click id: " + path);
+                        highlight = node.frameNo;
+                    }
                 }
-            )
+                
+                var showPopup = false;
+                
+                if (highlight && highlight == lastHightlight) {
+                    if (hover$.is(":visible")) {
+                        highlight = null;
+                    }
+                    else {
+                        showPopup = true;
+                    }
+                }
+
+                lastHightlight = highlight;
+                
+                if (highlight) {
+                    debug("highlight: " + highlight);
+                    var col = dataSet.frameColors[highlight];
+                    var stl = ""
+                    stl += "div." + hostId + "_fr" + highlight + " {";
+                    stl += "border-color: " + col + ";";
+                    stl += "background-color: #FAF;";
+                    stl += "font-weight: bold;";
+                    stl += "}\n";
+                    
+                    updateStyleSection(hostId + "_highlight", stl);
+                    pinTooltip = true;
+                    lastTooltip = "";
+                                        
+                    if (showPopup) {
+                        updatePopupText(hover$, path, tree, dataSet);
+                    
+                        hover$.show().queue(function() {
+                            placeHover($("#" + hostId), hover$, e);
+                            hover$.clearQueue();
+                        });
+                    }
+                    else {
+                        hover$.hide();
+                    }
+                }
+                else {
+                    debug("highlight disable");
+                    updateStyleSection(hostId + "_highlight", "");
+                    pinTooltip = false;
+                    hover$.hide();
+                }
+            }
+            
+            $("#" + hostId + " .flameNode").click(clickHandler);
+            $("#" + hostId + " .flameArea").click(clickHandler);
         }
 
+        function createZoomFrameNode(frame, frameNo) {
+            var fnode = $("<div class='zoomFrame'/>");
+            fnode.addClass(hostId + "_fr" + frameNo);
+            fnode.text(frame);
+            return fnode;                    
+        }
+        
+        function createZoomBar() {
+            var stack = $("<div class='zoomStack'/>");
+            var bar = $("<div class='zoomBar'/>");
+            var zoomInfo, i, fr, frame;
+            if (flameModel.filters.zoom[0] < 0) {
+                var n = flameModel.filters.zoom.length - 1;
+                if (n > 1) {
+                    zoomInfo = "zoom by " + n + " frames";
+                }
+                else {
+                    zoomInfo = "zoom by frame";
+                }                
+                for(i = 0; i < n; ++i) {
+                    fr = flameModel.filters.zoom[i + 1];
+                    frame = flameModel.data.frames[fr];
+                    createZoomFrameNode(frame, fr).prependTo(stack);
+                }
+            }
+            else {
+                zoomInfo = "zoom by trace";
+                for(i = 0; i < flameModel.filters.zoom.length - 1; ++i) {
+                    fr = flameModel.filters.zoom[i];
+                    frame = flameModel.data.frames[fr];
+                    createZoomFrameNode(frame, fr).prependTo(stack);
+                }
+            }
+            
+            $("<p class='zoomInfo'/>").text(zoomInfo).appendTo(bar);
+            $("<p class='doUnzoom'/>").text("Click to unzoom").appendTo(bar);
+            bar.click(unzoom);
+            bar.prependTo(stack);
+            return stack;
+        }
+        
         function redrawGraph() {
 
             var dataSet = flameModel.zoomedData;
@@ -343,6 +543,11 @@
 
                 rootNode.empty();
                 rootNode.append(graph);
+                
+                if (flameModel.filters.zoom) {
+                    debug("show zoom bar");
+                    rootNode.append(createZoomBar());
+                }
 
                 installTooltips(tree, dataSet);
             }

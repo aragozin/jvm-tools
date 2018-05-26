@@ -67,17 +67,22 @@ function wrapFlameModel(data) {
     }
 
     function applyZoom(trace, filter) {
+        var i;
         if (filter.zoom) {
             if (filter.zoom[0] == -1) {
                 // frame zoom
-                var frame = filter.zoom[1];
-                var n = trace.indexOf(frame);
-                if (n < 0) {
-                    return null;
+                var ntrace = trace;
+                for(i = 1; i < filter.zoom.length; ++i) {
+                    var frame = filter.zoom[i];
+                    var n = ntrace.indexOf(frame);
+                    if (n < 0) {
+                        return null;
+                    }
+                    else {
+                         ntrace = ntrace.slice(n);    
+                    }
                 }
-                else {
-                    return trace.slice(n);
-                }            
+                return ntrace;
             }
             else {
                 // path zoom
@@ -85,12 +90,12 @@ function wrapFlameModel(data) {
                 if (trace.length < len) {
                     return null;
                 }
-                for(var i = 0; i < len; ++i) {
+                for(i = 0; i < len; ++i) {
                     if (trace[i] != filter.zoom[i]) {
                         return null;
                     }
                 }
-                return trace.slice(len);            
+                return trace.slice(len - 1);            
             }
         }
         else {
