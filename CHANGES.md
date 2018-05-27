@@ -1,7 +1,10 @@
 Next version
 ----
-
 ...
+
+0.10 - 2018 May 28
+----
+- Added contention monitoring option to `ttop` command
 - `jstack` thread dump text format is now accepted by analytic commands
 - Added 'flame' command producing flame chart in HTML format
 
