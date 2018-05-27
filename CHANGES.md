@@ -2,6 +2,7 @@ Next version
 ----
 
 ...
+- `jstack` thread dump text format is now accepted by analytic commands
 - Added 'flame' command producing flame chart in HTML format
 
 0.9.3 - 2018 Mar 31
