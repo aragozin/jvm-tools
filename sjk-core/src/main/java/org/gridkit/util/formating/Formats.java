@@ -47,6 +47,30 @@ public class Formats {
 		return toFileDatestamp(System.currentTimeMillis());
 	}
 	
+	public static final String formatRate(double rate) {
+		if (rate == 0) {
+			return "    0";
+		}
+		else if (rate < 100) {
+			return String.format("%5.2f", rate);
+		}
+		else if (rate < 1000) {
+			return String.format("%5.1f", rate);
+		}
+		else if (rate < 100e3) {
+			return String.format("%4.1fk", rate / 1e3);
+		}
+		else if (rate < 100e6) {
+			return String.format("%4.1fm", rate / 1e6);
+		}
+		else if (rate < 100e9) {
+			return String.format("%4.1fg", rate / 1e9);
+		}
+		else {
+			return String.format("%5.1e", rate);
+		}
+	}
+	
 	public static final String toMemorySize(long n) {
 		if (n < (10l << 10)) {
 			return String.valueOf(n);
@@ -68,6 +92,13 @@ public class Formats {
 		System.out.println("ZERO_LEAD_DECIMAL_6: " + String.format(ZERO_LEAD_DECIMAL_6, 1234));
 		System.out.println(String.format("[%-6s]", "x"));
 		System.out.println(String.format("[%.2f]", 0.1));
+		System.out.println(String.format("[%5.2f]", 0.1));
+		System.out.println(String.format("[%05.2f]", 0.1));
+		System.out.println(String.format("[%5.2f]", 0f));
+		System.out.println(String.format("[%5.2f]", 10.11));
+		System.out.println(String.format("[%5.2f]", 100.11));
+		System.out.println(String.format("[%5.2f]", 1000.11));
+		System.out.println(String.format("[%5.02g]", 1000.11));
 		System.out.println("SimpleDataFormat: " + new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(System.currentTimeMillis()));
 	}
 }

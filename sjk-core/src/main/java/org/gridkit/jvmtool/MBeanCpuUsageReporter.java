@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Alexey Ragozin
+ * Copyright 2013-2018 Alexey Ragozin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.gridkit.jvmtool;
+
+import static org.gridkit.util.formating.Formats.formatRate;
 
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -30,6 +32,7 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.management.Attribute;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -80,6 +83,7 @@ public class MBeanCpuUsageReporter {
 	
 	private boolean bulkCpuEnabled;
 	private boolean threadAllocatedMemoryEnabled;
+	private boolean contentionMonitoringEnabled = false;
 	
 	private GcCpuUsageMonitor gcMon;
 	private SafePointMonitor spMon;
@@ -106,6 +110,18 @@ public class MBeanCpuUsageReporter {
 
 	public void setNativeThreadMonitor(NativeThreadMonitor ntMon) {
 	    this.ntMon = ntMon;
+	}
+	
+	public void setContentionMonitoringEnabled(boolean enabled) {
+		if (enabled) {
+			try {
+				Attribute attr = new Attribute("ThreadContentionMonitoringEnabled", Boolean.TRUE);
+				mserver.setAttribute(THREADING_MBEAN, attr);
+			} catch (Exception e) {
+				// ignore
+			}			
+		}
+		contentionMonitoringEnabled = enabled;
 	}
 	
 	private boolean getThreadingMBeanCapability(String attrName) {
@@ -269,13 +285,17 @@ public class MBeanCpuUsageReporter {
 			newNote.lastCpuTime = getThreadCpuTime(tid);
 			newNote.lastUserTime = getThreadUserTime(tid);
 			newNote.lastAllocatedBytes = getThreadAllocatedBytes(tid);
+			newNote.lastWaitCount = getThreadWaitCount(tid);
+			newNote.lastWaitTime = getThreadWaitTime(tid);
+			newNote.lastBlockCount = getThreadBlockCount(tid);
+			newNote.lastBlockTime = getThreadBlockTime(tid);
 			
 			newNotes.put(tid, newNote);
 			
 			long lastCpu = lastNote == null ? 0 : lastNote.lastCpuTime;
 			long lastUser = lastNote == null ? 0 : lastNote.lastUserTime;
 			long lastAlloc = lastNote == null ? 0 : lastNote.lastAllocatedBytes;
-			
+
 			deltaCpu = deltaCpu.add(BigInteger.valueOf(newNote.lastCpuTime - lastCpu));
 			deltaUser = deltaUser.add(BigInteger.valueOf(newNote.lastUserTime - lastUser));
 			deltaAlloc = deltaAlloc.add(BigInteger.valueOf(newNote.lastAllocatedBytes - lastAlloc));
@@ -290,7 +310,23 @@ public class MBeanCpuUsageReporter {
 				double userT = ((double)(newNote.lastUserTime - lastNote.lastUserTime)) / timeSplit;
 				double allocRate = ((double)(newNote.lastAllocatedBytes - lastNote.lastAllocatedBytes)) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
 
-				table.add(new ThreadLine(tid, 100 * userT, 100 * (cpuT - userT), allocRate, getThreadName(tid)));
+				double waitRate =  ((double)(newNote.lastWaitCount - lastNote.lastWaitCount)) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
+				double waitT =     newNote.lastWaitTime < 0 ? Double.NaN 
+						          : ((double)(newNote.lastWaitTime - lastNote.lastWaitTime)) / timeSplit;
+				double blockRate = ((double)(newNote.lastBlockCount - lastNote.lastBlockCount)) * TimeUnit.SECONDS.toNanos(1) / timeSplit;
+				double blockT =    newNote.lastBlockTime < 0 ? Double.NaN
+						          : ((double)(newNote.lastBlockTime - lastNote.lastBlockTime)) / timeSplit;
+
+				ThreadLine line = new ThreadLine(tid, getThreadName(tid));
+				line.userT = 100 * userT;
+				line.sysT = 100 * (cpuT - userT);
+				line.allocRate = allocRate;
+				line.waitRate = waitRate;
+				line.waitT = 100 * waitT;
+				line.blockRate = blockRate;
+				line.blockT = 100 * blockT;
+				
+				table.add(line);
 			}
 		}
 		
@@ -375,12 +411,27 @@ public class MBeanCpuUsageReporter {
 	}
 
 	private Object format(ThreadLine line) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("[%06d] user=%5.2f%% sys=%5.2f%% ", line.id, line.userT, line.sysT));
+		if (contentionMonitoringEnabled) {
+			if (Double.isNaN(line.waitT)) {
+				sb.append(String.format("wait=%s/s ", formatRate(line.waitRate)));
+			}
+			else {
+				sb.append(String.format("wait=%s/s(%5.2f%%) ", formatRate(line.waitRate), line.waitT));
+			}
+			if (Double.isNaN(line.blockT)) {
+				sb.append(String.format("block=%s/s ", formatRate(line.blockRate)));
+			}
+			else {
+				sb.append(String.format("block=%s/s(%5.2f%%) ", formatRate(line.blockRate), line.blockT));
+			}
+		}
 		if (threadAllocatedMemoryEnabled) {
-			return String.format("[%06d] user=%5.2f%% sys=%5.2f%% alloc=%6sb/s - %s", line.id, line.userT, (line.sysT), Formats.toMemorySize((long)line.allocRate), line.name);
+			sb.append(String.format("alloc=%6sb/s ", Formats.toMemorySize((long)line.allocRate)));
 		}
-		else {
-			return String.format("[%06d] user=%5.2f%% sys=%5.2f%% - %s", line.id, line.userT, (line.sysT), line.name);
-		}
+		sb.append(String.format("- %s", line.name));
+		return sb.toString();
 	}
 
 	private String getThreadName(long tid) {
@@ -403,6 +454,22 @@ public class MBeanCpuUsageReporter {
 	    return threadDump.get(tid).lastAllocatedBytes;
 	}
 
+	private long getThreadWaitCount(long tid) {
+		return threadDump.get(tid).lastThreadInfo.getWaitedCount();
+	}
+
+	private long getThreadWaitTime(long tid) {
+		return threadDump.get(tid).lastThreadInfo.getWaitedTime() * 1000000;
+	}
+
+	private long getThreadBlockCount(long tid) {
+		return threadDump.get(tid).lastThreadInfo.getBlockedCount();
+	}
+
+	private long getThreadBlockTime(long tid) {
+		return threadDump.get(tid).lastThreadInfo.getBlockedTime() * 1000000;
+	}
+	
 	private long getProcessCpuTime() {
 		try {
 			ObjectName bean = new ObjectName("java.lang:type=OperatingSystem");
@@ -430,21 +497,26 @@ public class MBeanCpuUsageReporter {
 		private long lastCpuTime;
 		private long lastUserTime;
 		private long lastAllocatedBytes;
+		private long lastWaitCount;
+		private long lastWaitTime;
+		private long lastBlockCount;
+		private long lastBlockTime;
 	}
 	
 	private static class ThreadLine {
 		
 		long id;
+		String name;
 		double userT;
 		double sysT;
 		double allocRate;
-		String name;
+		double waitRate;
+		double waitT;
+		double blockRate;
+		double blockT;
 		
-		public ThreadLine(long id, double userT, double sysT, double allocRate, String name) {
+		public ThreadLine(long id, String name) {
 			this.id = id;
-			this.userT = userT;
-			this.sysT = sysT;
-			this.allocRate = allocRate;
 			this.name = name;
 		}
 

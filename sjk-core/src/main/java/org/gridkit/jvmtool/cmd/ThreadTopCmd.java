@@ -74,6 +74,9 @@ public class ThreadTopCmd implements CmdRef {
 		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter threads by name")
 		private String threadFilter;
 		
+		@Parameter(names = {"-c", "--contention"}, description = "Enable contention monitoring")
+		private boolean contentionMon = false;
+		
 		@ParametersDelegate
 		private JmxConnectionInfo connInfo;
 		
@@ -111,6 +114,7 @@ public class ThreadTopCmd implements CmdRef {
 				}
 				
 				tmon.setTopLimit(topNumber);
+				tmon.setContentionMonitoringEnabled(contentionMon);
 				
 				if (threadFilter != null) {
 					tmon.setThreadFilter(GlobHelper.translate(threadFilter, "\0"));
