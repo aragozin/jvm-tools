@@ -14,7 +14,7 @@ What you can do with SJK?
  - [Monitor Java threads in real time][ttop]
  - [Analyze head dynamics with advanced class histograms][hh]
  - [Access MBean attributes and operation from command line][mx]
- - Create [flame graphs] and over reports from snapshots created VisualVM, Java Flight Recorder or [SJK's own sampler][stcap]
+ - Create [flame graphs][html-flame] and over reports from snapshots created VisualVM, Java Flight Recorder or [SJK's own sampler][stcap]
  
 See [full command reference](sjk-core/COMMANDS.md).
 
@@ -44,18 +44,7 @@ Pools thread CPU usage of target JVM and periodically report to console.
  - display thread memory allocation rate and cumulative process allocation rate
  - display safe point time consumption (only if attache via PID)
 
-[More details](sjk-core/COMMANDS.md#ttop-command)
-
-[jps]
-----
-
-Similar to `jps` from JDK. 
-
-- plus could display specific system properties of process in output
-- plus could display values of specific -XX for HotSpot JVM processes 
-- plus could filter process java processes by their system properties
- 
-[More details](sjk-core/COMMANDS.md#jps-command)
+[More details][ttop]
 
 [hh]
 ----
@@ -65,9 +54,9 @@ Similar to `jmap -histo`.
  - plus can show histogram of dead objects (histograms of all and live requested, then difference is calculated)
  - plus can show N top buckets in histogram
 
-[More details](sjk-core/COMMANDS.md#hh-command)
+[More details][hh]
 
-[stcap], [stcpy] and [ssa]
+[stcap], [stcpy], [ssa] and [flame]
 ----
 
 These commands provide basic sample profiler capabilities. `stcap` produces hyper-dense stack trace dump 
@@ -78,13 +67,13 @@ So far following reports are available
 
  - [sophisticated filtering] (time, stack trace, thread name)
  - stack frame histogram with advanced filtering options
- - flame graph visualization (SVG)
+ - flame graph visualization (SVG or [interactive HTML][html-flame])
  - per thread summary (CPU usage, memory allocation, etc)
  - converting back to text format
 
 Dump file can be also processed programatically.
 
-[More details](sjk-core/COMMANDS.md#ssa-command)
+[More details][ssa]
 
 [mx]
 -----
@@ -101,27 +90,40 @@ It can
  - connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
  - connect to JMX using host:port (password authentication is supported)
 
-[More details](sjk-core/COMMANDS.md#mx-command)
+[More details][mx]
+
+[jps]
+----
+
+Similar to `jps` from JDK. 
+
+- plus could display specific system properties of process in output
+- plus could display values of specific -XX for HotSpot JVM processes 
+- plus could filter process java processes by their system properties
+ 
+[More details][jps]
 
 [gc]
 -----
 
 Report information about GC in real time. Data is retrieved via JMX.
 
-[More details](sjk-core/COMMANDS.md#gc-command)
+[More details][gc]
 
 mxdump
 -----
 
 Dumps all MBeans of target java process to JSON.
 
- [ttop]: sjk-core/COMMANDS.md#ttop-command
- [jps]: sjk-core/COMMANDS.md#jps-command
- [hh]: sjk-core/COMMANDS.md#hh-command
- [gc]: sjk-core/COMMANDS.md#gc-command
- [mx]: sjk-core/COMMANDS.md#mx-command
- [stcap]: sjk-core/COMMANDS.md#stcap-command
- [stcpy]: sjk-core/COMMANDS.md#stcpy-command
- [ssa]: sjk-core/COMMANDS.md#ssa-command
+ [ttop]: sjk-core/docs/TTOP.md
+ [jps]: sjk-core/docs/JPS.md
+ [hh]: sjk-core/docs/HH.md
+ [gc]: sjk-core/docs/GC.md
+ [mx]: sjk-core/docs/MX.md
+ [stcap]: sjk-core/docs/STCAP.md
+ [stcpy]: sjk-core/docs/STCPY.md
+ [ssa]: sjk-core/docs/SSA.md
+ [flame]: sjk-hflame/docs/FLAME.md
  [sophisticated filtering]: sjk-core/src/main/resources/org/gridkit/jvmtool/cmd/ssa-help.md
  [flame graphs]: http://blog.ragozin.info/2016/01/flame-graphs-vs-cold-numbers.html
+ [html-flame]: sjk-hflame/docs/flame_graph_ui.md
