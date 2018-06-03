@@ -77,6 +77,17 @@
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>sun/**</exclude>
+                    <exclude>java/**</exclude>
+                    <exclude>jdk/**</exclude>
+                    <exclude>org/gridkit/lab/jvm/threaddump/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>

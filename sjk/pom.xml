@@ -37,11 +37,6 @@
       <artifactId>sjk-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>ygc-bench</artifactId>
-      <version>${project.version}</version>
-    </dependency>    
   </dependencies>
   
   <build>
@@ -70,6 +65,17 @@
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>sun/**</exclude>
+                    <exclude>java/**</exclude>
+                    <exclude>jdk/**</exclude>
+                    <exclude>org/gridkit/lab/jvm/threaddump/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
