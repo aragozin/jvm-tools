@@ -17,9 +17,12 @@ package org.gridkit.jvmtool.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -90,6 +93,7 @@ public class CommandLauncher {
 	}
 	
 	public boolean start(String[] args) {
+		breakCage(args);
 		JCommander parser = null;
 		try {
 
@@ -167,6 +171,10 @@ public class CommandLauncher {
 		}		
 	}
 
+	protected String[] getModulesUnlockCommand() {
+		return new String[0];
+	}
+	
 	protected List<String> getCommandPackages() {
 	    return Collections.singletonList(getClass().getPackage().getName() + ".cmd");
 	}
@@ -286,5 +294,67 @@ public class CommandLauncher {
 		    this.printUsage = printUsage;
 		    this.messages = messages;
 		}
+	}
+	
+	// special hack to workaround Java module system
+	private void breakCage(String... args) {
+		if ("false".equalsIgnoreCase(System.getProperty("sjk.breakCage", "true"))) {
+			// do not break
+			return;
+		}
+		RuntimeMXBean rtBean = ManagementFactory.getRuntimeMXBean();
+		String spec = rtBean.getSpecVersion();
+		if (spec.startsWith("1.")) {
+			// good classic Java
+			return;
+		}
+		else {
+			if (getModulesUnlockCommand().length > 0) {
+				// we need to unlock some modules
+				StringBuilder sb = new StringBuilder();
+				for(String a: rtBean.getInputArguments()) {
+					if (sb.length() > 0) {
+						sb.append(" ");
+					}
+					sb.append(a);
+				}
+				if (isUnlocked(sb.toString(), getModulesUnlockCommand())) {
+					// modules are unlocked
+					return;
+				}
+				else {
+					// break cage
+					List<String> command = new ArrayList<String>();
+					File jhome = new File(System.getProperty("java.home"));
+					File jbin = new File(jhome, "bin/java");
+					command.add(jbin.getPath());
+					for(String m: getModulesUnlockCommand()) {
+						command.add("--add-exports");
+						command.add(m);
+					}
+					command.add("-Dsjk.breakCage=false");
+					command.add("-cp");
+					command.add(rtBean.getClassPath());
+					command.addAll(rtBean.getInputArguments());
+					command.add(this.getClass().getName());
+					command.addAll(Arrays.asList(args));
+					
+					System.err.println("Restarting java with unlocked package access");
+					
+					ProcessSpawner.start(command);
+				}
+			}
+		}
+	}
+
+	private boolean isUnlocked(String cmd, String[] modules) {
+		for(String m: modules) {
+			String c1 = "--add-exports " + m;
+			String c2 = "--add-exports=" + m;
+			if (!cmd.contains(c1) && !cmd.contains(c2)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

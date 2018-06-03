@@ -11,6 +11,11 @@ public class SJK extends CommandLauncher {
         new SJK().start(args);
     }    
     
+	@Override
+	protected String[] getModulesUnlockCommand() {
+		return new String[] {"java.base/jdk.internal.perf=ALL-UNNAMED"};
+	}
+
 	protected List<String> getCommandPackages() {
 	    return Arrays.asList("org.gridkit.jvmtool.cmd", "org.gridkit.jvmtool.hflame.cmd");
 	}
