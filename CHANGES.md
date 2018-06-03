@@ -2,6 +2,11 @@ Next version
 ----
 ...
 
+
+0.10.1 - 2018 Jun 4
+----
+- Java 9/10 compatibility fixes
+
 0.10 - 2018 May 28
 ----
 - Added contention monitoring option to `ttop` command
