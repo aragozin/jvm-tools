@@ -2,6 +2,7 @@ Next version
 ----
 ...
 
+- Fixed parsing JFR files under JDK 9/10
 
 0.10.1 - 2018 Jun 4
 ----
