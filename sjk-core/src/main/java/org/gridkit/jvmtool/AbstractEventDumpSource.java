@@ -177,7 +177,9 @@ public abstract class AbstractEventDumpSource {
     	}
     	ServiceLoader<EventDumpParser> loader = ServiceLoader.load(EventDumpParser.class);
 		for(EventDumpParser edp: loader) {
-			sb.append(edp).append(", ");
+			if (edp.isFunctional()) {
+				sb.append(edp).append(", ");
+			}
 		}
 		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 2);

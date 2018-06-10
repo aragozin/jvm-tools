@@ -35,21 +35,22 @@
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-cli</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-stacktrace</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>sjk-hflame</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-jfr</artifactId>
+            <artifactId>sjk-jfr5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>sjk-jfr6</artifactId>
         </dependency>
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>

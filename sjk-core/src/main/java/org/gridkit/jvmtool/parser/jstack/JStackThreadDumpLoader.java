@@ -31,6 +31,10 @@ import org.gridkit.jvmtool.event.MorphingEventReader;
 
 public class JStackThreadDumpLoader implements EventDumpParser {
 
+	@Override
+	public boolean isFunctional() {
+		return true;
+	}
 
 	@Override
 	public EventReader<Event> open(InputStreamSource source) throws IOException {

@@ -35,17 +35,14 @@
     <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>sjk-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>mxdump</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>ygc-bench</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

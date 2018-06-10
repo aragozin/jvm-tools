@@ -81,6 +81,11 @@
       </dependency>
       <dependency>
         <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>sjk-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
         <artifactId>sjk-stacktrace</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -89,17 +94,32 @@
         <artifactId>sjk-hflame</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>mxdump</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>ygc-bench</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- Perfkit modules -->
       <dependency>
         <groupId>org.gridkit.jvmtool</groupId>
-        <artifactId>sjk-jfr</artifactId>
-        <version>0.3</version>
+        <artifactId>sjk-jfr5</artifactId>
+        <version>0.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>sjk-jfr6</artifactId>
+        <version>0.4</version>
       </dependency>
       <dependency>
         <groupId>org.gridkit.jvmtool</groupId>
         <artifactId>sjk-nps</artifactId>
-        <version>0.3</version>
+        <version>0.4</version>
       </dependency>
       <dependency>
         <groupId>org.gridkit.lab</groupId>
@@ -111,7 +131,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.10</version>
+        <version>4.11</version>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>

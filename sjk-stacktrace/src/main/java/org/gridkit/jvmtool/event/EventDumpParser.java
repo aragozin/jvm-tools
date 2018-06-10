@@ -11,11 +11,13 @@ import java.util.ServiceLoader;
  */
 public interface EventDumpParser {
 
+	public boolean isFunctional();
+	
 	/**
 	 * @return <code>null</code> if cannot open dump or {@link EventReader}
 	 * @throws IOException
 	 */
-	EventReader<Event> open(InputStreamSource source) throws IOException;
+	public EventReader<Event> open(InputStreamSource source) throws IOException;
 	
 	interface InputStreamSource {
 		

@@ -17,10 +17,9 @@ package org.gridkit.jvmtool;
 
 import java.lang.management.ManagementFactory;
 
-import junit.framework.Assert;
-
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.junit.Test;
+import org.junit.Assert;
 
 /**
  * JUnit command runner.
