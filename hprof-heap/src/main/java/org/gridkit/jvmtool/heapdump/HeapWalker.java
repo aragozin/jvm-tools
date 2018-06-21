@@ -270,16 +270,15 @@ public class HeapWalker {
 		if (!"java.lang.String".equals(obj.getJavaClass().getName()))
 			throw new IllegalArgumentException("Is not a string: " + obj.getInstanceId() + " (" + obj.getJavaClass().getName() + ")");
 		
-		byte UTF16 = 1;
 		Boolean COMPACT_STRINGS = (Boolean) obj.getJavaClass().getValueOfStaticField("COMPACT_STRINGS");
 		if (COMPACT_STRINGS == null)
 			return stringValue_java8(obj); // We're pre Java 9
 		
 		Object valueInstance = obj.getValueOfField("value");
-		PrimitiveArrayInstance chars = (PrimitiveArrayInstance) ( valueInstance);
+		PrimitiveArrayInstance chars = (PrimitiveArrayInstance) valueInstance;
 		
-		byte coderField = (Byte) obj.getValueOfField("coder");
-		byte coder = COMPACT_STRINGS ? coderField : UTF16;
+		byte UTF16 = 1;
+		byte coder = COMPACT_STRINGS ? (Byte) obj.getValueOfField("coder") : UTF16;
 		int len = chars.getLength() >> coder;
 		char[] text = new char[len];
 		
