@@ -20,13 +20,13 @@ import java.io.IOException;
 
 import org.junit.Before;
 
-public class BaseHeapTest_WithCompressedFastHprofHeap extends BaseHeapTest {
+public class BaseHeap_WithHprofHeap_Test extends BaseHeapTest {
 
     Heap heap;
 
     @Before
     public void initHeap() throws FileNotFoundException, IOException {
-        heap = HeapFactory.createFastHeap(HeapDumpProcuder.getCompressedHeapDump());
+        heap = HeapFactory.createHeap(HeapDumpProcuder.getHeapDump());
     }
 
     @Override
