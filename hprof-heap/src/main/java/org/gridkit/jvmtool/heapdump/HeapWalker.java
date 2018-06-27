@@ -264,7 +264,7 @@ public class HeapWalker {
         }
     }
 
-	public static String stringValue(Instance obj) {
+    public static String stringValue(Instance obj) {
 		if (obj == null) return null;
 		  
 		if (!"java.lang.String".equals(obj.getJavaClass().getName()))
@@ -284,11 +284,14 @@ public class HeapWalker {
 		
 		List<String> values = (List) chars.getValues();
 		if (coder == UTF16)
+			for (int i = 0; i < text.length; i++) {
+				text[i] = (char)
+				    ((Integer.parseInt(values.get(i*2+1)) << 8)
+				   | (Integer.parseInt(values.get(i*2)) & 0xFF));
+			}
+		else
 			for (int i = 0; i < text.length; i++)
-				text[i] = values.get(i).charAt(0);
-			else
-				for (int i = 0; i < text.length; i++)
-					text[i] = (char) Integer.parseInt(values.get(i));
+				text[i] = (char) Integer.parseInt(values.get(i));
 		
 		return new String(text);
 	}
