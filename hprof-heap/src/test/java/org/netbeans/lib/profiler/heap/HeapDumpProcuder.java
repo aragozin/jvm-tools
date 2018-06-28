@@ -24,6 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import javax.management.JMX;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.gridkit.lab.jvm.attach.HeapDumper;
 import org.junit.Test;
 
@@ -35,15 +40,15 @@ public class HeapDumpProcuder {
         PID = Integer.valueOf(pid.substring(0, pid.indexOf('@')));
     }
 
-    private static String HEAP_DUMP_PATH = "target/dump/test.dump";
-    private static String HEAP_DUMP_GZ_PATH = "target/dump/test.dump.gz";
+    private static String HEAP_DUMP_PATH = "target/dump/testdump.hprof";
+    private static String HEAP_DUMP_GZ_PATH = "target/dump/testdump.hprof.gz";
 
     public static File getHeapDump() {
         File file = new File(HEAP_DUMP_PATH);
         if (!file.exists()) {
             System.out.println("Generating heap dump: " + HEAP_DUMP_PATH);
             holder.initTestHeap();
-            System.out.println(HeapDumper.dumpLive(PID, HEAP_DUMP_PATH, 120000));
+            System.out.println(dumpLive(HEAP_DUMP_PATH, 120000));
         }
         return file;
     }
@@ -69,6 +74,38 @@ public class HeapDumpProcuder {
             fos.close();
         }
         return file;
+    }
+
+    public static String dumpLive(String targetFile, long timeoutMs) {
+    	try {
+    		return HeapDumper.dumpLive(PID, targetFile, timeoutMs);
+    	}
+    	catch(RuntimeException e) {
+    		Throwable ee = e.getCause();
+    		if (ee instanceof IOException && ee.getMessage().equals("Can not attach to current VM")) {
+    			// look like it is modern Java, let's try JMX
+    			return dumpHeapViaMBean(targetFile);
+    		}
+    		else {
+    			throw e;
+    		}
+    	}
+    }
+
+    private static String dumpHeapViaMBean(String targetFile) {
+		try {
+			MBeanServer factory = ManagementFactory.getPlatformMBeanServer();
+			ObjectName name = new ObjectName("com.sun.management:type=HotSpotDiagnostic");
+			HotSpotDiagnostic hsDiag = JMX.newMXBeanProxy(factory, name, HotSpotDiagnostic.class);
+			hsDiag.dumpHeap(targetFile, true);		
+			return "Dump heap via JMX";
+		} catch (MalformedObjectNameException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public interface HotSpotDiagnostic {
+    	public void dumpHeap(String fileName, boolean live);
     }
     
     // Called manually from IDE to clean cached dump
@@ -113,6 +150,8 @@ public class HeapDumpProcuder {
 	    		a.newInner("A.4"),
 	    	};
 	    }
+	    
+	    DummyS dummyS = new DummyS();
 	    
 	    public void initTestHeap() {
 	

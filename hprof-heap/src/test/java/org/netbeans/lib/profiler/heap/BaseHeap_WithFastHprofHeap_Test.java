@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import org.junit.Before;
 
-public class BaseHeapTest_WithFastHprofHeap extends BaseHeapTest {
+public class BaseHeap_WithFastHprofHeap_Test extends BaseHeapTest {
 
     Heap heap;
 

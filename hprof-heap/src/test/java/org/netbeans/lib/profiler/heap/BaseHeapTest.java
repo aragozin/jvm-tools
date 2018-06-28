@@ -359,6 +359,39 @@ public abstract class BaseHeapTest {
     	assertThat(scan(set, "*")).hasSize(50);
     }
     
+    @Test
+    public void verify_string_decoding_latin() {
+    	Heap heap = getHeap();
+    	JavaClass jclass = heap.getJavaClassByName(DummyS.class.getName());
+    	
+    	DummyS proto = new DummyS();
+    	Instance dummyS = jclass.getInstances().get(0);
+    	
+    	assertThat(valueOf(dummyS, "latinString")).isEqualTo(proto.latinString);    	
+    }
+
+    @Test
+    public void verify_string_decoding_cyrillic() {
+    	Heap heap = getHeap();
+    	JavaClass jclass = heap.getJavaClassByName(DummyS.class.getName());
+    	
+    	DummyS proto = new DummyS();
+    	Instance dummyS = jclass.getInstances().get(0);
+    	
+    	assertThat(valueOf(dummyS, "cyrillicString")).isEqualTo(proto.cyrillicString);
+    }
+
+    @Test
+    public void verify_string_decoding_unicode() {
+    	Heap heap = getHeap();
+    	JavaClass jclass = heap.getJavaClassByName(DummyS.class.getName());
+    	
+    	DummyS proto = new DummyS();
+    	Instance dummyS = jclass.getInstances().get(0);
+    	
+    	assertThat(valueOf(dummyS, "unicodeString")).isEqualTo(proto.unicodeString);
+    }
+    
     private Object[] scan(Iterable<Instance> instances, String path) {
     	List<Object> val = new ArrayList<Object>();
     	for(Instance i : instances) {
