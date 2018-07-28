@@ -40,6 +40,7 @@ public class FlameTemplateProcessorCheck {
 		Document doc = loadXml("flame_template.html");
 
 		FlameTemplateProcessor ftp = new FlameTemplateProcessor(doc);
+//		ftp.retainDebug(true);
 		
 		ftp.setDataSet("fg1", loadDataSet("hz1_dump.sjk"));
 		

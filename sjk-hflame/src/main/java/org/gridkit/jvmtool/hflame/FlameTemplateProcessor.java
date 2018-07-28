@@ -49,6 +49,7 @@ public class FlameTemplateProcessor {
 	private final Document template;
 	private final Map<String, String> imports = new HashMap<String, String>();
 	private final Map<String, JsonFlameDataSet> datasets = new HashMap<String, JsonFlameDataSet>();
+	private boolean retainDebug = false;
 	
 	public FlameTemplateProcessor(Document template) {
 		this.template = template;
@@ -59,6 +60,10 @@ public class FlameTemplateProcessor {
 		// nothing
 	}
 
+	public void retainDebug(boolean retain) {
+		retainDebug = retain;
+	}
+	
 	public void setDataSet(String name, JsonFlameDataSet dataSet) {
 		datasets.put(name, dataSet);
 	}
@@ -118,7 +123,9 @@ public class FlameTemplateProcessor {
 				}
 			}
 			if (id != null && id.startsWith("debug_")) {
-				head.removeChild(e);
+				if (!retainDebug) {
+					head.removeChild(e);
+				}
 			}
 			else if (id != null && id.startsWith("importflame_")) {
 				String flameName = id.substring("importflame_".length());
@@ -133,7 +140,9 @@ public class FlameTemplateProcessor {
 		for(Element e: elementsOf(node)) {
 			String id = id(e);
 			if (id != null && id.startsWith("debug_")) {
-				node.removeChild(e);
+				if (!retainDebug) {
+					node.removeChild(e);
+				}
 			}
 			else if (id != null && id.startsWith("importflame_")) {
 				String flameName = id.substring("importflame_".length());
@@ -207,8 +216,8 @@ public class FlameTemplateProcessor {
 			}
 			if (line.contains("!!THROW AWAY BELOW!!")) {
 				break;
-			}
-			if (line.contains("debug(") && line.contains(");")) {
+			}			
+			if (!retainDebug && line.contains("debug(") && line.contains(");")) {
 				// filtering out debug
 				continue;
 			}

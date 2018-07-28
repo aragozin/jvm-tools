@@ -22,7 +22,7 @@
         var btn$ = div$.find(".btn");
         var panel$ = div$.find(".panel");
         
-        btn$.click(function() {            
+        btn$.click(function() {
             if (panel$.is(":visible")) {
                 debug("panel visible");
                 hidePanel();
@@ -39,6 +39,7 @@
         filterHandler.updateCaption(btn$);
     
         $(wnd).click(function(e) {
+            debug("popup click handle");
             checkOutOfThreadFilterClick(e);             
         });
     
@@ -53,6 +54,9 @@
                         debug("click inside");
                     }
                 }
+            }
+            else {
+                debug("click on button");
             }
         }
         

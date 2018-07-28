@@ -478,8 +478,16 @@
                 }
             }
             
+            function hideHighlight(e) {
+                debug("highlight disable via flame area");
+                updateStyleSection(hostId + "_highlight", "");
+                lastHightlight = null;
+                pinTooltip = false;
+                hover$.hide();                
+            }
+            
+            $("#" + hostId + " .flameArea").click(hideHighlight);
             $("#" + hostId + " .flameNode").click(clickHandler);
-            $("#" + hostId + " .flameArea").click(clickHandler);
         }
 
         function createZoomFrameNode(frame, frameNo) {
