@@ -16,6 +16,7 @@
 package org.gridkit.jvmtool.cmd;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,11 +34,11 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.TabularData;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.jvmtool.jackson.JsonGenerator;
+import org.gridkit.jvmtool.jackson.JsonMiniFactory;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -82,13 +83,12 @@ public class MxDumpCmd implements CmdRef {
 	        		q = new ObjectName(query);
 	        	}
 				MBeanServerConnection jmx = conn.getMServer();
-				JsonFactory jsonFactory = new JsonFactory();
-				JsonGenerator jg = jsonFactory.createJsonGenerator(System.out);
+				JsonGenerator jg = JsonMiniFactory.createJsonGenerator(new OutputStreamWriter(System.out));
 				jg.useDefaultPrettyPrinter();
 				jg.writeStartObject();
 				listBeans(q, jg, jmx);
 				jg.writeEndObject();
-				jg.close();
+				jg.flush();
 				System.out.println();
 				System.out.flush();
 			} catch (Exception e) {
