@@ -1,0 +1,21 @@
+new.name: NEW
+new.rule: #State=NEW
+
+runnable.name: RUNNABLE
+runnable.rule: #State=RUNNABLE
+runnable.prop.color: #552222
+
+blocked.name: BLOCKED
+blocked.rule: #State=BLOCKED
+blocked.prop.color: #EE4444
+
+waiting.name: WAITING
+waiting.rule: #State=WAITING
+waiting.prop.color: #7755AA
+ 
+time_waiting.name: TIMED_WAITING
+time_waiting.rule: #State=TIMED_WAITING
+time_waiting.prop.color: #5577AA
+
+terminated.name: TERMINATED
+terminated.rule: #State=TERMINATED
