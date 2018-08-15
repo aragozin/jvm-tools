@@ -1,10 +1,11 @@
 package org.gridkit.jvmtool.stacktrace.analytics;
 
 import java.lang.Thread.State;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,12 +13,6 @@ import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
 import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.AndCombinatorFilter;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.AnyOfFrameMatcher;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.LastFollowedFilter;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.LastNotFollowedFilter;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.OrCombinatorFilter;
-import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.PatternFilter;
 
 /**
  * Default implementation of factory is producing thread safe filter
@@ -28,105 +23,6 @@ import org.gridkit.jvmtool.stacktrace.analytics.ClassificatorAST.PatternFilter;
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class BasicFilterFactory {
-
-    public ThreadSnapshotFilter build(ClassificatorAST.Filter filter) {
-        if (filter instanceof AndCombinatorFilter) {
-            List<ThreadSnapshotFilter> list = new ArrayList<ThreadSnapshotFilter>();
-            for(ClassificatorAST.Filter f: ((AndCombinatorFilter)filter).subfilters) {
-                if (!(f instanceof ClassificatorAST.TrueFilter)) {
-                    if (f instanceof ClassificatorAST.FalseFilter) {
-                        return falseFilter();
-                    }
-                    list.add(build(f));
-                }
-            }
-            if (list.isEmpty()) {
-                return trueFilter();
-            }
-            else {
-                return disjunction(list);
-            }
-        }
-        else if (filter instanceof OrCombinatorFilter) {
-            List<ThreadSnapshotFilter> list = new ArrayList<ThreadSnapshotFilter>();
-            for(ClassificatorAST.Filter f: ((OrCombinatorFilter)filter).subfilters) {
-                if (!(f instanceof ClassificatorAST.FalseFilter)) {
-                    if (f instanceof ClassificatorAST.TrueFilter) {
-                        return trueFilter();
-                    }
-                    list.add(build(f));
-                }
-            }
-            if (list.isEmpty()) {
-                return falseFilter();
-            }
-            else {
-                return conjunction(list);
-            }
-        }
-        else if (filter instanceof ClassificatorAST.TrueFilter) {
-            return trueFilter();
-        }
-        else if (filter instanceof ClassificatorAST.FalseFilter) {
-            return falseFilter();
-        }
-        else if (filter instanceof ClassificatorAST.LastFollowedFilter) {
-            LastFollowedFilter lff = (LastFollowedFilter) filter;
-            return followed(lastFrame(build(lff.snippet)), build(lff.followFilter));
-        }
-        else if (filter instanceof ClassificatorAST.LastNotFollowedFilter) {
-            LastNotFollowedFilter lff = (LastNotFollowedFilter) filter;
-            return followed(lastFrame(build(lff.snippet)), not(build(lff.followFilter)));
-        }
-        else if (filter instanceof ClassificatorAST.PatternFilter) {
-            PatternFilter pf = (PatternFilter) filter;
-            return frameFilter(patternFrameMatcher(pf.patterns));
-        }
-        else {
-            throw new IllegalArgumentException("Unknow AST node: " + filter);
-        }
-    }
-
-    public StackFrameMatcher build(ClassificatorAST.FrameMatcher matcher) {
-        if (matcher instanceof ClassificatorAST.PatternFilter) {
-            PatternFilter pf = (PatternFilter) matcher;
-            return patternFrameMatcher(pf.patterns);
-        }
-        else if (matcher instanceof ClassificatorAST.FalseFilter) {
-            return falseFrameMatcher();
-        }
-        else if (matcher instanceof ClassificatorAST.AnyOfFrameMatcher) {
-            AnyOfFrameMatcher any = (AnyOfFrameMatcher) matcher;
-            List<String> patterns = new ArrayList<String>();
-            List<StackFrameMatcher> list = new ArrayList<StackFrameMatcher>();
-            for(ClassificatorAST.FrameMatcher m: any.submatchers) {
-                if (m instanceof ClassificatorAST.FalseFilter) {
-                    continue;
-                }
-                else if (m instanceof ClassificatorAST.PatternFilter) {
-                    patterns.addAll(((PatternFilter)m).patterns);
-                }
-                else {
-                    list.add(build(m));
-                }
-            }
-            if (!patterns.isEmpty()) {
-                list.add(patternFrameMatcher(patterns));
-            }
-            if (list.isEmpty()) {
-                return falseFrameMatcher();
-            }
-            else if (list.size() == 1) {
-                return list.get(0);
-            }
-            else {
-                return matcherConjunction(list);
-            }            
-        }
-        else {
-            throw new IllegalArgumentException("Unknown ASt node: " + matcher);
-        }
-    }
 
     public ThreadSnapshotFilter disjunction(ThreadSnapshotFilter... subfilters) {
         return disjunction(Arrays.asList(subfilters));
@@ -200,6 +96,10 @@ public class BasicFilterFactory {
         return new TrueFilter();
     }
 
+    public ThreadSnapshotFilter threadStateMatter(String matcher) {
+        return new ThreadStateMatcher(matcher);
+    }
+    
     public StackFrameMatcher patternFrameMatcher(String... patterns) {
         return patternFrameMatcher(Arrays.asList(patterns));
     }
@@ -414,6 +314,35 @@ public class BasicFilterFactory {
         public boolean evaluate(StackFrame frame) {
             return regEx.matcher(frame).lookingAt();
         }
+    }
+
+    protected static class ThreadStateMatcher implements ThreadSnapshotFilter {
+    	
+    	private final EnumSet<State> states;
+    	private final boolean matchNull;
+    	
+    	ThreadStateMatcher(String pattern) {
+    		Pattern regEx = Pattern.compile(wildCardTranslate(pattern));
+    		Set<State> st = new HashSet<State>();
+    		for(State s: State.values()) {
+    			if (regEx.matcher(s.toString()).matches()) {
+    				st.add(s);
+    			}
+    		}
+    		states = st.isEmpty() ? EnumSet.noneOf(State.class) : EnumSet.copyOf(st);
+    		matchNull = regEx.matcher(String.valueOf((Object)null)).matches();
+    	}
+    	
+    	@Override
+		public boolean evaluate(ThreadSnapshot snapshot) {
+			State state = snapshot.threadState();
+			if (state == null) {
+				return matchNull;
+			}
+			else {
+				return states.contains(state);
+			}
+		}
     }
     
     protected static class ThreadSnapProxy implements ThreadSnapshot {

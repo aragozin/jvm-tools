@@ -26,9 +26,15 @@ public class FilterParserMatchingTest {
         
         String name;
         List<StackFrame> frame = new ArrayList<StackFrame>();
+        State state = null;
         
         public Trace(String name) {
             this.name = name;
+        }
+        
+        public Trace(String name, State state) {
+        	this.name = name;
+        	this.state = state;
         }
         
         public Trace t(String trace) {
@@ -52,10 +58,10 @@ public class FilterParserMatchingTest {
             return name;
         }
     }
-    
+
     private static List<Object[]> cases = new ArrayList<Object[]>();
 
-    public static final Trace TRACE_A = new Trace("TRACE_A")
+    public static final Trace TRACE_A = new Trace("TRACE_A", State.RUNNABLE)
     .t("com.acme.MyClass")
     .t("test.MyBean.init(MyBean.java:100)")
     .t("com.acme.MyClass$1");
@@ -108,7 +114,7 @@ public class FilterParserMatchingTest {
 
     public static final Trace TRACE_B5 = new Trace("TRACE_B5")
     .t("test.server.Handler.run")
-    .t("test.server.Handler.process(X.java:128)") // differnt line number
+    .t("test.server.Handler.process(X.java:128)") // different line number
     .t("test.myapp.security.Filter.process")
     .t("test.framework.Rederer.execute")
     .t("test.framework.Bijector.invoke")
@@ -127,6 +133,7 @@ public class FilterParserMatchingTest {
         caseMatch   (TRACE_A, "**.acme.*");
         caseMatch   (TRACE_A, "**.MyCla");
         caseMatch   (TRACE_A, "**.MyClass$1");
+        caseNonMatch(TRACE_A, "!**.MyClass$1");
         caseMatch   (TRACE_A, "**.*$1");
         caseNonMatch(TRACE_A, "*.MyClass");
         caseNonMatch(TRACE_A, "MyClass");
@@ -142,6 +149,11 @@ public class FilterParserMatchingTest {
         caseNonMatch(TRACE_B3, smartMatch);
         caseMatch   (TRACE_B4, smartMatch);
         caseNonMatch(TRACE_B5, smartMatch);
+        
+        caseMatch   (TRACE_A, "#STATE=RUN*");
+        caseNonMatch(TRACE_A, "#State=null");
+        caseNonMatch(TRACE_B1, "#state=RUN*");
+        caseMatch   (TRACE_B1, "#STATE=null");
         
         return cases;
     }
@@ -186,7 +198,7 @@ public class FilterParserMatchingTest {
             
             @Override
             public State threadState() {
-                return null;
+                return trace.state;
             }
             
             @Override

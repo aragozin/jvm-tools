@@ -9,6 +9,7 @@ public class TraceFilterPredicateParser {
 
     private static final String REG_PAR = "[()]";
     private static final String REG_PATTERN = "[\\w\\d.:*$]+";
+    private static final String REG_STATE_PATTERN = "#[Ss][Tt][Aa][Tt][Ee]=[\\w*]+";
     private static final String REG_COMMA = "[,]";
     private static final String REG_PLUS = "[+]";
     private static final String REG_EXCL = "[!]";
@@ -20,15 +21,16 @@ public class TraceFilterPredicateParser {
     static final Pattern TOKENIZER;
     static {
         String pattern = "("
-                + "(" + REG_PAR + ")|"
-                + "(" + REG_PATTERN + ")|"
-                + "(" + REG_COMMA + ")|"
-                + "(" + REG_PLUS + ")|"
-                + "(" + REG_EXCL + ")|"
-                + "(" + REG_SLASH_PLUS + ")|"
-                + "(" + REG_SLASH_EXCL + ")|"
-                + "(" + REG_SLASH_UP_PLUS + ")|"
-                + "(" + REG_SLASH_UP_EXCL + ")|"
+                + "(" + REG_PAR + ")|"            	// 2
+                + "(" + REG_PATTERN + ")|"        	// 3
+                + "(" + REG_COMMA + ")|"          	// 4
+                + "(" + REG_PLUS + ")|"          	// 5
+                + "(" + REG_EXCL + ")|"           	// 6
+                + "(" + REG_SLASH_PLUS + ")|"    	// 7
+                + "(" + REG_SLASH_EXCL + ")|"   	// 8
+                + "(" + REG_SLASH_UP_PLUS + ")|"	// 9
+                + "(" + REG_SLASH_UP_EXCL + ")|"	// 10
+                + "(" + REG_STATE_PATTERN + ")|"	// 11
                 + "\\s+)";
         TOKENIZER = Pattern.compile(pattern);
     }
@@ -102,6 +104,9 @@ public class TraceFilterPredicateParser {
                     else if (matcher.group(10) != null) {
                         processOp(TokenType.SLASH_UP_EXCL, 2);
                     }
+                    else if (matcher.group(11) != null) {
+                    	processStatePattern();
+                    }
                 }
                 else {
                     throw error(matcher.regionStart(), "cannot parse");
@@ -135,6 +140,29 @@ public class TraceFilterPredicateParser {
             op.offset = matcher.start();
             
             pushToken(op);
+        }
+
+        private void processUniverse() {
+        	String pattern = matcher.group(1);
+        	Op op = new Op();
+        	op.toc = TokenType.UNIVERSE;
+        	op.rank = -1;
+        	op.body = pattern;
+        	op.offset = matcher.start();
+        	
+        	pushToken(op);
+        }
+
+        private void processStatePattern() {
+        	String pattern = matcher.group(1);
+        	int off = "#STATE=".length();
+        	Op op = new Op();
+        	op.toc = TokenType.STATE_PATTERN;
+        	op.rank = -1;
+        	op.body = pattern.substring(off);
+        	op.offset = matcher.start() + off;
+        	
+        	pushToken(op);
         }
 
         private void processPar() {
@@ -201,7 +229,13 @@ public class TraceFilterPredicateParser {
             }
             else if (op.rank >= 0) {
                 if (stack.isEmpty()) {
-                    error(op.offset, " operator expected");
+                	if (op.toc == TokenType.EXCL) {
+                		// special case
+                		processUniverse();
+                	}
+                	else {
+                		error(op.offset, " operator expected");
+                	}
                 }
                 while(true) {
                     int lor = lastOpRank();
@@ -258,6 +292,8 @@ public class TraceFilterPredicateParser {
             switch(node.toc) {
                 case PATTERN:
                     return filterFactory.frameFilter(filterFactory.patternFrameMatcher(refinePattern(node.body)));
+                case STATE_PATTERN:
+                	return filterFactory.threadStateMatter(node.body);
                 case COMMA:
                     return produceConjunctionFilter(node);
                 case PLUS:
@@ -365,6 +401,8 @@ public class TraceFilterPredicateParser {
             switch(node.toc) {
                 case PATTERN:
                     return filterFactory.patternFrameMatcher(refinePattern(node.body));
+                case STATE_PATTERN:
+                	throw error(node.offset, "Unsupported for frame predicate");
                 case COMMA:
                     return produceConjunctionMatcher(node);
                 case PLUS:
@@ -390,6 +428,7 @@ public class TraceFilterPredicateParser {
     private static enum TokenType {
         UNIVERSE,
         PATTERN,
+        STATE_PATTERN,
         COMMA,
         PLUS,
         EXCL,
