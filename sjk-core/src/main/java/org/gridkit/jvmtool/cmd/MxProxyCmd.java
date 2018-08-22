@@ -117,6 +117,8 @@ public class MxProxyCmd implements CmdRef {
             		return;
             	}
             	
+            	System.setProperty("java.rmi.server.hostname", bhost);
+            	
         		MBeanServerConnection connection = jmxConnectionInfo.getMServer();
         		System.out.println("Connected to target JMX endpoint");
             	
