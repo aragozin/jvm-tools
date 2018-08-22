@@ -444,6 +444,21 @@ public class CliCheck {
     public void mprx() {
     	exec("mprx", "-p", PID,  "-b", "14000");
     }
+    
+    @Test
+    public void vminfo_sysprops() {
+    	exec("vminfo", "-p", PID, "--sysprops");
+    }
+
+    @Test
+    public void vminfo_agentprops() {
+    	exec("vminfo", "-p", PID, "--agentprops");
+    }
+
+    @Test
+    public void vminfo_perf() {
+    	exec("vminfo", "-p", PID, "--perf");
+    }
 
     private void exec(String... cmd) {
         SJK sjk = new SJK();

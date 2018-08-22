@@ -51,7 +51,7 @@ public class HeapHistoCmd implements CmdRef {
 		@ParametersDelegate
 		private CommandLauncher host;
 		
-		@Parameter(names = {"-p", "--pid"}, description = "Process ID")
+		@Parameter(names = {"-p", "--pid"}, description = "Process ID", required = true)
 		private int pid;
 		
 		@Parameter(names = "--live", description = "Live objects histogram")
