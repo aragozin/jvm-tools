@@ -2,11 +2,16 @@ package org.gridkit.util.formating;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.junit.Test;
 
 public class SimpleNumberFormatterTest {
+
+    private static char localeDecimalSeparator = ((DecimalFormat)DecimalFormat.getInstance()).getDecimalFormatSymbols().getDecimalSeparator();
 
     @Test
     public void verify_decimal() {
@@ -18,10 +23,10 @@ public class SimpleNumberFormatterTest {
 
         assertThat(snf.formatDouble(1000)).isEqualTo("1000");
         assertThat(snf.formatDouble(1)).isEqualTo("01");
-        assertThat(snf.formatDouble(1.1)).isEqualTo("01.1");
-        assertThat(snf.formatDouble(1.55)).isEqualTo("01.55");
-        assertThat(snf.formatDouble(1.5555)).isEqualTo("01.56");
-        assertThat(snf.formatDouble(10.5555)).isEqualTo("10.56");
+        assertThat(snf.formatDouble(1.1)).isEqualTo("01" + localeDecimalSeparator + "1");
+        assertThat(snf.formatDouble(1.55)).isEqualTo("01" + localeDecimalSeparator + "55");
+        assertThat(snf.formatDouble(1.5555)).isEqualTo("01" + localeDecimalSeparator + "56");
+        assertThat(snf.formatDouble(10.5555)).isEqualTo("10" + localeDecimalSeparator + "56");
         
     }
 
