@@ -2,6 +2,10 @@ Next version
 ----
 ...
 
+- `mxprx` command force correct RMI hostname usage
+- `vminfo` command added
+- Stack trace filter language improvements
+- Support Java 9/10 strings
 - Fixed parsing JFR files under JDK 9/10
 
 0.10.1 - 2018 Jun 4
