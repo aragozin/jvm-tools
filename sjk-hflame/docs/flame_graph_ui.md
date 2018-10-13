@@ -7,8 +7,6 @@ Result would be a self contained html file.
 
 ![](fg_screen_0.png)
 
-[Here](https://training.ragozin.info/collaterial/flame_demo.html) you can play with pregenerated flame graph.
-
 Visuals are generated dynamically using JavaScript so you may see placeholder screen 
 for few seconds after opening a file.
 
