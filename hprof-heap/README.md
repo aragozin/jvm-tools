@@ -29,6 +29,19 @@ on disk structures.
  
  * Only forward reference traversing
 
+Installation
+----
+
+This library is available on Maven Central, simply add this dependency to your Maven project:
+
+```xml
+<dependency>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>hprof-heap</artifactId>
+    <version>0.10.1</version>
+</dependency>
+```
+
 Examples
 ----
 
