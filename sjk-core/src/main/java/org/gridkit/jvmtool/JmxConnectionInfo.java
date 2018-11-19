@@ -17,6 +17,9 @@ package org.gridkit.jvmtool;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Collections;
 import java.util.Map;
 
@@ -24,6 +27,9 @@ import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.management.remote.rmi.RMIConnector;
+import javax.management.remote.rmi.RMIServer;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.lab.jvm.attach.AttachManager;
@@ -99,17 +105,45 @@ public class JmxConnectionInfo {
 	@SuppressWarnings("resource")
 	private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
 		try {
-                        String proto = System.getProperty("jmx.service.protocol", "rmi");
 
-                        final String uri = "rmi".equals(proto) ?
-                          "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi" :
-                          "service:jmx:" + proto + "://" + host + ":" + port;
-                  
-			JMXServiceURL jmxurl = new JMXServiceURL(uri);						
+			RMIServer rmiServer = null;
+			try {
+				Registry registry = LocateRegistry.getRegistry(host, port, new SslRMIClientSocketFactory());
+				try {
+					rmiServer = (RMIServer) registry.lookup("jmxrmi");
+				} catch (NotBoundException nbe) {
+					throw (IOException)
+							new IOException(nbe.getMessage()).initCause(nbe);
+				}
+			} catch (IOException e) {
+				Registry registry = LocateRegistry.getRegistry(host, port);
+				try {
+					rmiServer = (RMIServer) registry.lookup("jmxrmi");
+				} catch (NotBoundException nbe) {
+					System.out.println("Failed using LocateRegistry. Fallback to JMXConnectorFactory");
+				}
+			}
+			if(rmiServer != null) {
+				RMIConnector rmiConnector = new RMIConnector(rmiServer, props);
+				rmiConnector.connect();
+				return rmiConnector.getMBeanServerConnection();
+			}
+
+
+			String proto = System.getProperty("jmx.service.protocol", "rmi");
+
+			final String uri = "rmi".equals(proto) ?
+					"service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi" :
+					"service:jmx:" + proto + "://" + host + ":" + port;
+
+			JMXServiceURL jmxurl = new JMXServiceURL(uri);
 			JMXConnector conn = props == null ? JMXConnectorFactory.connect(jmxurl) : JMXConnectorFactory.connect(jmxurl, props);
 			// TODO credentials
 			MBeanServerConnection mserver = conn.getMBeanServerConnection();
 			return mserver;
+
+
+
 		} catch (MalformedURLException e) {
 		    commandHost.fail("JMX Connection failed: " + e.toString(), e);
 		} catch (IOException e) {

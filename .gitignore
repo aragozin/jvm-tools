@@ -4,3 +4,4 @@ target/
 .project
 .factorypath
 .codenvy
+*.iml
