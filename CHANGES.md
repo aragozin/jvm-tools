@@ -2,6 +2,7 @@ Next version
 ----
 ...
 
+- Support JMX over TLS remote connections
 - `mxprx` command force correct RMI hostname usage
 - `vminfo` command added
 - Stack trace filter language improvements
