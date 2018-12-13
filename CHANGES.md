@@ -2,6 +2,9 @@ Next version
 ----
 ...
 
+
+0.11 - 2018 Dec 12
+----
 - Support JMX over TLS remote connections
 - `mxprx` command force correct RMI hostname usage
 - `vminfo` command added
