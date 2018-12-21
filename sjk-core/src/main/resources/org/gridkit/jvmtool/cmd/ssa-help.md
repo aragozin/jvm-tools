@@ -13,7 +13,7 @@ Available subcommands are
 - `--thread-info` Report aggregates of trace dumps 
                   segregated by threads
 
-Input poulation of trades can be filtered in various ways
+Input poulation of traces can be filtered in various ways
 
 - `-tf` Filter traces using predicate expression
 - `-tt` Transforms (trim trace root) based on expression
