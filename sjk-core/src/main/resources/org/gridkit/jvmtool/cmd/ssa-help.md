@@ -44,7 +44,9 @@ in the trace are matched against the pattern.
 Examples
 
 `javax.jdbc` - match anything in `javax.jdbc` package
+
 `**.MyClass` - match any frame containing `.MyClass`
+
 `java.util.ResourceBundle.getObject*:395` - this example include line number matching
 
 ### Operators
