@@ -18,6 +18,7 @@ package org.gridkit.jvmtool.cmd;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
+import java.rmi.UnmarshalException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -172,6 +173,10 @@ public class MxDumpCmd implements CmdRef {
 	            //threw an exception, so log it and skip outputting the attribute
 	            error("getting attribute "+attName+" of "+oname+" threw an exception", e);
 	            return;
+	        } catch (UnmarshalException e) {
+	        	//Marshaling problem on remote side?
+	        	error("getting attribute "+attName+" of "+oname+" threw an exception", e);
+	        	return;
 	        } catch (InstanceNotFoundException e) {
 	            //Ignored the mbean itself was not found, which should never happen because we
 	            //just accessed it (perhaps something unregistered in-between) but if this
