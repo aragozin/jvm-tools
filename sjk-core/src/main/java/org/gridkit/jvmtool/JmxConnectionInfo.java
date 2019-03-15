@@ -144,7 +144,9 @@ public class JmxConnectionInfo {
 		try {
 			RMIServer rmiServer = null;
 			try {
-				System.out.println("Try to connect via TLS");
+				if (diagMode) {
+					System.out.println("Try to connect via TLS");
+				}
 				Registry registry = LocateRegistry.getRegistry(host, port, new SslRMIClientSocketFactory());
 				try {
 					rmiServer = (RMIServer) registry.lookup("jmxrmi");
