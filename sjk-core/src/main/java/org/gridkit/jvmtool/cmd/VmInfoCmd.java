@@ -54,7 +54,7 @@ public class VmInfoCmd implements CmdRef {
 		private final CommandLauncher host;
 
 // need jcmd support in attach API
-//		@Parameter(names = {"--flags"}, required = false, description = "Dump XX flags")
+		@Parameter(names = {"--flags"}, required = false, description = "Dump XX flags")
 		private boolean dumpVmFlags = false;
 		
 		@Parameter(names = {"--sysprops"}, required = false, description = "Dump System.getProperties()")		
@@ -83,7 +83,9 @@ public class VmInfoCmd implements CmdRef {
 			JavaProcessDetails jpd = AttachManager.getDetails(Long.parseLong(pid));
 			
 			if (dumpVmFlags) {
-				System.out.println(jpd.getVmFlag(null));
+				StringBuilder sb = new StringBuilder();
+				jpd.jcmd("VM.flags -all", sb);
+				System.out.println(sb);
 			}
 			if (dumpSysProps) {
 				dumpProps(jpd.getSystemProperties());
