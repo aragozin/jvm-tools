@@ -124,7 +124,7 @@
       <dependency>
         <groupId>org.gridkit.lab</groupId>
         <artifactId>jvm-attach-api</artifactId>
-        <version>1.4</version>
+        <version>1.5</version>
       </dependency>
 
       <!-- 3rd party modules -->

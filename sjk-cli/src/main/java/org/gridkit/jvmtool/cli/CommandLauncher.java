@@ -93,6 +93,7 @@ public class CommandLauncher {
 	}
 	
 	public boolean start(String[] args) {
+		verbose = Arrays.asList(args).contains("-X");
 		breakCage(args);
 		JCommander parser = null;
 		try {
@@ -306,6 +307,9 @@ public class CommandLauncher {
 		String spec = rtBean.getSpecVersion();
 		if (spec.startsWith("1.")) {
 			// good classic Java
+			if (verbose) {
+				System.out.println("Java version " + spec + " skipping cage break");
+			}
 			return;
 		}
 		else {
@@ -318,8 +322,11 @@ public class CommandLauncher {
 					}
 					sb.append(a);
 				}
-				if (isUnlocked(sb.toString(), getModulesUnlockCommand())) {
+				if (isUnlocked(sb.toString())) {
 					// modules are unlocked
+					if (verbose) {
+						System.out.println("All required modules are unlocked, skipping cage break");
+					}
 					return;
 				}
 				else {
@@ -329,7 +336,7 @@ public class CommandLauncher {
 					File jbin = new File(jhome, "bin/java");
 					command.add(jbin.getPath());
 					for(String m: getModulesUnlockCommand()) {
-						command.add("--add-exports");
+						command.add("--add-opens");
 						command.add(m);
 					}
 					command.add("-Dsjk.breakCage=false");
@@ -340,6 +347,9 @@ public class CommandLauncher {
 					command.addAll(Arrays.asList(args));
 					
 					System.err.println("Restarting java with unlocked package access");
+					if (verbose) {
+						System.err.println("Exec command: " + formatCmd(command));
+					}
 					
 					ProcessSpawner.start(command);
 				}
@@ -347,10 +357,34 @@ public class CommandLauncher {
 		}
 	}
 
-	private boolean isUnlocked(String cmd, String[] modules) {
-		for(String m: modules) {
-			String c1 = "--add-exports " + m;
-			String c2 = "--add-exports=" + m;
+	private String formatCmd(List<String> command) {
+		StringBuilder sb = new StringBuilder();
+		for(String part: command) {
+			if (hasWhitespace(part)) {
+				sb.append("\"").append(part).append("\"");
+			}
+			else {
+				sb.append(part);
+			}
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
+
+	private boolean hasWhitespace(String part) {
+		for(int i = 0; i != part.length(); ++i) {
+			if (Character.isWhitespace(part.charAt(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isUnlocked(String cmd) {
+		
+		for(String m: getModulesUnlockCommand()) {
+			String c1 = "--add-opens " + m;
+			String c2 = "--add-opens=" + m;
 			if (!cmd.contains(c1) && !cmd.contains(c2)) {
 				return false;
 			}
