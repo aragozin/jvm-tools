@@ -1,7 +1,9 @@
 Next version
 ----
 ...
-
+- Java 11 compatibility fixes
+- `mxping` command for connectivity diagnostics
+- `vminfo` support JVM flags listing
 
 0.11 - 2018 Dec 12
 ----
