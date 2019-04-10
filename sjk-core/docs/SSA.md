@@ -85,6 +85,8 @@ Usage
 		   Flame graph width in pixels
 		   Default: 1200
 
+Subcommands
+----
 Following subcommands are available:
 
 `--print` print stack trace in text format.
