@@ -27,31 +27,28 @@
       <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mxdump</artifactId>
+    <artifactId>sjk-json</artifactId>
     <name>${project.groupId}::${project.artifactId}</name>
-    <description>MBean to JSON dump command for Swiss Java Knife (SJK) tool</description>
-   
+    <description>Minimal JSON support</description>
+
     <dependencies>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-core</artifactId>
-        </dependency>
-        <dependency>
-        	<groupId>org.gridkit.jvmtool</groupId>
-        	<artifactId>sjk-json</artifactId>
-        </dependency>
-        <dependency>
-        	<groupId>org.apache.tomcat.embed</groupId>
-        	<artifactId>tomcat-embed-core</artifactId>
-        	<version>8.5.16</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.carrotsearch</groupId>
+            <artifactId>junit-benchmarks</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>

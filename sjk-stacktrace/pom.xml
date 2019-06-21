@@ -32,6 +32,10 @@
     <description>Thread dumps: capture and encoding</description>
 
     <dependencies>
+    	<dependency>
+    		<groupId>org.gridkit.jvmtool</groupId>
+    		<artifactId>sjk-json</artifactId>
+    	</dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
