@@ -63,9 +63,9 @@
                 <includes>
                   <include>org.gridkit.jvmtool:*</include>
                   <include>org.gridkit.lab:*</include>
-                  <include>org.codehaus.jackson:*</include>
                   <include>com.beust:*</include>
                   <include>org.slf4j:*</include>
+                  <include>org.perfkit.sjk.parsers:*</include>
                 </includes>
               </artifactSet>
               <transformers>

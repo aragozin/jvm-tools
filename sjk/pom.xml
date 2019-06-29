@@ -36,6 +36,10 @@
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>sjk-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gridkit.jvmtool</groupId>
+      <artifactId>mxdump</artifactId>
+    </dependency>
   </dependencies>
   
   <build>
@@ -55,6 +59,7 @@
                 <includes>
                   <include>org.gridkit.jvmtool:*</include>
                   <include>org.gridkit.lab:*</include>
+                  <include>org.perfkit.sjk.parsers:*</include>
                   <include>com.beust:*</include>
                 </includes>
               </artifactSet>

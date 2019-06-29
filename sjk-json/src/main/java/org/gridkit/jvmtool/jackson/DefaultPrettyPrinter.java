@@ -271,8 +271,9 @@ public class DefaultPrettyPrinter
             level += level; // 2 spaces per level
             while (level > SPACE_COUNT) { // should never happen but...
                 jg.writeRaw(SPACES, 0, SPACE_COUNT); 
-                level -= SPACES.length;
+                level -= SPACE_COUNT;
             }
+            
             jg.writeRaw(SPACES, 0, level);
         }
     }

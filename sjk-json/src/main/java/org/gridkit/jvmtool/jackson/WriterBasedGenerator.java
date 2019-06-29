@@ -438,7 +438,12 @@ public final class WriterBasedGenerator extends JsonGenerator
             if (len > room) {
                 _flushBuffer();
             }
-            System.arraycopy(text, offset, _outputBuffer, _outputTail, len);
+            try {
+            	System.arraycopy(text, offset, _outputBuffer, _outputTail, len);
+            }
+            catch(ArrayIndexOutOfBoundsException e) {
+            	new String();
+            }
             _outputTail += len;
             return;
         }

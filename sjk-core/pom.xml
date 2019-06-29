@@ -45,15 +45,19 @@
             <artifactId>sjk-hflame</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
+            <groupId>org.perfkit.sjk.parsers</groupId>
             <artifactId>sjk-jfr5</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
+            <groupId>org.perfkit.sjk.parsers</groupId>
             <artifactId>sjk-jfr6</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
+            <groupId>org.perfkit.sjk.parsers</groupId>
+            <artifactId>sjk-jfr-standalone</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.perfkit.sjk.parsers</groupId>
             <artifactId>sjk-nps</artifactId>
         </dependency>
         <dependency>

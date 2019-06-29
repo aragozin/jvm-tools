@@ -460,6 +460,11 @@ public class CliCheck {
     	exec("vminfo", "-p", PID, "--perf");
     }
 
+    @Test
+    public void vminfo_flags() {
+    	exec("vminfo", "-p", PID, "--flags");
+    }
+
     private void exec(String... cmd) {
         SJK sjk = new SJK();
         sjk.suppressSystemExit();
