@@ -115,6 +115,13 @@ mxdump
 
 Dumps all MBeans of target java process to JSON.
 
+mprx
+----
+
+JMX proxy - expose target process' MBeans for remote access.
+
+[More details][mprx]
+
  [ttop]: sjk-core/docs/TTOP.md
  [jps]: sjk-core/docs/JPS.md
  [hh]: sjk-core/docs/HH.md
@@ -123,6 +130,7 @@ Dumps all MBeans of target java process to JSON.
  [stcap]: sjk-core/docs/STCAP.md
  [stcpy]: sjk-core/docs/STCPY.md
  [ssa]: sjk-core/docs/SSA.md
+ [mprx]: sjk-core/docs/MPRX.md
  [flame]: sjk-hflame/docs/FLAME.md
  [sophisticated filtering]: sjk-core/src/main/resources/org/gridkit/jvmtool/cmd/ssa-help.md
  [flame graphs]: http://blog.ragozin.info/2016/01/flame-graphs-vs-cold-numbers.html

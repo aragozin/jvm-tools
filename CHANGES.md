@@ -3,6 +3,11 @@ Next version
 
 ...
 
+0.13 - 2019 Jul 2
+----
+
+- `jfr2json` command to translate JFR files into JSON
+
 0.12 - 2019 Mar 15
 ----
 - Java 11 compatibility fixes
