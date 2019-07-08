@@ -173,13 +173,15 @@ class HeapOffsetMap {
                 long ciid = iid >>> allignmentBits;
 
                 // number of pages to be added up front
-                int ps = (int) (((cidOffset - ciid + pageSize - 1) / (pageSize)));
+                int ps = (int) ((cidOffset - ciid + pageSize - 1) / (pageSize));
                 long oldCidBase = cidOffset;
-                cidOffset -= ps * pageSize;
+                cidOffset -= ((long) ps * pageSize);
                 long[] noffsetMap = new long[offsetMap.length + ps];
                 Arrays.fill(noffsetMap, 0, ps, 0); // explicitly nullify array to avoid possible JIT bug
                 System.arraycopy(offsetMap, 0, noffsetMap, ps, offsetMap.length);
                 offsetMap = noffsetMap;
+                // Let's free the obsolete in recursion noffsetMap.
+                noffsetMap = null;
                 offsetMap[0] = ptr;
                 int savedMaxPage = maxPage;
                 boolean savedNestedScan = nestedScan;
