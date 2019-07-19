@@ -10,7 +10,7 @@ Usage
 -----
 
 	> java -jar sjk.jar --help dexp
-	[Dump Export] Extract metrics form compressed dump into tabular format
+	[Dump Export] Extract metrics from compressed dump into tabular format
 	Usage: dexp [options]
 	  Options:
 		-cl, --columns
