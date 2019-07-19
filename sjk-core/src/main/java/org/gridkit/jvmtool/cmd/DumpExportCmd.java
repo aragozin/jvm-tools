@@ -64,7 +64,7 @@ public class DumpExportCmd implements CmdRef {
 		return new DumpExport(host);
 	}
 
-	@Parameters(commandDescription = "[Dump Export] Extract metrics form compressed dump into tabular format")
+	@Parameters(commandDescription = "[Dump Export] Extract metrics from compressed dump into tabular format")
 	public static class DumpExport implements Runnable {
 
 		@ParametersDelegate
