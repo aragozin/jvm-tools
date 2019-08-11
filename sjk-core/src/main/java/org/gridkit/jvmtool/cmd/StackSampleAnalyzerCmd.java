@@ -60,83 +60,82 @@ import com.beust.jcommander.ParametersDelegate;
 
 public class StackSampleAnalyzerCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "ssa";
-	}
+    @Override
+    public String getCommandName() {
+        return "ssa";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new SSA(host);
-	}
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new SSA(host);
+    }
 
-	@Parameters(commandDescription = "[Stack Sample Analyzer] Analyzing stack trace dumps")
-	public static class SSA implements Runnable {
-		
-		@ParametersDelegate
-		private final CommandLauncher host;
+    @Parameters(commandDescription = "[Stack Sample Analyzer] Analyzing stack trace dumps")
+    public static class SSA implements Runnable {
 
-		@ParametersDelegate
-		private final ThreadDumpSource dumpSource;
-		
-		@Parameter(names={"-cf", "--categorizer-file"}, required = false, description="Path to file with stack trace categorization definition")
-		private String categorizerFile = null;
+        @ParametersDelegate
+        private final CommandLauncher host;
+
+        @ParametersDelegate
+        private final ThreadDumpSource dumpSource;
+
+        @Parameter(names={"-cf", "--categorizer-file"}, required = false, description="Path to file with stack trace categorization definition")
+        private String categorizerFile = null;
 
         @Parameter(names={"-nc", "--named-class"}, required = false, variableArity = true, description="May be used with some commands to define name stack trace classes\nUse <name>=<filter expression> notation")
         private List<String> namedClasses = new ArrayList<String>();
-        
+
         @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps and time ranges")
         private String timeZone = "UTC";
 
         @Parameter(names={"-co", "--csv-output"}, required = false, description="Output data in CSV format")
         private boolean csvOutput = false;
-        
+
         private List<SsaCmd> allCommands = new ArrayList<SsaCmd>();
 
         @ParametersDelegate
-		private SsaCmd print = new PrintCmd();
+        private SsaCmd print = new PrintCmd();
 
         @ParametersDelegate
-		private SsaCmd histo = new HistoCmd();
+        private SsaCmd histo = new HistoCmd();
 
         @ParametersDelegate
-		private SsaCmd flame = new FlameCmd();
+        private SsaCmd flame = new FlameCmd();
 
         @ParametersDelegate
         private SsaCmd csummary = new CategorizeCmd();
 
         @ParametersDelegate
         private SsaCmd threadInfo = new ThreadInfoCmd();
-        
+
         @ParametersDelegate
         private SsaCmd help = new HelpCmd();
 
-		ThreadSnapshotCategorizer categorizer;
+        ThreadSnapshotCategorizer categorizer;
 
+        public SSA(CommandLauncher host) {
+            this.host = host;
+            this.dumpSource = new ThreadDumpSource(host);
+        }
 
-		public SSA(CommandLauncher host) {
-			this.host = host;
-			this.dumpSource = new ThreadDumpSource(host);
-		}
-
-		@Override
-		public void run() {
-			try {
-				List<Runnable> action = new ArrayList<Runnable>();
-				for(SsaCmd cmd: allCommands) {
-				    if (cmd.isSelected()) {
-				        action.add(cmd);
-				    }
-				}
-				if (action.isEmpty() || action.size() > 1) {
-					host.failAndPrintUsage("You should choose one of " + allCommands);
-				}
-				dumpSource.setTimeZone(timeZone());
-				if (categorizerFile != null) {
-				    if (!namedClasses.isEmpty()) {
-				        host.failAndPrintUsage("You eigther should specify categorizer (-cf) or named classed (-nc)");
-				    }
-				    try {
+        @Override
+        public void run() {
+            try {
+                List<Runnable> action = new ArrayList<Runnable>();
+                for(SsaCmd cmd: allCommands) {
+                    if (cmd.isSelected()) {
+                        action.add(cmd);
+                    }
+                }
+                if (action.isEmpty() || action.size() > 1) {
+                    host.failAndPrintUsage("You should choose one of " + allCommands);
+                }
+                dumpSource.setTimeZone(timeZone());
+                if (categorizerFile != null) {
+                    if (!namedClasses.isEmpty()) {
+                        host.failAndPrintUsage("You eigther should specify categorizer (-cf) or named classed (-nc)");
+                    }
+                    try {
                         FileReader csource = new FileReader(categorizerFile);
                         SimpleCategorizer sc = new SimpleCategorizer();
                         CachingFilterFactory cff = new CachingFilterFactory();
@@ -145,120 +144,121 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     } catch (ParserException e) {
                         throw host.fail("Failed to parse filter expression at [" + e.getOffset() + "] : " + e.getMessage(), e.getParseText());
                     }
-				}
-				action.get(0).run();
-			} catch (Exception e) {
-			    host.fail(e.toString(), e);
-			}
-		}
-		
-		TimeZone timeZone() {
-		    return TimeZone.getTimeZone(timeZone);
-		}
+                }
+                action.get(0).run();
+            } catch (Exception e) {
+                host.fail(e.toString(), e);
+            }
+        }
 
-		Map<String, ThreadSnapshotFilter> getNamedClasses() {
-		    if (namedClasses.isEmpty()) {
-		        return new HashMap<String, ThreadSnapshotFilter>();
-		    }
-		    else {
-		        CachingFilterFactory factory = new CachingFilterFactory();
-		        Map<String, ThreadSnapshotFilter> classes = new LinkedHashMap<String, ThreadSnapshotFilter>();
-		        for(String nc: namedClasses) {
-		            int n = nc.indexOf('=');
-		            if (n < 0) {
-		                throw host.fail("Cannot parse named class", "[" + nc + "]", "Required format NAME=FILTER_EXPRESSION");
-		            }
-		            String name = nc.substring(0, n);
-		            String filter = nc.substring(n + 1);
-		            if (classes.containsKey(name)) {
-		                throw host.fail("Duplicated class name [" + name + "]");		                
-		            }
-		            try {
+        TimeZone timeZone() {
+            return TimeZone.getTimeZone(timeZone);
+        }
+
+        Map<String, ThreadSnapshotFilter> getNamedClasses() {
+            if (namedClasses.isEmpty()) {
+                return new HashMap<String, ThreadSnapshotFilter>();
+            }
+            else {
+                CachingFilterFactory factory = new CachingFilterFactory();
+                Map<String, ThreadSnapshotFilter> classes = new LinkedHashMap<String, ThreadSnapshotFilter>();
+                for(String nc: namedClasses) {
+                    int n = nc.indexOf('=');
+                    if (n < 0) {
+                        throw host.fail("Cannot parse named class", "[" + nc + "]", "Required format NAME=FILTER_EXPRESSION");
+                    }
+                    String name = nc.substring(0, n);
+                    String filter = nc.substring(n + 1);
+                    if (classes.containsKey(name)) {
+                        throw host.fail("Duplicated class name [" + name + "]");
+                    }
+                    try {
                         ThreadSnapshotFilter tf = TraceFilterPredicateParser.parseFilter(filter, factory);
                         classes.put(name, tf);
                     } catch (ParserException e) {
                         throw host.fail("Cannot parse named class", "[" + nc + "]", e.getMessage());
                     }
-		        }
-		        return classes;
-		    }
-		}
-		
-		ThreadSnapshotFilter parseFilter(String filter) {
-		    CachingFilterFactory factory = new CachingFilterFactory();
-		    ThreadSnapshotFilter tf = TraceFilterPredicateParser.parseFilter(filter, factory);
-		    return tf;
-		}
-		
-		EventReader<ThreadSnapshotEvent> getFilteredReader() {
-		    return dumpSource.getFilteredReader();
-		}
+                }
+                return classes;
+            }
+        }
 
-		EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
-		    return dumpSource.getUnclassifiedReader();
-		}
+        ThreadSnapshotFilter parseFilter(String filter) {
+            CachingFilterFactory factory = new CachingFilterFactory();
+            ThreadSnapshotFilter tf = TraceFilterPredicateParser.parseFilter(filter, factory);
+            return tf;
+        }
 
-		abstract class SsaCmd implements Runnable {
-		    
-		    public SsaCmd() {
+        EventReader<ThreadSnapshotEvent> getFilteredReader() {
+            return dumpSource.getFilteredReader();
+        }
+
+        EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
+            return dumpSource.getUnclassifiedReader();
+        }
+
+        abstract class SsaCmd implements Runnable {
+
+            public SsaCmd() {
                 allCommands.add(this);
             }
 
-		    public abstract boolean isSelected();
-		}
-		
-		class PrintCmd extends SsaCmd {
+            public abstract boolean isSelected();
+        }
 
-			@Parameter(names={"--print"}, description="Print traces from file")
-			boolean run;
+        class PrintCmd extends SsaCmd {
 
-			@Override
+            @Parameter(names={"--print"}, description="Print traces from file")
+            boolean run;
+
+            @Override
             public boolean isSelected() {
                 return run;
             }
 
             @Override
-			public void run() {
-				try {
-				    
-			        EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
-			        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-			        fmt.setTimeZone(timeZone());
-			        StringBuilder threadHeader = new StringBuilder();
-			        StringBuilder stackFrameBuffer = new StringBuilder();
-			        for(ThreadSnapshotEvent e: reader) {
-			            String timestamp = fmt.format(e.timestamp());
-			            threadHeader
-			                .append("Thread [")
-			                .append(e.threadId())
-			                .append("] ");
-			            if (e.threadState() != null) {
-			                threadHeader.append(e.threadState()).append(' ');
-			            }
-			            threadHeader.append("at ").append(timestamp);
-			            if (e.threadName() != null) {
-			                threadHeader.append(" - ").append(e.threadName());
-			            }
-			            System.out.println(threadHeader);
-			            StackFrameList trace = e.stackTrace();
-			            for(StackFrame frame: trace) {
-			            	frame.toString(stackFrameBuffer);
-			                System.out.println(stackFrameBuffer);
-			                stackFrameBuffer.setLength(0);
-			            }
-			            System.out.println();
-			            threadHeader.setLength(0);
-			        }
-				    
-				} catch (Exception e) {
-					host.fail(e.toString(), e);
-				}
-			}
-            
+            public void run() {
+                try {
+
+                    EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
+                    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+                    fmt.setTimeZone(timeZone());
+                    StringBuilder threadHeader = new StringBuilder();
+                    StringBuilder stackFrameBuffer = new StringBuilder();
+                    for(ThreadSnapshotEvent e: reader) {
+                        String timestamp = fmt.format(e.timestamp());
+                        threadHeader
+                            .append("Thread [")
+                            .append(e.threadId())
+                            .append("] ");
+                        if (e.threadState() != null) {
+                            threadHeader.append(e.threadState()).append(' ');
+                        }
+                        threadHeader.append("at ").append(timestamp);
+                        if (e.threadName() != null) {
+                            threadHeader.append(" - ").append(e.threadName());
+                        }
+                        System.out.println(threadHeader);
+                        StackFrameList trace = e.stackTrace();
+                        for(StackFrame frame: trace) {
+                            frame.toString(stackFrameBuffer);
+                            System.out.println(stackFrameBuffer);
+                            stackFrameBuffer.setLength(0);
+                        }
+                        System.out.println();
+                        threadHeader.setLength(0);
+                    }
+
+                } catch (Exception e) {
+                    host.fail(e.toString(), e);
+                }
+            }
+
+            @Override
             public String toString() {
                 return "--print";
             }
-		}
+        }
 
         class HistoCmd extends SsaCmd {
 
@@ -281,7 +281,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     for(Map.Entry<String, ThreadSnapshotFilter> entry: getNamedClasses().entrySet()) {
                         histo.addCondition(entry.getKey(), entry.getValue());
                     }
-                    
+
                     EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
                     int n = 0;
                     for(ThreadSnapshotEvent e: reader) {
@@ -289,9 +289,9 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         histo.feed(trace);
                         ++n;
                     }
-                    
+
                     if (sortByTerm) {
-			histo.setHistoOrder(StackHisto.BY_TERMINAL);
+            histo.setHistoOrder(StackHisto.BY_TERMINAL);
                     }
 
                     if (n > 0) {
@@ -305,12 +305,13 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     else {
                         System.out.println("No data");
                     }
-                    
+
                 } catch (Exception e) {
                     host.fail(e.toString(), e);
                 }
             }
-            
+
+            @Override
             public String toString() {
                 return "--histo";
             }
@@ -320,13 +321,13 @@ public class StackSampleAnalyzerCmd implements CmdRef {
 
             @Parameter(names={"--flame"}, description="Export flame graph to SVG format")
             boolean run;
-            
+
             @Parameter(names={"--title"}, description="Flame graph title")
             String title = "Flame Graph";
-            
+
             @Parameter(names={"--width"}, description="Flame graph width in pixels")
             int width = 1200;
-            
+
             @Parameter(names={"-rc", "--rainbow"}, variableArity = true, description="List of filters for rainbow coloring")
             List<String> rainbow;
 
@@ -348,7 +349,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         }
                         fg.setColorPicker(new RainbowColorPicker(filters));
                     }
-                    
+
                     EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
                     int n = 0;
                     for(ThreadSnapshotEvent e: reader) {
@@ -356,7 +357,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         fg.feed(trace);
                         ++n;
                     }
-                    
+
                     if (n > 0) {
                         Writer w = new OutputStreamWriter(System.out);
                         fg.renderSVG(title, width, w);
@@ -365,17 +366,18 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     else {
                         System.out.println("No data");
                     }
-                    
+
                 } catch (Exception e) {
                     host.fail(e.toString(), e);
                 }
             }
-            
+
+            @Override
             public String toString() {
                 return "--histo";
             }
         }
-        
+
         class CategorizeCmd extends SsaCmd {
 
             @Parameter(names={"--categorize"}, description="Print summary for provided categorization")
@@ -398,14 +400,14 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                             for(String fn: nf.keySet()) {
                                 sc.addCategory(fn, nf.get(fn));
                             }
-                            cat = sc;                            
+                            cat = sc;
                         }
                     }
-                    
+
                     if (cat == null) {
                         throw host.fail("Neigther -cf nor -nc. Eigther of them is required.");
                     }
-                    
+
                     List<String> bucketNames = new ArrayList<String>(cat.getCategories());
                     long[] counters = new long[bucketNames.size()];
                     long total = 0;
@@ -423,12 +425,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     String tab = csvOutput ? "" : "\t ";
 
                     tt.addRow("Total samples", tab + total,  tab + "100.00%");
-                    
-                    
+
+
                     for(int i = 0; i != counters.length; ++i) {
                         tt.addRow(bucketNames.get(i), tab + counters[i],  tab + (counters[i] == 0 ? "0.00%" : String.format("%.2f%%", (100f * counters[i]) / total)));
                     }
-                    
+
                     if (csvOutput) {
                         System.out.println(TextTable.formatCsv(tt));
                     }
@@ -441,13 +443,14 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 }
             }
 
+            @Override
             public String toString() {
                 return "--categorize";
             }
         }
 
         class ThreadInfoCmd extends SsaCmd {
-            
+
             @Parameter(names={"--thread-info"}, description="Per thread info summary")
             boolean run;
 
@@ -458,7 +461,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             public boolean isSelected() {
                 return run;
             }
-            
+
             List<String> summaryNames = new ArrayList<String>();
             List<ThreadDumpAggregatorFactory> summaries = new ArrayList<ThreadDumpAggregatorFactory>();
             List<SummaryFormater> summaryFormaters = new ArrayList<SummaryFormater>();
@@ -472,11 +475,11 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 summaries.add(summary);
                 summaryFormaters.add(formater);
             }
-            
+
             @Override
             public void run() {
                 try {
-                    
+
                     if (summaryInfo == null || summaryInfo.isEmpty()) {
                         add("Name", COMMON.name());
                         add("Count", COMMON.count(), new RightFormater());
@@ -490,13 +493,13 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                             addSummary(si);
                         }
                     }
-                    
+
                     ThreadSplitAggregator threadAgg = new ThreadSplitAggregator(summaries.toArray(new ThreadDumpAggregatorFactory[0]));
                     EventReader<ThreadSnapshotEvent> reader = getFilteredReader();
                     for(ThreadSnapshotEvent e: reader) {
                         threadAgg.feed(e);
                     }
-                    
+
                     TextTable tt = new TextTable();
                     tt.addRow(summaryNames);
                     int n = 0;
@@ -509,7 +512,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         }
                         tt.addRow(frow);
                     }
-                    
+
                     if (n > 0) {
                         if (csvOutput) {
                             System.out.println(TextTable.formatCsv(tt));
@@ -521,12 +524,12 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     else {
                         System.out.println("No data");
                     }
-                    
+
                 } catch (Exception e) {
                     host.fail(e.toString(), e);
                 }
             }
-            
+
             private void addSummary(String si) {
                 si = si.trim();
                 if ("NAME".equals(si)) {
@@ -549,7 +552,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     add("On CPU", COMMON.cpu(), new PercentFormater());
                 }
                 else if ("SYS".equals(si)) {
-                	add("System", COMMON.sysCpu(), new PercentFormater());
+                    add("System", COMMON.sysCpu(), new PercentFormater());
                 }
                 else if ("ALLOC".equals(si)) {
                     add("Alloc ", COMMON.alloc(), new MemRateFormater());
@@ -578,7 +581,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 else if ("GAP_CHM".equals(si)) {
                     add("Gap CHM", COMMON.periodCHM(), new DecimalFormater(3));
                 }
-                else { 
+                else {
                     badSummary(si);
                 }
             }
@@ -601,14 +604,15 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                         "  S:[RUNNABLE|BLOCKED|WAITING|TIMED_WAITING]",
                         "  <name>=<filter expression>"
                         );
-                
+
             }
 
+            @Override
             public String toString() {
                 return "--categorize";
             }
         }
-        
+
         public class HelpCmd extends SsaCmd {
 
             @Parameter(names={"--ssa-help"}, description="Additional information about SSA")
@@ -644,59 +648,60 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 }
             }
 
+            @Override
             public String toString() {
                 return "--ssa-help";
             }
         }
-	}
-		
-	interface SummaryFormater {
-	    
-	    public String toString(Object summary);
-	}
-	
-	static class DefaultFormater implements SummaryFormater {
+    }
+
+    interface SummaryFormater {
+
+        public String toString(Object summary);
+    }
+
+    static class DefaultFormater implements SummaryFormater {
 
         @Override
         public String toString(Object summary) {
             return String.valueOf(summary);
         }
-	}
+    }
 
-	static class RightFormater implements SummaryFormater {
-	    
-	    @Override
-	    public String toString(Object summary) {
-	        return "\t" + String.valueOf(summary);
-	    }
-	}
+    static class RightFormater implements SummaryFormater {
 
-	static class DecimalFormater implements SummaryFormater {
-	    
-	    int n;
-	    
-	    public DecimalFormater(int n) {
+        @Override
+        public String toString(Object summary) {
+            return "\t" + String.valueOf(summary);
+        }
+    }
+
+    static class DecimalFormater implements SummaryFormater {
+
+        int n;
+
+        public DecimalFormater(int n) {
             this.n = n;
         }
-	    
-	    @Override
-	    public String toString(Object summary) {
-	        if (summary instanceof Long) {
-	            return "\t" + summary;
-	        }
-	        else if (summary instanceof Number) {
-	            return "\t" + String.format("%." + n +"f", ((Number) summary).doubleValue());
-	        }
-	        else {
-	            return "";
-	        }
-	    }
-	}
 
-	static class PercentFormater implements SummaryFormater {
-	    
-	    @Override
-	    public String toString(Object summary) {
+        @Override
+        public String toString(Object summary) {
+            if (summary instanceof Long) {
+                return "\t" + summary;
+            }
+            else if (summary instanceof Number) {
+                return "\t" + String.format("%." + n +"f", ((Number) summary).doubleValue());
+            }
+            else {
+                return "";
+            }
+        }
+    }
+
+    static class PercentFormater implements SummaryFormater {
+
+        @Override
+        public String toString(Object summary) {
             if (summary instanceof Number) {
                 double d = ((Number) summary).doubleValue();
                 if (!Double.isNaN(d)) {
@@ -704,10 +709,10 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                 }
             }
             return "";
-	    }
-	}
-	
-	static class MemRateFormater implements SummaryFormater {
+        }
+    }
+
+    static class MemRateFormater implements SummaryFormater {
 
         @Override
         public String toString(Object summary) {
@@ -719,25 +724,25 @@ public class StackSampleAnalyzerCmd implements CmdRef {
             }
             return "";
         }
-	}
+    }
 
-	static class DateFormater implements SummaryFormater {
-	    
-	    SimpleDateFormat fmt;
-	    
-	    public DateFormater(TimeZone tz) {
+    static class DateFormater implements SummaryFormater {
+
+        SimpleDateFormat fmt;
+
+        public DateFormater(TimeZone tz) {
             fmt = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss");
             fmt.setTimeZone(tz);
         }
-	    
-	    @Override
-	    public String toString(Object summary) {
-	        if (summary instanceof Long) {
-	            return fmt.format(summary);
-	        }
-	        else {
-	            return "";
-	        }
-	    }
-	}
+
+        @Override
+        public String toString(Object summary) {
+            if (summary instanceof Long) {
+                return fmt.format(summary);
+            }
+            else {
+                return "";
+            }
+        }
+    }
 }

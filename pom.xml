@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+
 <!--
 
     Copyright 2012 Alexey Ragozin
@@ -32,7 +32,7 @@
   <name>${project.groupId}::${project.artifactId}</name>
   <description>JVM tools, parent project</description>
   <packaging>pom</packaging>
-  
+
   <modules>
     <module>sjk-cli</module>
     <module>sjk-stacktrace</module>
@@ -47,7 +47,7 @@
     <module>hprof-heap</module>
     <module>ygc-bench</module>
   </modules>
-   
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -120,7 +120,7 @@
       <dependency>
         <groupId>org.perfkit.sjk.parsers</groupId>
         <artifactId>sjk-jfr6</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
       </dependency>
       <dependency>
         <groupId>org.perfkit.sjk.parsers</groupId>
@@ -130,7 +130,7 @@
       <dependency>
         <groupId>org.perfkit.sjk.parsers</groupId>
         <artifactId>sjk-jfr-standalone</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
       </dependency>
       <dependency>
         <groupId>org.gridkit.lab</groupId>

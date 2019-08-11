@@ -15,7 +15,11 @@
  */
 package org.gridkit.jvmtool;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +31,12 @@ import org.gridkit.jvmtool.event.Event;
 import org.gridkit.jvmtool.event.EventMorpher;
 import org.gridkit.jvmtool.event.EventReader;
 import org.gridkit.jvmtool.event.ShieldedEventReader;
+import org.gridkit.jvmtool.event.SimpleErrorEvent;
+import org.gridkit.jvmtool.event.SingleEventReader;
+import org.gridkit.jvmtool.spi.parsers.FileInputStreamSource;
+import org.gridkit.jvmtool.spi.parsers.JsonEventDumpHelper;
+import org.gridkit.jvmtool.spi.parsers.JsonEventDumpParserFactory;
+import org.gridkit.jvmtool.spi.parsers.JsonEventSource;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
@@ -34,6 +44,8 @@ import org.gridkit.jvmtool.stacktrace.analytics.ThreadEventFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
+import org.gridkit.jvmtool.stacktrace.codec.json.JfrEventParser;
+import org.gridkit.jvmtool.stacktrace.codec.json.JfrEventReader;
 
 import com.beust.jcommander.Parameter;
 
@@ -48,11 +60,63 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
     @Parameter(names={"-tn", "--thread-name"}, required = false, description="Thread name filter (Java RegEx syntax)")
     private String threadName = null;
 
-    
+    @Parameter(names = {"--force-jdk-parser"}, required = false, description="Only for JFR. Forces to use JDK built-in parser. Require Java 11")
+    private boolean forceJdkParser = false;
+
+    @Parameter(names = {"--force-mc-parser"}, required = false, description="Only for JFR. Forces to use MC code for parsing.")
+    private boolean forceMcParser = false;
+
+    @Parameter(names = {"--jfr-event"}, required = false, description="Only for JFR. Available options: EXEC, ALLOC, THROW")
+    private String jfrEventType;
+
     public AbstractThreadDumpSource(CommandLauncher host) {
         super(host);
     }
-        
+
+    private boolean isJfrRequired() {
+        return jfrEventType != null || forceJdkParser || forceMcParser;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected EventReader<Event> openReader(String file) {
+        try {
+            Map<String, String> options = new HashMap<String, String>();
+
+            if (forceJdkParser && forceMcParser) {
+                host.failAndPrintUsage("--force-jdk-parser and --force-mc-parser are mutually exclusive options");
+            }
+            if (forceJdkParser) {
+                options.put(JsonEventDumpParserFactory.OPT_USE_NATIVE_JFR_PARSER, "true");
+            }
+            if (forceMcParser) {
+                options.put(JsonEventDumpParserFactory.OPT_USE_NATIVE_JFR_PARSER, "false");
+            }
+
+            if (jfrEventType == null || "EXEC".equals(jfrEventType)) {
+                options.put(JsonEventDumpParserFactory.OPT_JFR_EVENT_WHITELIST, "jdk.ExecutionSample,jdk.NativeMethodSample");
+            }
+            else if ("THROW".equals(jfrEventType)) {
+                options.put(JsonEventDumpParserFactory.OPT_JFR_EVENT_WHITELIST, "jdk.JavaExceptionThrow");
+            }
+            else if ("ALLOC".equals(jfrEventType)) {
+                options.put(JsonEventDumpParserFactory.OPT_JFR_EVENT_WHITELIST, "jdk.ObjectAllocationInNewTLAB");
+            }
+
+            JsonEventSource jevent = JsonEventDumpHelper.open(new FileInputStreamSource(new File(file)), options);
+            JfrEventReader reader = new JfrEventReader(jevent, new JfrEventParser());
+
+            return EventReader.class.cast(reader);
+
+        } catch (IOException e) {
+            if (isJfrRequired()) {
+                return new SingleEventReader<Event>(new SimpleErrorEvent(e));
+            }
+        }
+
+        return super.openReader(file);
+    }
+
     public EventReader<ThreadSnapshotEvent> getFilteredReader() {
         if (traceFilter == null && traceTrim == null && threadName == null && timeRange == null) {
             return getUnclassifiedReader();
@@ -101,8 +165,9 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
         }
     }
 
+    @Override
     protected abstract List<String> inputFiles();
-    
+
     public EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
 
     	EventReader<Event> rawReader = getRawReader();
@@ -111,17 +176,18 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
             @Override
             public boolean onException(Exception e) {
                 System.err.println("Stream reader error: " + e);
+                e.printStackTrace();
                 return true;
             }
         });
 
         return shielderReader;
-    }    
-        
+    }
+
     static class TimeFilter implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
-        
+
         TimeRangeChecker checker;
-        
+
         public TimeFilter(TimeRangeChecker checker) {
             this.checker = checker;
         }
@@ -133,9 +199,9 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
     }
 
     static class ThreadNameFilter implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
-        
+
         Matcher matcher;
-        
+
         public ThreadNameFilter(String regex) {
             this.matcher = Pattern.compile(regex).matcher("");
         }
@@ -155,12 +221,12 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
             }
         }
     }
-    
+
     static class TrimProxy implements EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent> {
-        
+
         protected ThreadSnapshotEventPojo snap = new ThreadSnapshotEventPojo();
         protected int trimPoint = 0;
-        
+
         public TrimProxy() {
         }
 
@@ -170,5 +236,5 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
             snap.stackTrace(event.stackTrace().fragment(0, trimPoint));
             return snap;
         }
-    }    
+    }
 }

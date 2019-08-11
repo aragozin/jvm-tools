@@ -40,5 +40,5 @@ public class JsonEventDumpHelper {
 		else {
 			throw new IOException("Unable to open dump\n" + sb.toString());
 		}
-	}	
+	}
 }

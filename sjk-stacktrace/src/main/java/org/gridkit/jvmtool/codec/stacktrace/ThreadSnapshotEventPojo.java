@@ -3,6 +3,7 @@ package org.gridkit.jvmtool.codec.stacktrace;
 import java.lang.Thread.State;
 
 import org.gridkit.jvmtool.event.CommonEvent;
+import org.gridkit.jvmtool.event.Event;
 import org.gridkit.jvmtool.event.GenericEvent;
 import org.gridkit.jvmtool.event.TaggedEvent;
 import org.gridkit.jvmtool.jvmevents.JvmEvents;
@@ -79,18 +80,23 @@ public class ThreadSnapshotEventPojo extends GenericEvent implements ThreadSnaps
         stackTrace(event.stackTrace());
     }
 
-    public void loadFromRawEvent(ThreadTraceEvent event) {
+    public void loadFromRawEvent(Event event) {
         threadId(-1);
         threadName(null);
         threadState(null);
-        CommonEvent cevent = (CommonEvent)event;
-        copyCommonEventFrom(cevent);
-        if (cevent.counters().getValue(JvmEvents.THREAD_ID) >= 0) {
-            threadId(cevent.counters().getValue(JvmEvents.THREAD_ID));
+
+        if (event instanceof CommonEvent) {
+            CommonEvent cevent = (CommonEvent) event;
+            copyCommonEventFrom(cevent);
+            if (cevent.counters().getValue(JvmEvents.THREAD_ID) >= 0) {
+                threadId(cevent.counters().getValue(JvmEvents.THREAD_ID));
+            }
+            threadName(cevent.tags().firstTagFor(JvmEvents.THREAD_NAME));
+            threadState(state(cevent.tags().firstTagFor(JvmEvents.THREAD_STATE)));
         }
-        threadName(cevent.tags().firstTagFor(JvmEvents.THREAD_NAME));
-        threadState(state(cevent.tags().firstTagFor(JvmEvents.THREAD_STATE)));
-        stackTrace(event.stackTrace());
+        if (event instanceof ThreadTraceEvent) {
+            stackTrace(((ThreadTraceEvent) event).stackTrace());
+        }
     }
 
     private State state(String state) {
