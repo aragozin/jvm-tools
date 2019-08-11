@@ -3,6 +3,13 @@ Next version
 
 ...
 
+0.14 - 2019 Aug 11
+---
+- Support for parsing JFR recordings Java 8 - 11
+- `jfr2json` command to convert JFR recordings to json
+- Support JFR allocation samples in `ssa` command
+- Support JFR exception event in `ssa` command
+
 0.12 - 2019 Mar 15
 ----
 - Java 11 compatibility fixes
