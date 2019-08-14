@@ -22,9 +22,8 @@ Download
 ----
 
 Latest prebuild binaries [![Last Version](https://img.shields.io/maven-central/v/org.gridkit.jvmtool/sjk.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.gridkit.jvmtool%22)
-- [sjk.jar - all commands without mxdump](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk&v=LATEST)
-- [sjk-plus.jar - all commands](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk-plus&v=LATEST)
-
+- `wget https://bit.ly/2YNDZfg -O sjk.jar` -> [sjk.jar - all commands without mxdump](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk&v=LATEST)
+- `wget https://bit.ly/2H3Uqck -O sjk.jar` -> [sjk-plus.jar - all commands](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk-plus&v=LATEST) 
 
 Starting sjk
 ----
