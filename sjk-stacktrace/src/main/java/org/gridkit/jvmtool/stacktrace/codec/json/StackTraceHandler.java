@@ -76,7 +76,7 @@ abstract class StackTraceHandler implements JsonObjectHandler {
 
         @Override
         public void onObjectComplete() {
-            StackFrame frame = new StackFrame("", className, methodName, line >= 0 ? "java" : null, line);
+            StackFrame frame = new StackFrame("", String.valueOf(className), String.valueOf(methodName), line >= 0 ? "java" : null, line);
             frames.add(frame);
             className = null;
             methodName = null;
