@@ -38,12 +38,14 @@ import org.gridkit.jvmtool.spi.parsers.JsonEventDumpHelper;
 import org.gridkit.jvmtool.spi.parsers.JsonEventDumpParserFactory;
 import org.gridkit.jvmtool.spi.parsers.JsonEventSource;
 import org.gridkit.jvmtool.stacktrace.analytics.CachingFilterFactory;
+import org.gridkit.jvmtool.stacktrace.analytics.Calculators;
 import org.gridkit.jvmtool.stacktrace.analytics.ParserException;
 import org.gridkit.jvmtool.stacktrace.analytics.PositionalStackMatcher;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadEventFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
 import org.gridkit.jvmtool.stacktrace.analytics.TimeRangeChecker;
 import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
+import org.gridkit.jvmtool.stacktrace.analytics.WeigthCalculator;
 import org.gridkit.jvmtool.stacktrace.codec.json.JfrEventParser;
 import org.gridkit.jvmtool.stacktrace.codec.json.JfrEventReader;
 
@@ -117,6 +119,53 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
         return super.openReader(file);
     }
 
+    public WeigthCalculator getWeightCalculator() {
+        // Unfortunately there is no common interpretation for all
+        // supported formats.
+        // Particularly VisualVM format is not event based.
+        // Though merging samples produced by different means doesn't
+        // make much sense any more.
+        // Any way here we need to decide which WeightCalculator to use for all files
+
+        WeigthCalculator calc = tryVisualVMCalculator();
+
+        // TODO JFR specific calculator
+
+        return calc == null ? Calculators.SAMPLES : calc;
+
+    }
+
+    private WeigthCalculator tryVisualVMCalculator() {
+
+        int vvmCount = 0;
+        int nonVvmCount = 0;
+
+        for (String source: sourceFiles()) {
+            if (new File(source).isFile()) {
+                try {
+                    EventReader<?> reader = openReader(source);
+                    if (reader != null) {
+                        if (reader.getClass().getSimpleName().equals("DirectNpsEventAdapter")) {
+                            vvmCount++;
+                        }
+                        else {
+                            nonVvmCount++;
+                        }
+                        reader.dispose();
+                    }
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+
+        if (vvmCount > 0 && nonVvmCount == 0) {
+            return new VisualVMSampleCalculator();
+        }
+
+        return null;
+    }
+
     public EventReader<ThreadSnapshotEvent> getFilteredReader() {
         if (traceFilter == null && traceTrim == null && threadName == null && timeRange == null) {
             return getUnclassifiedReader();
@@ -170,7 +219,7 @@ public abstract class AbstractThreadDumpSource extends AbstractEventDumpSource {
 
     public EventReader<ThreadSnapshotEvent> getUnclassifiedReader() {
 
-    	EventReader<Event> rawReader = getRawReader();
+        EventReader<Event> rawReader = getRawReader();
 
         ShieldedEventReader<ThreadSnapshotEvent> shielderReader = new ShieldedEventReader<ThreadSnapshotEvent>(rawReader, ThreadSnapshotEvent.class, new ErrorHandler() {
             @Override

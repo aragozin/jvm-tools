@@ -17,6 +17,7 @@ package org.gridkit.jvmtool.stacktrace.analytics.flame;
 
 import java.lang.Thread.State;
 
+import org.gridkit.jvmtool.event.TagCollection;
 import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
@@ -29,8 +30,8 @@ import org.gridkit.jvmtool.stacktrace.analytics.ThreadSnapshotFilter;
  * {@link FlameColorPicker} for {@link FlameGraphGenerator}. Rainbow color picker
  * choose coloring hue based on category of trace above color element.
  * <br/>
- * Categories are provided as a list of filters. 
- * 
+ * Categories are provided as a list of filters.
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class RainbowColorPicker implements FlameColorPicker {
@@ -38,7 +39,7 @@ public class RainbowColorPicker implements FlameColorPicker {
     ThreadSnapshotFilter[] filters;
     int[] hues;
     int dh;
-    
+
     public RainbowColorPicker(ThreadSnapshotFilter[] filters) {
         this.filters = filters;
         this.hues = new int[filters.length];
@@ -61,7 +62,7 @@ public class RainbowColorPicker implements FlameColorPicker {
         }
         TSnap snap = new TSnap(ftrace);
         StackFrame frame = ftrace[ftrace.length - 1];
-        
+
         for(int n = 0; n != filters.length; ++n) {
             if (filters[n].evaluate(snap)) {
                 return DefaultColorPicker.hashColor(hues[n], 0, frame);
@@ -69,16 +70,16 @@ public class RainbowColorPicker implements FlameColorPicker {
         }
         return DefaultColorPicker.hashGrayColor(frame);
     }
-    
-    
+
+
     private static class TSnap implements ThreadSnapshot {
 
         StackFrameList trace;
-        
+
         public TSnap(StackFrame[] trace) {
             this.trace = new StackFrameArray(trace);
         }
-        
+
         @Override
         public long threadId() {
             return 0;
@@ -106,6 +107,11 @@ public class RainbowColorPicker implements FlameColorPicker {
 
         @Override
         public CounterCollection counters() {
+            return null;
+        }
+
+        @Override
+        public TagCollection tags() {
             return null;
         }
     }

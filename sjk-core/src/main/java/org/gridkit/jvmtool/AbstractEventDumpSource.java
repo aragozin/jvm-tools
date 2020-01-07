@@ -70,7 +70,6 @@ public abstract class AbstractEventDumpSource {
         wildcardFileMatching = enabled;
     }
 
-
     protected abstract List<String> inputFiles();
 
     public List<String> sourceFiles() {

@@ -19,16 +19,25 @@ import java.util.Comparator;
 
 import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
+import org.gridkit.jvmtool.stacktrace.analytics.WeigthCalculator;
 
 /**
  * Specialization of {@link GenericFlameGraphGenerator} working
  * with Java stack traces.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class FlameGraphGenerator extends GenericFlameGraphGenerator {
 
     private static final FrameComparator FRAME_COMPARATOR = new FrameComparator();
+
+    public FlameGraphGenerator() {
+        super();
+    }
+
+    public FlameGraphGenerator(WeigthCalculator calculator) {
+        super(calculator);
+    }
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -36,6 +45,7 @@ public class FlameGraphGenerator extends GenericFlameGraphGenerator {
         return (Comparator)FRAME_COMPARATOR;
     }
 
+    @Override
     protected String describe(Node node) {
         StackFrame frame = (StackFrame) node.path[node.path.length - 1];
         String line = frame.getClassName() + "." + frame.getMethodName();
@@ -64,7 +74,7 @@ public class FlameGraphGenerator extends GenericFlameGraphGenerator {
             return 0;
         }
 
-        private int compare(int n1, int n2) {            
+        private int compare(int n1, int n2) {
             return Long.signum(((long)n1) - ((long)n2));
         }
 

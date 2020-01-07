@@ -23,44 +23,56 @@ import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.gridkit.jvmtool.codec.stacktrace.ThreadSnapshotEvent;
 import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
+import org.gridkit.jvmtool.stacktrace.analytics.Calculators;
+import org.gridkit.jvmtool.stacktrace.analytics.WeigthCalculator;
+import org.gridkit.jvmtool.stacktrace.analytics.WeigthCalculator.CaptionFlavour;
 
 public abstract class GenericFlameGraphGenerator {
 
     private static final GenericStackElement[] ROOT = new GenericStackElement[0];
-    private static final Locale SVG_LOCALE; 
+    private static final Locale SVG_LOCALE;
     static {
         SVG_LOCALE = Locale.ROOT;
     }
-    
+
     private Node root;
-    
-    private FlameColorPicker colorPicker = new DefaultColorPicker();    
-    
+
+    private FlameColorPicker colorPicker = new DefaultColorPicker();
+    private WeigthCalculator calculator = Calculators.SAMPLES;
+
     public GenericFlameGraphGenerator() {
-        root = new Node(ROOT, comparator());        
+        root = new Node(ROOT, comparator());
     }
-    
+
+    public GenericFlameGraphGenerator(WeigthCalculator calculator) {
+        root = new Node(ROOT, comparator());
+        this.calculator = calculator;
+    }
+
     protected abstract Comparator<GenericStackElement> comparator();
-    
+
     public void setColorPicker(FlameColorPicker cp) {
         this.colorPicker = cp;
     }
-    
-    public void feed(StackFrameList trace) {
+
+    public void feed(ThreadSnapshotEvent event) {
         Node node = root;
-        ++node.totalCount;
+        long w = calculator.getWeigth(event);
+        node.totalCount += w;
+        StackFrameList trace = event.stackTrace();
         for(int i = trace.depth(); i > 0; --i) {
             StackFrame f = trace.frameAt(i - 1).withoutSource();
             Node c = node.child(f);
-            ++c.totalCount;
+            c.totalCount += w;
             node = c;
         }
-        ++node.terminalCount;
+        node.terminalCount += w;
     }
-    
+
     public void renderSVG(String title, int width, Writer writer) throws IOException {
         int topm = 24;
         int bm = 0;
@@ -69,15 +81,15 @@ public abstract class GenericFlameGraphGenerator {
         int threashold = (int)(1.5d * root.totalCount / width);
         int maxDepth = calculateMaxDepth(root, threashold);
 
-        int height = maxDepth * frameheight + topm + bm;  
-        
+        int height = maxDepth * frameheight + topm + bm;
+
         appendHeader(width, height, writer);
-        
+
         format(writer, "<rect x=\"0.0\" y=\"0\" width=\"%d\" height=\"%d\" fill=\"url(#background)\"/>\n", width, height);
 
         format(writer, "<text text-anchor=\"middle\" x=\"%d\" y=\"%d\" font-size=\"17\" font-family=\"Verdana\" fill=\"rgb(0,0,0)\"  >%s</text>\n", width/2, topm, title);
-        
-        appendChildNodes(writer, root, 0, width, height - frameheight, frameheight, threashold);        
+
+        appendChildNodes(writer, root, 0, width, height - frameheight, frameheight, threashold);
 
         format(writer, "</svg>");
     }
@@ -94,7 +106,7 @@ public abstract class GenericFlameGraphGenerator {
             return max + 1;
         }
     }
-    
+
     private void appendChildNodes(Writer writer, Node node, int xoffs, int width, int height, int frameheight, int threshold) throws IOException {
         int x = xoffs;
 //        x += node.terminalCount / 2;
@@ -104,7 +116,7 @@ public abstract class GenericFlameGraphGenerator {
                 appendChildNodes(writer, child, x, width, height - frameheight, frameheight, threshold);
             }
             x += child.totalCount;
-        }      
+        }
         if (node.terminalCount > threshold) {
             renderSmoke(writer, x, node.terminalCount, height, width, frameheight);
         }
@@ -115,7 +127,7 @@ public abstract class GenericFlameGraphGenerator {
         double rw = (double)(width) * node.totalCount / root.totalCount;
         double ry = height;
         double rh = frameheight;
-        
+
         int c = colorPicker.pickColor(node.path);
         int cr = (0xFF) & (c >> 16);
         int cg = (0xFF) & (c >>  8);
@@ -123,32 +135,32 @@ public abstract class GenericFlameGraphGenerator {
 
         // Node box
         format(writer, "<g class=\"fbar\">\n");
-        format(writer, "<title>%s (%d samples, %.2f%%)</title>\n", 
-                escape(describe(node)), node.totalCount, 100d * node.totalCount / root.totalCount);
+        format(writer, "<title>%s (%s, %.2f%%)</title>\n",
+                escape(describe(node)), formatWeight(node.totalCount), 100d * node.totalCount / root.totalCount);
         format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(%d,%d,%d)\" rx=\"2\" ry=\"2\"/>\n",
                 rx, ry, rw, rh, cr, cg, cb);
         format(writer, "<text x=\"%.1f\" y=\"%.1f\" fill=\"rgb(0,0,0)\">%s</text>\n",
                 rx + 10, ry + frameheight - 3, escape(trimStr(describe(node), (int)(rw - 10) / 7)));
         format(writer, "</g>\n");
-        
-//        if (node.terminalCount == node.totalCount) {
-//            renderSmoke(writer, x, node.terminalCount, height, width, frameheight);
-//        }
     }
 
-    private void renderSmoke(Writer writer, int x, int samples, int height, int width, int frameheight) throws IOException {
+    private void renderSmoke(Writer writer, int x, long weight, int height, int width, int frameheight) throws IOException {
         double rx = (double)(width) * x / root.totalCount;
-        double rw = (double)(width) * samples / root.totalCount;
+        double rw = (double)(width) * weight / root.totalCount;
         double ry = height;
         double rh = frameheight;
 
         format(writer, "<g>\n");
-        format(writer, "<title>%d samples, %.2f%%</title>", samples, 100d * samples / root.totalCount);
+        format(writer, "<title>%s, %.2f%%</title>", formatWeight(weight), 100d * weight / root.totalCount);
         format(writer, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"rgb(20,20,20)\" rx=\"1\" ry=\"1\"/>\n",
                 rx, ry + rh / 2, rw, 3f);
-        format(writer, "</g>\n");                    
+        format(writer, "</g>\n");
     }
-    
+
+    private Object formatWeight(long totalCount) {
+        return calculator.formatWeight(CaptionFlavour.COMMON, totalCount);
+    }
+
     private String trimStr(String describe, int len) {
         if (len < 3) {
             return "";
@@ -172,13 +184,13 @@ public abstract class GenericFlameGraphGenerator {
              .replace((CharSequence)"<", "&lt;")
              .replace((CharSequence)">", "&gt;");
     }
-    
+
     protected abstract String describe(Node node);
 
     private void format(Writer writer, String format, Object...  args) throws IOException {
         writer.append(String.format(SVG_LOCALE, format, args));
     }
-    
+
     protected void appendHeader(int width, int height, Writer writer) throws IOException {
         format(writer, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
         format(writer, "<svg version=\"1.1\" width=\"%d\" height=\"%d\" onload=\"init(evt)\" viewBox=\"0 0 %d %d\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n"
@@ -194,12 +206,12 @@ public abstract class GenericFlameGraphGenerator {
         format(writer, "  .fbar:hover { stroke:black; stroke-width:0.5; cursor:pointer; }\n");
         format(writer, "</style>\n");
     }
-    
+
     static class Node {
-        
+
         GenericStackElement[] path;
-        int totalCount;
-        int terminalCount;
+        long totalCount;
+        long terminalCount;
         Comparator<GenericStackElement> comparator;
         SortedMap<GenericStackElement, Node> children;
 
@@ -218,12 +230,12 @@ public abstract class GenericFlameGraphGenerator {
                 children.put(f, c);
             }
             return c;
-        }        
-        
+        }
+
         public GenericStackElement element() {
             return path[path.length - 1];
         }
-        
+
         @Override
         public String toString() {
             return path.length == 0 ? "<root>" : path[path.length - 1].toString();

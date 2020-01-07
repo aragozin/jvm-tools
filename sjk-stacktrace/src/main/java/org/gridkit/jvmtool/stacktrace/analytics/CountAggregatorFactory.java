@@ -4,16 +4,22 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 class CountAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregatorFactory {
 
-    @Override
-    public ThreadDumpAggregator newInstance() {
-        return new CountAggregatorFactory();
+    final WeigthCalculator calc;
+    long counter;
+
+    public CountAggregatorFactory(WeigthCalculator calc) {
+        this.calc = calc;
     }
 
-    long counter;
+    @Override
+    public ThreadDumpAggregator newInstance() {
+        return new CountAggregatorFactory(calc);
+    }
 
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
-        ++counter;
+        long w = calc.getWeigth(threadInfo);
+        counter += w;
     }
 
     @Override

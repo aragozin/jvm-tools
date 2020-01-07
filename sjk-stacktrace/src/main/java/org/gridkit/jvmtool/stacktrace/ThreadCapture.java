@@ -5,6 +5,9 @@ import java.lang.management.ThreadInfo;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.gridkit.jvmtool.event.SimpleTagCollection;
+import org.gridkit.jvmtool.event.TagCollection;
+
 public class ThreadCapture implements ThreadSnapshot {
 
     public long threadId;
@@ -12,8 +15,9 @@ public class ThreadCapture implements ThreadSnapshot {
     public long timestamp;
     public StackTraceElement[] elements;
     public CounterArray counters = new CounterArray();
+    public TagCollection tags = new SimpleTagCollection();
     public State state;
-    
+
     @Override
     public long threadId() {
         return threadId;
@@ -42,6 +46,11 @@ public class ThreadCapture implements ThreadSnapshot {
     @Override
     public CounterCollection counters() {
         return counters;
+    }
+
+    @Override
+    public TagCollection tags() {
+        return tags;
     }
 
     public void copyFrom(ThreadInfo info) {
@@ -75,11 +84,11 @@ public class ThreadCapture implements ThreadSnapshot {
         counters.reset();
         state = null;
     }
-    
+
     class StackProxy implements StackFrameList {
 
         StackTraceElement[] stack;
-        
+
         public StackProxy(StackTraceElement[] stack) {
             this.stack = stack;
         }
@@ -135,11 +144,11 @@ public class ThreadCapture implements ThreadSnapshot {
             return stack.length == 0;
         }
     }
-    
+
     static class StackFrameWrapper extends StackFrame {
 
         StackTraceElement ste;
-        
+
         public StackFrameWrapper(StackTraceElement ste) {
             super(ste);
             this.ste = ste;

@@ -5,11 +5,11 @@ import java.lang.Thread.State;
 public interface ThreadDumpAggregatorFactory {
 
     public static CommonFactory COMMON = new CommonFactory();
-    
+
     public ThreadDumpAggregator newInstance();
-    
+
     public static class CommonFactory {
-        
+
         public ThreadDumpAggregatorFactory maxTimestamp() {
             return new MaxTimestampAggregatorFactory();
         }
@@ -18,8 +18,8 @@ public interface ThreadDumpAggregatorFactory {
             return new MinTimestampAggregatorFactory();
         }
 
-        public ThreadDumpAggregatorFactory count() {
-            return new CountAggregatorFactory();
+        public ThreadDumpAggregatorFactory count(WeigthCalculator calc) {
+            return new CountAggregatorFactory(calc);
         }
 
         public ThreadDumpAggregatorFactory cpu() {
@@ -27,7 +27,7 @@ public interface ThreadDumpAggregatorFactory {
         }
 
         public ThreadDumpAggregatorFactory sysCpu() {
-        	return new SysCpuAggregatorFactory();
+            return new SysCpuAggregatorFactory();
         }
 
         public ThreadDumpAggregatorFactory alloc() {
@@ -38,8 +38,8 @@ public interface ThreadDumpAggregatorFactory {
             return new ThreadStateAggregatorFactory(state);
         }
 
-        public ThreadDumpAggregatorFactory threadFilter(ThreadSnapshotFilter filter) {
-            return new FilterAggregatorFactory(filter);
+        public ThreadDumpAggregatorFactory threadFilter(ThreadSnapshotFilter filter, WeigthCalculator calc) {
+            return new FilterAggregatorFactory(filter, calc);
         }
 
         public ThreadDumpAggregatorFactory waitCalls() {
@@ -60,18 +60,18 @@ public interface ThreadDumpAggregatorFactory {
 
         public ThreadDumpAggregatorFactory frequencyHM() {
             return new FrequencyHMAggregatorFactory();
-        }        
+        }
 
         public ThreadDumpAggregatorFactory name() {
             return new ThreadNameAggregatorFactory(32);
-        }        
+        }
 
         public ThreadDumpAggregatorFactory name(int length) {
             return new ThreadNameAggregatorFactory(length);
-        }        
+        }
 
         public ThreadDumpAggregatorFactory threadId() {
             return new ThreadIdAggregatorFactory();
-        }        
+        }
     }
 }

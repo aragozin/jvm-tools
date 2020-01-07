@@ -2,10 +2,12 @@ package org.gridkit.jvmtool.stacktrace;
 
 import java.lang.Thread.State;
 
+import org.gridkit.jvmtool.event.SimpleTagCollection;
+import org.gridkit.jvmtool.event.TagCollection;
 import org.gridkit.jvmtool.stacktrace.StackTraceReader.StackTraceReaderDelegate;
 
 public class ReaderProxy extends StackTraceReaderDelegate implements ThreadSnapshot {
-    
+
     protected StackTraceReader reader;
 
     public ReaderProxy(StackTraceReader reader) {
@@ -46,5 +48,10 @@ public class ReaderProxy extends StackTraceReaderDelegate implements ThreadSnaps
     @Override
     public CounterCollection counters() {
         return getCounters();
+    }
+
+    @Override
+    public TagCollection tags() {
+        return SimpleTagCollection.EMPTY;
     }
 }

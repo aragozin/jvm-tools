@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.gridkit.jvmtool.event.TagCollection;
 import org.gridkit.jvmtool.stacktrace.CounterCollection;
 import org.gridkit.jvmtool.stacktrace.StackFrame;
 import org.gridkit.jvmtool.stacktrace.StackFrameList;
@@ -19,7 +20,7 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
  * implementations.
  * <br/>
  * See {@link CachingFilterFactory} for optimized single threaded version.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class BasicFilterFactory {
@@ -38,7 +39,7 @@ public class BasicFilterFactory {
     public ThreadSnapshotFilter conjunction(ThreadSnapshotFilter... subfilters) {
         return conjunction(Arrays.asList(subfilters));
     }
-    
+
     public ThreadSnapshotFilter conjunction(Collection<ThreadSnapshotFilter> subfilters) {
         if (subfilters.isEmpty()) {
             return falseFilter();
@@ -49,14 +50,14 @@ public class BasicFilterFactory {
     public StackFrameMatcher matcherConjunction(StackFrameMatcher... subfilters) {
         return matcherConjunction(Arrays.asList(subfilters));
     }
-    
+
     public StackFrameMatcher matcherConjunction(Collection<StackFrameMatcher> subfilters) {
         if (subfilters.isEmpty()) {
             return falseFrameMatcher();
         }
         return new ConjunctionMatcher(subfilters.toArray(new StackFrameMatcher[0]));
     }
-    
+
     public ThreadSnapshotFilter not(final ThreadSnapshotFilter filter) {
         return new ThreadSnapshotFilter() {
             @Override
@@ -69,7 +70,7 @@ public class BasicFilterFactory {
     public ThreadSnapshotFilter followed(PositionalStackMatcher matcher, ThreadSnapshotFilter filter) {
         return new FollowedPredicate(matcher, filter);
     }
-    
+
     public ThreadSnapshotFilter frameFilter(final StackFrameMatcher matcher) {
         return new ThreadSnapshotFilter() {
             @Override
@@ -83,15 +84,15 @@ public class BasicFilterFactory {
             }
         };
     }
-    
+
     public ThreadSnapshotFilter falseFilter() {
         return new FalseFilter();
-    }    
+    }
 
     public StackFrameMatcher falseFrameMatcher() {
         return new FalseMatcher();
-    }    
-    
+    }
+
     public ThreadSnapshotFilter trueFilter() {
         return new TrueFilter();
     }
@@ -99,11 +100,11 @@ public class BasicFilterFactory {
     public ThreadSnapshotFilter threadStateMatter(String matcher) {
         return new ThreadStateMatcher(matcher);
     }
-    
+
     public StackFrameMatcher patternFrameMatcher(String... patterns) {
         return patternFrameMatcher(Arrays.asList(patterns));
     }
-    
+
     public StackFrameMatcher patternFrameMatcher(Collection<String> patterns) {
         if (patterns.isEmpty()) {
             throw new IllegalArgumentException("Pattern list is empty");
@@ -118,7 +119,7 @@ public class BasicFilterFactory {
     public PositionalStackMatcher firstFrame(StackFrameMatcher matcher) {
         return new FirstFrameMatcher(matcher);
     }
-    
+
     protected final class TrueFilter implements ThreadSnapshotFilter {
         @Override
         public boolean evaluate(ThreadSnapshot snapshot) {
@@ -141,7 +142,7 @@ public class BasicFilterFactory {
     }
 
     protected class LastFrameMatcher implements PositionalStackMatcher {
-        
+
         private final StackFrameMatcher matcher;
 
         public LastFrameMatcher(StackFrameMatcher matcher) {
@@ -163,9 +164,9 @@ public class BasicFilterFactory {
             return -1;
         }
     }
-    
+
     protected class FirstFrameMatcher implements PositionalStackMatcher {
-        
+
         private final StackFrameMatcher matcher;
 
         public FirstFrameMatcher(StackFrameMatcher matcher) {
@@ -192,7 +193,7 @@ public class BasicFilterFactory {
 
         private final PositionalStackMatcher matcher;
         private final ThreadSnapshotFilter tailFilter;
-     
+
         public FollowedPredicate(PositionalStackMatcher matcher, ThreadSnapshotFilter tailFilter) {
             this.matcher = matcher;
             this.tailFilter = tailFilter;
@@ -211,7 +212,7 @@ public class BasicFilterFactory {
             if (n >= 0) {
                 StackFrameList remained = snapshot.stackTrace();
                 remained = remained.fragment(0, n);
-                return tailFilter.evaluate(new ThreadSnapProxy(snapshot, remained)); 
+                return tailFilter.evaluate(new ThreadSnapProxy(snapshot, remained));
             }
             else {
                 return false;
@@ -237,9 +238,9 @@ public class BasicFilterFactory {
             }
         }
     }
-    
+
     protected static class DisjunctionFilter implements ThreadSnapshotFilter {
-        
+
         private final ThreadSnapshotFilter[] filters;
 
         public DisjunctionFilter(ThreadSnapshotFilter[] filters) {
@@ -258,7 +259,7 @@ public class BasicFilterFactory {
     }
 
     protected static class ConjunctionFilter implements ThreadSnapshotFilter {
-        
+
         private final ThreadSnapshotFilter[] filters;
 
         public ConjunctionFilter(ThreadSnapshotFilter[] filters) {
@@ -277,7 +278,7 @@ public class BasicFilterFactory {
     }
 
     protected static class ConjunctionMatcher implements StackFrameMatcher {
-        
+
         private final StackFrameMatcher[] matchers;
 
         public ConjunctionMatcher(StackFrameMatcher[] matcher) {
@@ -294,11 +295,11 @@ public class BasicFilterFactory {
             return false;
         }
     }
-    
+
     protected static class PatternFrameMatcher implements StackFrameMatcher {
-        
+
         private final Pattern regEx;
-        
+
         PatternFrameMatcher(Collection<String> patterns) {
             StringBuilder sb = new StringBuilder();
             sb.append('(');
@@ -317,39 +318,39 @@ public class BasicFilterFactory {
     }
 
     protected static class ThreadStateMatcher implements ThreadSnapshotFilter {
-    	
-    	private final EnumSet<State> states;
-    	private final boolean matchNull;
-    	
-    	ThreadStateMatcher(String pattern) {
-    		Pattern regEx = Pattern.compile(wildCardTranslate(pattern));
-    		Set<State> st = new HashSet<State>();
-    		for(State s: State.values()) {
-    			if (regEx.matcher(s.toString()).matches()) {
-    				st.add(s);
-    			}
-    		}
-    		states = st.isEmpty() ? EnumSet.noneOf(State.class) : EnumSet.copyOf(st);
-    		matchNull = regEx.matcher(String.valueOf((Object)null)).matches();
-    	}
-    	
-    	@Override
-		public boolean evaluate(ThreadSnapshot snapshot) {
-			State state = snapshot.threadState();
-			if (state == null) {
-				return matchNull;
-			}
-			else {
-				return states.contains(state);
-			}
-		}
+
+        private final EnumSet<State> states;
+        private final boolean matchNull;
+
+        ThreadStateMatcher(String pattern) {
+            Pattern regEx = Pattern.compile(wildCardTranslate(pattern));
+            Set<State> st = new HashSet<State>();
+            for(State s: State.values()) {
+                if (regEx.matcher(s.toString()).matches()) {
+                    st.add(s);
+                }
+            }
+            states = st.isEmpty() ? EnumSet.noneOf(State.class) : EnumSet.copyOf(st);
+            matchNull = regEx.matcher(String.valueOf((Object)null)).matches();
+        }
+
+        @Override
+        public boolean evaluate(ThreadSnapshot snapshot) {
+            State state = snapshot.threadState();
+            if (state == null) {
+                return matchNull;
+            }
+            else {
+                return states.contains(state);
+            }
+        }
     }
-    
+
     protected static class ThreadSnapProxy implements ThreadSnapshot {
 
         ThreadSnapshot snap;
         StackFrameList stack;
-        
+
         public ThreadSnapProxy(ThreadSnapshot snap, StackFrameList stack) {
             this.snap = snap;
             this.stack = stack;
@@ -379,11 +380,16 @@ public class BasicFilterFactory {
         public CounterCollection counters() {
             return snap.counters();
         }
+
+        @Override
+        public TagCollection tags() {
+            return snap.tags();
+        }
     }
-    
+
     /**
      * GLOB pattern supports *, ** and ? wild cards.
-     * Leading and trailing ** have special meaning, consecutive separator become optional. 
+     * Leading and trailing ** have special meaning, consecutive separator become optional.
      */
     protected static String wildCardTranslate(String pattern) {
         String separator = ".";
@@ -403,7 +409,7 @@ public class BasicFilterFactory {
             pattern = pattern.substring(0, st.start(1));
             useSt = true;
         }
-        
+
         for(int i = 0; i != pattern.length(); ++i) {
             char c = pattern.charAt(i);
             if (c == '?') {
@@ -431,11 +437,11 @@ public class BasicFilterFactory {
                 }
             }
         }
-        
+
         if (useSt) {
             sb.append("([" + es + "].*)?");
         }
-        
+
         return sb.toString();
     }
 
@@ -451,5 +457,5 @@ public class BasicFilterFactory {
             }
         }
         return sb.toString();
-    }    
+    }
 }

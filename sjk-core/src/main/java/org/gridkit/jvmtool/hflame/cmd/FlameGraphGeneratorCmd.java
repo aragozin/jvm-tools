@@ -39,111 +39,112 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Stack capture command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class FlameGraphGeneratorCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "flame";
-	}
+    @Override
+    public String getCommandName() {
+        return "flame";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new FlameGen(host);
-	}
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new FlameGen(host);
+    }
 
-	@Parameters(commandDescription = "Generates flame graph from stack traces")
-	public static class FlameGen implements Runnable {
+    @Parameters(commandDescription = "Generates flame graph from stack traces")
+    public static class FlameGen implements Runnable {
 
-		@ParametersDelegate
-		private CommandLauncher host;
-				
-		@ParametersDelegate
-		private DumpInput input;
-		
-	    @Parameter(names = {"-o", "--output"}, required = true, description = "Name of generated report file")
-	    private String outputFile;
+        @ParametersDelegate
+        private CommandLauncher host;
+
+        @ParametersDelegate
+        private DumpInput input;
+
+        @Parameter(names = {"-o", "--output"}, required = true, description = "Name of generated report file")
+        private String outputFile;
 
         @Parameter(names={"-tz", "--timezone", "--time-zone"}, required = false, description="Time zone used for timestamps and time ranges")
         private String timeZone = "UTC";
-	    
-	    private int traceCounter;
-		
-		public FlameGen(CommandLauncher host) {
-			this.host = host;
-			this.input = new DumpInput(host);
-		}
-		
-		@Override
-		public void run() {
-			
-			try {
-				
-				TimeZone tz = TimeZone.getTimeZone(timeZone);
-				input.setTimeZone(tz);				
 
-				Document template = XmlUtil.parseFromResource("flame_template.html");
-				
-				FlameTemplateProcessor tproc = new FlameTemplateProcessor(template);
-				JsonFlameDataSet dataSet = new JsonFlameDataSet();
-				
-			    System.out.println("Input files");
-			    
-			    for(String f: input.sourceFiles()) {
-	                System.out.println("  " + f);
-			    }
-			    System.out.println();
-			    
-			    dataSet.feed(input.getFilteredReader().morph(new EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent>() {
-					@Override
-					public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
-						if (event.stackTrace() != null && !event.stackTrace().isEmpty()) {
-							++traceCounter;
-							return event;
-						}
-						else {
-							return null;
-						}
-					}			    	
-				}));
-			    
-			    System.out.println(traceCounter + " samples processed");
-			    
-			    if (traceCounter == 0) {
-			    	System.out.println("No data omit report generation");
-			    }
-			    
-			    tproc.setDataSet("fg1", dataSet);
-			    
-			    OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF8"));
-			    tproc.generate(writer);
-			    writer.close();
+        private int traceCounter;
 
-			    System.out.println("Generated " + new File(outputFile).getAbsolutePath() + " (" + new File(outputFile).length() + " bytes)");
-				
-			} catch (Exception e) {
-				host.fail("Unexpected error: " + e.toString(), e);
-			}			
-		}
+        public FlameGen(CommandLauncher host) {
+            this.host = host;
+            this.input = new DumpInput(host);
+        }
+
+        @Override
+        public void run() {
+
+            try {
+
+                TimeZone tz = TimeZone.getTimeZone(timeZone);
+                input.setTimeZone(tz);
+
+                Document template = XmlUtil.parseFromResource("flame_template.html");
+
+                FlameTemplateProcessor tproc = new FlameTemplateProcessor(template);
+                JsonFlameDataSet dataSet = new JsonFlameDataSet();
+                dataSet.setWeightCalculator(input.getWeightCalculator());
+
+                System.out.println("Input files");
+
+                for(String f: input.sourceFiles()) {
+                    System.out.println("  " + f);
+                }
+                System.out.println();
+
+                dataSet.feed(input.getFilteredReader().morph(new EventMorpher<ThreadSnapshotEvent, ThreadSnapshotEvent>() {
+                    @Override
+                    public ThreadSnapshotEvent morph(ThreadSnapshotEvent event) {
+                        if (event.stackTrace() != null && !event.stackTrace().isEmpty()) {
+                            ++traceCounter;
+                            return event;
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                }));
+
+                System.out.println(traceCounter + " samples processed");
+
+                if (traceCounter == 0) {
+                    System.out.println("No data omit report generation");
+                }
+
+                tproc.setDataSet("fg1", dataSet);
+
+                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF8"));
+                tproc.generate(writer);
+                writer.close();
+
+                System.out.println("Generated " + new File(outputFile).getAbsolutePath() + " (" + new File(outputFile).length() + " bytes)");
+
+            } catch (Exception e) {
+                host.fail("Unexpected error: " + e.toString(), e);
+            }
+        }
 
 
-	}
-	
-	static class DumpInput extends AbstractThreadDumpSource {
-		
-		@Parameter(names = {"-f", "--file"}, description = "Input files", required = true, variableArity = true)
-		private List<String> inputFiles = new ArrayList<String>();
+    }
 
-		public DumpInput(CommandLauncher host) {
-			super(host);
-		}
+    static class DumpInput extends AbstractThreadDumpSource {
 
-		@Override
-		protected List<String> inputFiles() {
+        @Parameter(names = {"-f", "--file"}, description = "Input files", required = true, variableArity = true)
+        private List<String> inputFiles = new ArrayList<String>();
 
-			return inputFiles;
-		}
-	}
+        public DumpInput(CommandLauncher host) {
+            super(host);
+        }
+
+        @Override
+        protected List<String> inputFiles() {
+
+            return inputFiles;
+        }
+    }
 }

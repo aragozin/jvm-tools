@@ -13,8 +13,8 @@ class AllocAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregat
         return new AllocAggregatorFactory();
     }
 
-    private Map<Long, ThreadTrack> info = new HashMap<Long, AllocAggregatorFactory.ThreadTrack>(); 
-    
+    private Map<Long, ThreadTrack> info = new HashMap<Long, AllocAggregatorFactory.ThreadTrack>();
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         if (threadInfo.counters().getValue(ThreadCounters.ALLOCATED_BYTES) != Long.MIN_VALUE) {
@@ -57,9 +57,9 @@ class AllocAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregat
             return (((double)totalAlloc) / (maxTs - minTs)) * 1000d;
         }
     }
-    
+
     private static class ThreadTrack {
-        
+
         long firstTimestamp;
         long fisrtAlloc;
 

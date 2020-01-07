@@ -13,8 +13,8 @@ class CpuAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregator
         return new CpuAggregatorFactory();
     }
 
-    private Map<Long, ThreadTrack> info = new HashMap<Long, ThreadTrack>(); 
-    
+    private Map<Long, ThreadTrack> info = new HashMap<Long, ThreadTrack>();
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         if (threadInfo.counters().getValue(ThreadCounters.CPU_TIME_MS) != Long.MIN_VALUE) {
@@ -57,9 +57,9 @@ class CpuAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregator
             return (((double)totalCPU) / (maxTs - minTs));
         }
     }
-    
+
     private static class ThreadTrack {
-        
+
         long firstTimestamp;
         long fisrtCPU;
 

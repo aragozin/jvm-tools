@@ -7,11 +7,11 @@ import java.util.Map;
 import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 
 public class SimpleCategorizer implements ThreadSnapshotCategorizer {
-    
+
     private String[] categories = new String[0];
     private ThreadSnapshotFilter[] filters = new ThreadSnapshotFilter[0];
-    
-    public SimpleCategorizer() {        
+
+    public SimpleCategorizer() {
     }
 
     public SimpleCategorizer(Map<String, ThreadSnapshotFilter> categories) {

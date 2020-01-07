@@ -40,22 +40,27 @@ public interface StackTraceReader {
 
         protected abstract StackTraceReader getReader();
 
+        @Override
         public boolean isLoaded() {
             return getReader().isLoaded();
         }
 
+        @Override
         public long getThreadId() {
             return getReader().getThreadId();
         }
 
+        @Override
         public long getTimestamp() {
             return getReader().getTimestamp();
         }
 
+        @Override
         public String getThreadName() {
             return getReader().getThreadName();
         }
 
+        @Override
         public State getThreadState() {
             return getReader().getThreadState();
         }
@@ -65,14 +70,17 @@ public interface StackTraceReader {
             return getReader().getCounters();
         }
 
+        @Override
         public StackTraceElement[] getTrace() {
             return getReader().getTrace();
         }
 
+        @Override
         public StackFrameList getStackTrace() {
             return getReader().getStackTrace();
         }
 
+        @Override
         public boolean loadNext() throws IOException {
             return getReader().loadNext();
         }

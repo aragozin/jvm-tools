@@ -8,18 +8,18 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 public class ThreadSplitAggregator {
 
     private ThreadDumpAggregatorFactory[] aggregators;
-    
+
     private Map<Long, ThreadTrack> data = new TreeMap<Long, ThreadTrack>();
-    
+
     public ThreadSplitAggregator(ThreadDumpAggregatorFactory... aggregators) {
         this.aggregators = aggregators;
     }
-    
+
     public void feed(ThreadSnapshot threadDump) {
         ThreadTrack tt = track(threadDump.threadId());
         process(tt, threadDump);
     }
-    
+
     private ThreadTrack track(long threadId) {
         ThreadTrack tt = data.get(threadId);
         if (tt == null) {
@@ -53,14 +53,14 @@ public class ThreadSplitAggregator {
             }
             ++n;
         }
-        
+
         return result;
     }
-    
+
     private static class ThreadTrack {
-        
+
         String threadName;
         ThreadDumpAggregator[] aggregations;
-        
+
     }
 }

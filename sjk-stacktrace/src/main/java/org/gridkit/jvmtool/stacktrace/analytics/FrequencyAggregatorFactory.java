@@ -12,12 +12,12 @@ class FrequencyAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggr
     long total;
     long minTs = Long.MAX_VALUE;
     long maxTs = Long.MIN_VALUE;
-    
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         ++total;
         minTs = Math.min(minTs, threadInfo.timestamp());
-        maxTs = Math.max(maxTs, threadInfo.timestamp());        
+        maxTs = Math.max(maxTs, threadInfo.timestamp());
     }
 
     @Override
