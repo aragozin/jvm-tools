@@ -125,7 +125,7 @@
       <dependency>
         <groupId>org.perfkit.sjk.parsers</groupId>
         <artifactId>sjk-nps</artifactId>
-        <version>0.5</version>
+        <version>0.9</version>
       </dependency>
       <dependency>
         <groupId>org.perfkit.sjk.parsers</groupId>
@@ -159,6 +159,31 @@
   </dependencyManagement>
 
   <build>
+
+    <plugins>
+        <!-- SJK is 1.6 compatible -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-toolchains-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>toolchain</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <toolchains>
+                 <jdk>
+                    <version>1.6</version>
+                    <vendor>sun</vendor>
+                 </jdk>
+              </toolchains>
+            </configuration>
+        </plugin>
+    </plugins>
+
     <pluginManagement>
       <plugins>
         <plugin>
