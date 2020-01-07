@@ -16,7 +16,6 @@
 package org.gridkit.jvmtool.cmd;
 
 import static org.gridkit.jvmtool.stacktrace.analytics.ThreadDumpAggregatorFactory.COMMON;
-import static org.junit.Assert.fail;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -295,7 +294,7 @@ public class StackSampleAnalyzerCmd implements CmdRef {
                     }
 
                     if (sortByTerm && sortBy != null) {
-                        fail("--by-term and --sort are mutually exclusive");
+                        host.fail("--by-term and --sort are mutually exclusive");
                     }
 
                     if (sortBy == null) {
