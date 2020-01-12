@@ -1,10 +1,15 @@
 Next version
 ----
 
-...
+ ...
+
+0.15 - 2020 Jan 8
+----
+- Fixed NPE parsing some Java 11 JFR files
+- Fixed Netbeans/VisualVM nps files parsing
 
 0.14 - 2019 Aug 11
----
+----
 - Support for parsing JFR recordings Java 8 - 11
 - `jfr2json` command to convert JFR recordings to json
 - Support JFR allocation samples in `ssa` command
