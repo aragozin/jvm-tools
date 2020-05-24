@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+
 <!--
 
     Copyright 2012 Alexey Ragozin
@@ -17,7 +17,7 @@
     limitations under the License.
 
 -->
-  
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -41,7 +41,7 @@
       <artifactId>mxdump</artifactId>
     </dependency>
   </dependencies>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -65,7 +65,12 @@
               </artifactSet>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.gridkit.jvmtool.SJK</mainClass>
+                  <manifestEntries>
+                    <Main-Class>org.gridkit.jvmtool.SJK</Main-Class>
+                    <Premain-Class>org.gridkit.jvmtool.agent.SjkAgent</Premain-Class>
+                    <Agent-Class>org.gridkit.jvmtool.agent.SjkAgent</Agent-Class>
+                    <Can-Redefine-Classes>false</Can-Redefine-Classes>
+                  </manifestEntries>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>

@@ -1,7 +1,8 @@
 Next version
 ----
+- Added `hs` command
+- Ability to active HostpotInternal MBeans via JVM agent `hs --enable-hotspot-mbean`
 
- ...
 
 0.15 - 2020 Jan 8
 ----

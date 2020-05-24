@@ -485,6 +485,11 @@ public class CliCheck {
         exec("vminfo", "-p", PID, "--flags");
     }
 
+    @Test
+    public void hs_hsmbean() {
+        exec("hs", "-p", PID, "--enable-hotspot-mbean", "-X");
+    }
+
     private void exec(String... cmd) {
         SJK sjk = new SJK();
         sjk.suppressSystemExit();

@@ -39,6 +39,7 @@
     <module>sjk-hflame</module>
     <module>sjk-win32</module>
     <module>sjk-core</module>
+    <module>sjk-agent</module>
     <module>sjk-json</module>
     <module>mxdump</module>
     <module>gcflow</module>
@@ -103,6 +104,11 @@
       <dependency>
         <groupId>org.gridkit.jvmtool</groupId>
         <artifactId>sjk-json</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>sjk-agent</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

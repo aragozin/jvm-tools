@@ -2,7 +2,7 @@
 
 <!--
 
-    Copyright 2012 Alexey Ragozin
+    Copyright 2020 Alexey Ragozin
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 -->
 
     <modelVersion>4.0.0</modelVersion>
-
+    
     <parent>
       <groupId>org.gridkit.jvmtool</groupId>
       <artifactId>jvmtool-umbrella-pom</artifactId>
@@ -27,47 +27,11 @@
       <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>sjk-core</artifactId>
+    <artifactId>sjk-agent</artifactId>
     <name>${project.groupId}::${project.artifactId}</name>
-    <description>Core classes for Swiss Java Knife tool</description>
-
+    <description>JVM agent libary</description>
+   
     <dependencies>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-cli</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-stacktrace</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-hflame</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.perfkit.sjk.parsers</groupId>
-            <artifactId>sjk-jfr5</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.perfkit.sjk.parsers</groupId>
-            <artifactId>sjk-jfr6</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.perfkit.sjk.parsers</groupId>
-            <artifactId>sjk-jfr-standalone</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.perfkit.sjk.parsers</groupId>
-            <artifactId>sjk-nps</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.lab</groupId>
-            <artifactId>jvm-attach-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-agent</artifactId>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -76,11 +40,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.carrotsearch</groupId>
-            <artifactId>junit-benchmarks</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
