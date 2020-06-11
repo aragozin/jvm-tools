@@ -60,24 +60,29 @@ public class MBeanHelper {
 	    }
 	}
 	
-	public String get(ObjectName bean, String attr) throws Exception {
+	public Map<String, String> get(ObjectName bean, String... attrs) throws Exception {
 		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
-		if (ai == null) {
-			throw new IllegalArgumentException("No such attribute '" + attr + "'");
+		Map<String, MBeanAttributeInfo> attrInfos = attrInfos(mbinfo);
+		for(String attr:attrs) {
+			MBeanAttributeInfo ai = attrInfos.get(attr);
+			if (ai == null) {
+				throw new IllegalArgumentException("No such attribute '" + attr + "'");
+			}
+			if (!ai.isReadable()) {
+				throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+			}
 		}
-		if (!ai.isReadable()) {
-			throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+		Map<String, String> attrValues = new HashMap<String, String>();
+		for(Attribute attr: mserver.getAttributes(bean, attrs).asList()) {
+			MBeanAttributeInfo attrInfo = attrInfos.get(attr.getName());
+			attrValues.put(attr.getName(), format(attr.getValue(), attrInfo.getType()));
 		}
-		Object v = mserver.getAttribute(bean, attr);
-		String type = ai.getType();
-		String text = format(v, type);
-		return text;
+		return attrValues;
 	}
 
 	public void getAsTable(ObjectName bean, String attr, MTable table) throws Exception {
 		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
+		MBeanAttributeInfo ai = attrInfos(mbinfo).get(attr);
 		if (ai == null) {
 			throw new IllegalArgumentException("No such attribute '" + attr + "'");
 		}
@@ -137,7 +142,7 @@ public class MBeanHelper {
 
 	public void set(ObjectName bean, String attr, String value) throws Exception {
 		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
+		MBeanAttributeInfo ai = attrInfos(mbinfo).get(attr);
 		if (ai == null) {
 			throw new IllegalArgumentException("No such attribute '" + attr + "'");
 		}
@@ -418,13 +423,12 @@ public class MBeanHelper {
 		throw new IllegalArgumentException("Cannot convert '" + value + "' to " + type);
 	}
 
-	private MBeanAttributeInfo attrInfo(MBeanInfo mbinfo, String attr) {
+	private Map<String, MBeanAttributeInfo> attrInfos(MBeanInfo mbinfo) {
+		Map<String, MBeanAttributeInfo> attrInfos = new HashMap<String, MBeanAttributeInfo>();
 		for(MBeanAttributeInfo ai: mbinfo.getAttributes()) {
-			if (ai.getName().equals(attr)) {
-				return ai;
-			}
+			attrInfos.put(ai.getName(), ai);
 		}
-		return null;
+		return attrInfos;
 	}
 
 	public String describe(ObjectName bean) throws Exception {

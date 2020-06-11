@@ -17,6 +17,7 @@ package org.gridkit.jvmtool.cmd;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.management.MBeanServerConnection;
@@ -57,8 +58,8 @@ public class MxCmd implements CmdRef {
 		@Parameter(names={"-b", "--bean"}, required = true, description="MBean name")
 		private String mbean;
 		
-		@Parameter(names={"-f", "--field", "--attribute"}, description="MBean attribute")
-		String attrib = null;
+		@Parameter(names={"-f", "--field", "--attribute"}, variableArity=true, splitter = Unsplitter.class, description="MBean attributes")
+		List<String> attribs = new ArrayList<String>();
 
         @Parameter(names={"--quiet"}, description="Avoid non-essential output")
         boolean quiet = false;
@@ -171,16 +172,19 @@ public class MxCmd implements CmdRef {
 			@Override
 			public void run() {
 				try {
-					if (attrib == null) {
-						host.failAndPrintUsage("MBean operation name is missing");
+					if (attribs == null || attribs.isEmpty()) {
+						host.failAndPrintUsage("MBean attribute is missing");
 					}
 					MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
 					if (csv) {
+						if (attribs.size() > 0) {
+							host.failAndPrintUsage("Multiple MBean attributes not supported");
+						}
 						MTable table = new MTable();
 	                    for (ObjectName name : names) {
-						    helper.getAsTable(name, attrib, table);
+						    helper.getAsTable(name, attribs.get(0), table);
 	                    }
 	                    if (table.isEmpty()) {
 	                    	System.out.println("No data");
@@ -197,7 +201,16 @@ public class MxCmd implements CmdRef {
 	                        if (!quiet) {
 	                            System.out.println(name);
 	                        }
-						    System.out.println(helper.get(name, attrib));
+							Map<String, String> attrValues = helper.get(name, attribs.toArray(new String[attribs.size()]));
+	                        for(String attrib:attribs) {
+								if (quiet) {
+									System.out.println(attrValues.get(attrib));
+								} else {
+									System.out.println(attrib + " " + attrValues.get(attrib));
+								}
+
+							}
+						    System.out.println();
 	                    }
 					}
 				} catch (Exception e) {
@@ -217,8 +230,10 @@ public class MxCmd implements CmdRef {
 			@Override
 			public void run() {
 				try {
-					if (attrib == null) {
+					if (attribs == null || attribs.isEmpty()) {
 						host.failAndPrintUsage("MBean attribute name is missing");
+					} else if (attribs.size() > 1) {
+						host.failAndPrintUsage("Multiple MBean attribute names not supported");
 					}
 					if (value == null) {
 						host.failAndPrintUsage("Value is required");
@@ -230,7 +245,7 @@ public class MxCmd implements CmdRef {
                         if (!quiet) {
                             System.out.println(name);
                         }
-                        helper.set(name, attrib, value);
+                        helper.set(name, attribs.get(0), value);
                     }
 				} catch (Exception e) {
 					host.fail(e.toString(), e);
