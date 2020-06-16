@@ -15,14 +15,9 @@
  */
 package org.gridkit.jvmtool.cmd;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.beust.jcommander.ParametersDelegate;
 import org.gridkit.jvmtool.JmxConnectionInfo;
 import org.gridkit.jvmtool.MBeanHelper;
 import org.gridkit.jvmtool.MTable;
@@ -30,9 +25,12 @@ import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.util.formating.TextTable;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.beust.jcommander.ParametersDelegate;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MxCmd implements CmdRef {
 
@@ -179,12 +177,9 @@ public class MxCmd implements CmdRef {
                     Set<ObjectName> names = resolveSingleBean(conn);
 					MBeanHelper helper = new MBeanHelper(conn);
 					if (csv) {
-						if (attribs.size() > 0) {
-							host.failAndPrintUsage("Multiple MBean attributes not supported");
-						}
 						MTable table = new MTable();
 	                    for (ObjectName name : names) {
-						    helper.getAsTable(name, attribs.get(0), table);
+						    helper.getAsTable(name, attribs, table);
 	                    }
 	                    if (table.isEmpty()) {
 	                    	System.out.println("No data");
@@ -201,14 +196,17 @@ public class MxCmd implements CmdRef {
 	                        if (!quiet) {
 	                            System.out.println(name);
 	                        }
-							Map<String, String> attrValues = helper.get(name, attribs.toArray(new String[attribs.size()]));
+							Map<String, String> attrValues = helper.get(name, attribs);
 	                        for(String attrib:attribs) {
+								String attribValue = attrValues.get(attrib);
 								if (quiet) {
-									System.out.println(attrValues.get(attrib));
+									System.out.println(attribValue);
+								} else if (attribValue.contains("\n")) {
+									System.out.println("    " + attrib);
+									System.out.println("        " + attribValue.replaceAll("\\n", "\\\n        "));
 								} else {
-									System.out.println(attrib + " " + attrValues.get(attrib));
+									System.out.println("    " + attrib + " " + attribValue);
 								}
-
 							}
 						    System.out.println();
 	                    }

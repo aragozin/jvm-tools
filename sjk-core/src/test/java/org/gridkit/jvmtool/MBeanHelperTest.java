@@ -1,6 +1,8 @@
 package org.gridkit.jvmtool;
 
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.management.MalformedObjectNameException;
@@ -66,12 +68,12 @@ public class MBeanHelperTest {
 	public void test_bean_get_set() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
 		helper.set(threadMXBean(), "ThreadCpuTimeEnabled", "true");
-		String threadAllocatedMemoryEnabled = helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled").get("ThreadAllocatedMemoryEnabled");
+		String threadAllocatedMemoryEnabled = helper.get(threadMXBean(), Collections.singletonList("ThreadAllocatedMemoryEnabled")).get("ThreadAllocatedMemoryEnabled");
 		System.out.println("ThreadCpuTimeEnabled: " + threadAllocatedMemoryEnabled);
 		assertThat(threadAllocatedMemoryEnabled).isEqualTo("true");
 
 		helper.set(threadMXBean(), "ThreadCpuTimeEnabled", "FALSE");
-		threadAllocatedMemoryEnabled = helper.get(threadMXBean(), "ThreadAllocatedMemoryEnabled").get("ThreadAllocatedMemoryEnabled");
+		threadAllocatedMemoryEnabled = helper.get(threadMXBean(), Collections.singletonList("ThreadAllocatedMemoryEnabled")).get("ThreadAllocatedMemoryEnabled");
 		System.out.println("ThreadCpuTimeEnabled: " + threadAllocatedMemoryEnabled);
 		assertThat(threadAllocatedMemoryEnabled).isEqualTo("true");
 	}
@@ -85,20 +87,20 @@ public class MBeanHelperTest {
 	@Test
 	public void test_get_sys_props() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
-		System.out.println(helper.get(runtimeMXBean(), "SystemProperties"));
+		System.out.println(helper.get(runtimeMXBean(), Collections.singletonList("SystemProperties")));
 	}
 
 	@Test
 	public void test_get_sys_props_wide() throws Exception {
 	    MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
 	    helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, 200);
-	    System.out.println(helper.get(runtimeMXBean(), "SystemProperties"));
+	    System.out.println(helper.get(runtimeMXBean(), Collections.singletonList("SystemProperties")));
 	}
 
 	@Test
 	public void test_get_mem_heap() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
-		System.out.println(helper.get(memoryMXBean(), "HeapMemoryUsage"));
+		System.out.println(helper.get(memoryMXBean(), Collections.singletonList("HeapMemoryUsage")));
 	}
 
 	@Test
@@ -116,7 +118,7 @@ public class MBeanHelperTest {
 	@Test
 	public void test_get_vm_spec_infos() throws Exception {
 		MBeanHelper helper = new MBeanHelper(ManagementFactory.getPlatformMBeanServer());
-		Map<String, String> attrs = helper.get(runtimeMXBean(), "SpecName", "SpecVendor", "SpecVersion");
+		Map<String, String> attrs = helper.get(runtimeMXBean(), Arrays.asList("SpecName", "SpecVendor", "SpecVersion"));
 		System.out.println(attrs);
 		assertThat(attrs).containsKeys("SpecName", "SpecVendor", "SpecVersion");
 	}
