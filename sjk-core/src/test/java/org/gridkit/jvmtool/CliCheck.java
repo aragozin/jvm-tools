@@ -199,6 +199,16 @@ public class CliCheck {
     }
 
     @Test
+    public void mx_get_memory_pool_usage_peakusage() {
+        exec("mx", "-p", PID, "--get", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage", "-f", "PeakUsage");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_peakusage_csv() {
+        exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage", "-f", "PeakUsage");
+    }
+
+    @Test
     public void mx_set_threading_alloc() {
         exec("mx", "-p", PID, "--set", "--bean", "*:type=Threading", "-f", "ThreadAllocatedMemoryEnabled", "-v", "true");
     }
