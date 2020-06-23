@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,93 +61,131 @@ public class MBeanHelper {
 	        widthThresholdComposite = (Integer) value;
 	    }
 	}
-	
-	public String get(ObjectName bean, String attr) throws Exception {
+
+	/**
+	 * Get MBean attributes metadata
+	 * @param bean MBean attributes
+	 * @param attrs Required attributes
+	 * @param read Attributes must be readable
+	 * @param write Attributes must be writable
+	 * @return Map attribute name - attribute info
+	 */
+	private Map<String, MBeanAttributeInfo> getAttributeInfos(ObjectName bean, Collection<String> attrs, boolean read, boolean write) throws IntrospectionException, ReflectionException, InstanceNotFoundException, IOException {
 		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
-		if (ai == null) {
-			throw new IllegalArgumentException("No such attribute '" + attr + "'");
+		// Convert array to map
+		Map<String, MBeanAttributeInfo> attrInfos = new HashMap<String, MBeanAttributeInfo>(attrs.size());
+		for(MBeanAttributeInfo attrInfo: mbinfo.getAttributes()) {
+			attrInfos.put(attrInfo.getName(), attrInfo);
 		}
-		if (!ai.isReadable()) {
-			throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+		// Check required attributes and their read/write flag
+		for(String attr:attrs) {
+			MBeanAttributeInfo ai = attrInfos.get(attr);
+			if (ai == null) {
+				throw new IllegalArgumentException("No such attribute '" + attr + "'");
+			}
+			if (read && !ai.isReadable()) {
+				throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+			}
+			if (write && !ai.isWritable()) {
+				throw new IllegalArgumentException("Attribute '" + attr + "' is not writeable");
+			}
 		}
-		Object v = mserver.getAttribute(bean, attr);
-		String type = ai.getType();
-		String text = format(v, type);
-		return text;
+
+		return attrInfos;
 	}
 
-	public void getAsTable(ObjectName bean, String attr, MTable table) throws Exception {
-		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
-		if (ai == null) {
-			throw new IllegalArgumentException("No such attribute '" + attr + "'");
+	/**
+	 * Get MBean attributes metadata
+	 * @param bean MBean attributes
+	 * @param attrs Required attributes
+	 * @return Map attribut name - attribute value
+	 */
+	private Map<String, Object> getAttributes(ObjectName bean, Collection<String> attrs) throws InstanceNotFoundException, ReflectionException, IOException {
+		Map<String, Object> attrValues = new HashMap<String, Object>(attrs.size());
+		for(Attribute attr:mserver.getAttributes(bean, attrs.toArray(new String[0])).asList()) {
+			attrValues.put(attr.getName(), attr.getValue());
 		}
-		if (!ai.isReadable()) {
-			throw new IllegalArgumentException("Attribute '" + attr + "' is write-only");
+		return attrValues;
+	}
+
+	public Map<String, String> get(ObjectName bean, Collection<String> attrs) throws Exception {
+		Map<String, MBeanAttributeInfo> attrInfos = getAttributeInfos(bean, attrs, true, false);
+		Map<String, Object> attrRawValues = getAttributes(bean, attrs);
+		Map<String, String> attrValues = new HashMap<String, String>(attrs.size());
+		for(String attr: attrs) {
+			String attrValue = format(attrRawValues.get(attr), attrInfos.get(attr).getType());
+			attrValues.put(attr, attrValue);
 		}
-		Object v = mserver.getAttribute(bean, attr);
-		
-		if (v instanceof CompositeData[]) {
-			CompositeData[] td = (CompositeData[]) v;
-			if (td.length == 0) {
-				return;
-			}
-			List<String> header = new ArrayList<String>();
-			for(String f: td[0].getCompositeType().keySet()) {
-				if (!header.contains(f)) {
-					header.add(f);
+		return attrValues;
+	}
+
+	public void getAsTable(ObjectName bean, Collection<String> attrs, MTable table) throws Exception {
+		Map<String, MBeanAttributeInfo> attrInfos = getAttributeInfos(bean, attrs, true, false);
+		Map<String, Object> attrRawValues = getAttributes(bean, attrs);
+		for(String attr: attrs) {
+			Object v = attrRawValues.get(attr);
+			List<String> tableHeader = null;
+			List<String[]> tableRows = new ArrayList<String[]>();
+			if (v instanceof CompositeData[]) {
+				CompositeData[] td = (CompositeData[]) v;
+				if (td.length == 0) {
+					continue;
 				}
-			}
-			String[] hdr = header.toArray(new String[0]);
-			for(Object row: td) {
-				table.append(hdr, formatRow((CompositeData)row, header));
-			}
-			return;
-		}
-		else if (v instanceof CompositeData) {
-			CompositeData cd = (CompositeData) v;
-			List<String> header = new ArrayList<String>();
-			for(String f: cd.getCompositeType().keySet()) {
-				if (!header.contains(f)) {
-					header.add(f);
+				List<String> header = new ArrayList<String>();
+				for (String f : td[0].getCompositeType().keySet()) {
+					if (!header.contains(f)) {
+						header.add(f);
+					}
 				}
-			}
-			String[] hdr = header.toArray(new String[0]);
-			table.append(hdr, formatRow(cd, header));
-			return;
-		}
-		else if (v instanceof TabularData) {
-			TabularData td = (TabularData) v;
-			td.getTabularType().getIndexNames();
-			List<String> header = new ArrayList<String>(td.getTabularType().getIndexNames());
-			for(String f: td.getTabularType().getRowType().keySet()) {
-				if (!header.contains(f)) {
-					header.add(f);
+				tableHeader = header;
+				for (Object row : td) {
+					tableRows.add(formatRow((CompositeData) row, header));
 				}
+			} else if (v instanceof CompositeData) {
+				CompositeData cd = (CompositeData) v;
+				List<String> header = new ArrayList<String>();
+				for (String f : cd.getCompositeType().keySet()) {
+					if (!header.contains(f)) {
+						header.add(f);
+					}
+				}
+				tableHeader = header;
+				tableRows.add(formatRow(cd, header));
+			} else if (v instanceof TabularData) {
+				TabularData td = (TabularData) v;
+				td.getTabularType().getIndexNames();
+				List<String> header = new ArrayList<String>(td.getTabularType().getIndexNames());
+				for (String f : td.getTabularType().getRowType().keySet()) {
+					if (!header.contains(f)) {
+						header.add(f);
+					}
+				}
+				tableHeader = header;
+				for (Object row : td.values()) {
+					tableRows.add(formatRow((CompositeData) row, header));
+				}
+			} else {
+				tableHeader = Collections.singletonList("Value");
+				tableRows.add(new String[]{formatLine(v, attrInfos.get(attr).getType())});
 			}
-			String[] hdr = header.toArray(new String[0]);
-			for(Object row: td.values()) {
-				table.append(hdr, formatRow((CompositeData)row, header));
+			List<String> tableHeader2 = new ArrayList<String>(tableHeader.size() + 2);
+			tableHeader2.add(0, "MBean");
+			tableHeader2.add(1, "Attribute");
+			tableHeader2.addAll(tableHeader);
+			String[] hdr = tableHeader2.toArray(new String[0]);
+			for(String[] tableRow:tableRows) {
+				List<String> tableCells = new ArrayList<String>(tableRow.length +2);
+				tableCells.add(bean.getCanonicalName());
+				tableCells.add(attr);
+				tableCells.addAll(Arrays.asList(tableRow));
+				table.append(hdr, tableCells.toArray(new String[0]));
 			}
-			return;
-		}
-		else {
-			throw new IllegalArgumentException("Attribute is not tabular");
 		}
 	}
 
 	public void set(ObjectName bean, String attr, String value) throws Exception {
-		MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
-		MBeanAttributeInfo ai = attrInfo(mbinfo, attr);
-		if (ai == null) {
-			throw new IllegalArgumentException("No such attribute '" + attr + "'");
-		}
-		if (!ai.isWritable()) {
-			throw new IllegalArgumentException("Attribute '" + attr + "' is not writeable");
-		}
-		String type = ai.getType();
-		Object ov = convert(value, type);
+		Map<String, MBeanAttributeInfo> attrInfos = getAttributeInfos(bean, Collections.singletonList(attr), false, true);
+		Object ov = convert(value, attrInfos.get(attr).getType());
 		mserver.setAttribute(bean, new Attribute(attr, ov));
 	}
 	
@@ -416,15 +456,6 @@ public class MBeanHelper {
 			return array;			
 		}
 		throw new IllegalArgumentException("Cannot convert '" + value + "' to " + type);
-	}
-
-	private MBeanAttributeInfo attrInfo(MBeanInfo mbinfo, String attr) {
-		for(MBeanAttributeInfo ai: mbinfo.getAttributes()) {
-			if (ai.getName().equals(attr)) {
-				return ai;
-			}
-		}
-		return null;
 	}
 
 	public String describe(ObjectName bean) throws Exception {

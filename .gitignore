@@ -5,3 +5,4 @@ target/
 .factorypath
 .codenvy
 *.iml
+.idea/
