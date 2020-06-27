@@ -48,6 +48,9 @@ public class CliCheck {
     @Rule
     public CliCheckRule rule = new CliCheckRule();
 
+    @Rule
+    public ConsoleRule stdOut = ConsoleRule.out();
+
     private String call1arg1;
     private String call2arg1;
     private String call2arg2;
@@ -103,17 +106,26 @@ public class CliCheck {
     @Test
     public void jps() {
         exec("jps");
-    }
+
+        // some PID something expected
+        stdOut.lineEx("[0-9]+\\s.*");
+}
 
     @Test
     public void jps_filter_by_prop() {
         System.setProperty("my.prop", "123");
         exec("jps", "-fp", "my.*=123");
+
+        // some PID something expected
+        stdOut.lineEx("[0-9]+\\s.*junit.*");
     }
 
     @Test
     public void jps_filter_by_desc() {
         exec("jps", "-fd", "*junit*");
+
+        // some PID something expected
+        stdOut.lineEx("[0-9]+\\s.*junit.*");
     }
 
     @Test
@@ -172,11 +184,26 @@ public class CliCheck {
     @Test
     public void hh_young_N_self() {
         exec("hh", "-p", PID, "--young", "-n", "20", "-d", "1s");
+
+        stdOut.skip();
+        stdOut.line("Garbage histogram for last 1s");
+        stdOut.skip();
+        stdOut.lineEx("\\s*20:.*");
+        stdOut.lineEx("Total.*");
+
     }
 
     @Test
     public void mx_info() {
         exec("mx", "-p", PID, "--info", "--bean", "*:type=HotSpotDiagnostic");
+
+        stdOut.line("com.sun.management:type=HotSpotDiagnostic");
+        stdOut.line("sun.management.HotSpotDiagnostic");
+        stdOut.line(" - Information on the management interface of the MBean");
+        stdOut.line(" (A) DiagnosticOptions : CompositeData[]");
+        stdOut.line(" (O) dumpHeap(String p0, boolean p1) : void");
+        stdOut.line(" (O) getVMOption(String p0) : CompositeData");
+        stdOut.line(" (O) setVMOption(String p0, String p1) : void");
     }
 
     @Test
@@ -217,6 +244,23 @@ public class CliCheck {
     @Test
     public void mx_get_memory_pool_usage_peakusage_csv() {
         exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage", "-f", "PeakUsage");
+
+        stdOut.line("committed,init,max,used");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_peakusage_csv_add_bean_name() {
+        exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage,PeakUsage", "--add-mbean-name");
+
+        stdOut.line("MBean,Attribute,committed,init,max,used");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_peakusage_csv_with_projection() {
+        exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage,PeakUsage", "--col-list", "Attribute,-,init,used,committed");
+
+        stdOut.line("Attribute,-,init,used,committed");
+        stdOut.lineEx("(Usage|PeakUsage),,\\d+,\\d+,\\d+");
     }
 
     @Test
@@ -539,6 +583,8 @@ public class CliCheck {
             sb.append(' ').append(escape(c));
         }
         System.out.println(sb);
+        stdOut.line(sb.toString());
+        stdOut.verify();
         Assert.assertTrue(sjk.start(cmd));
     }
 
