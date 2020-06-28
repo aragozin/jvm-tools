@@ -8,14 +8,14 @@ import java.util.logging.LogManager;
 
 public class LogOff {
 
-	public LogOff() throws IOException {
-		Properties prop = new Properties();
-		prop.setProperty(".level", "OFF");
-		prop.setProperty(".level", "OFF");
-		
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		prop.store(bos, "");
-		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-		LogManager.getLogManager().readConfiguration(bis);
-	}	
+    public LogOff() throws IOException {
+        Properties prop = new Properties();
+        prop.setProperty(".level", "OFF");
+        prop.setProperty(".level", "OFF");
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        prop.store(bos, "");
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        LogManager.getLogManager().readConfiguration(bis);
+    }
 }

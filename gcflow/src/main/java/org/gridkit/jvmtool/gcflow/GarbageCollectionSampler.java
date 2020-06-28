@@ -4,57 +4,57 @@ import java.util.Collection;
 
 public interface GarbageCollectionSampler {
 
-	public void report(String algoName, int eventsMissed, GcReport info);
-	
-	interface GcReport {
-		
-		public long getId();
-		
-		public boolean isYoungGC();
+    public void report(String algoName, int eventsMissed, GcReport info);
 
-		public boolean isConcurrentGC();
+    interface GcReport {
 
-		public long getCollectedSize();
+        public long getId();
 
-		public long getPromotedSize();
+        public boolean isYoungGC();
 
-		public long getTotalSizeBefore();
+        public boolean isConcurrentGC();
 
-		public long getTotalSizeAfter();
-		
-		public Collection<String> getColletedPools();
+        public long getCollectedSize();
 
-		public Collection<String> getAllCollectedPools();
+        public long getPromotedSize();
 
-		public Collection<String> getAllMemoryPools();
+        public long getTotalSizeBefore();
 
-		public long getSizeBefore(String pool);
+        public long getTotalSizeAfter();
 
-		public long getSizeAfter(String pool);
+        public Collection<String> getColletedPools();
 
-		public long getSizeBefore(Collection<String> pools);
+        public Collection<String> getAllCollectedPools();
 
-		public long getSizeAfter(Collection<String> pools);
+        public Collection<String> getAllMemoryPools();
 
-		public long getTimeSincePreviousGC();
+        public long getSizeBefore(String pool);
 
-		public long getDuration();
+        public long getSizeAfter(String pool);
 
-		public long getJvmClockEndTime();
+        public long getSizeBefore(Collection<String> pools);
 
-		public long getJvmClockStartTime();
+        public long getSizeAfter(Collection<String> pools);
 
-		public long getWallClockEndTime();
+        public long getTimeSincePreviousGC();
 
-		public long getWallClockStartTime();
-		
-		public Collection<String> getEdenPools();
+        public long getDuration();
 
-		public Collection<String> getSurvivourPools();
+        public long getJvmClockEndTime();
 
-		public Collection<String> getOldSpacePools();
+        public long getJvmClockStartTime();
 
-		public Collection<String> getPermSpacePools();
+        public long getWallClockEndTime();
 
-	}
+        public long getWallClockStartTime();
+
+        public Collection<String> getEdenPools();
+
+        public Collection<String> getSurvivourPools();
+
+        public Collection<String> getOldSpacePools();
+
+        public Collection<String> getPermSpacePools();
+
+    }
 }
