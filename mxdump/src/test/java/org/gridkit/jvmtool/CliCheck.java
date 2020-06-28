@@ -23,45 +23,45 @@ import org.junit.Assert;
 
 /**
  * JUnit command runner.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class CliCheck {
 
-	private static String PID;
-	static {
-		PID = ManagementFactory.getRuntimeMXBean().getName();
-		PID = PID.substring(0, PID.indexOf('@'));
-	}
-	
-	@Test
-	public void mxdump_self() {
-		exec("mxdump", "-p", PID);
-	}
+    private static String PID;
+    static {
+        PID = ManagementFactory.getRuntimeMXBean().getName();
+        PID = PID.substring(0, PID.indexOf('@'));
+    }
 
-	@Test
-	public void mxdump_by_query() {
-		exec("mxdump", "-p", PID, "-q", "java.lang:type=GarbageCollector,name=*");
-	}
+    @Test
+    public void mxdump_self() {
+        exec("mxdump", "-p", PID);
+    }
 
-	private void exec(String... cmd) {
-		CommandLauncher sjk = new CommandLauncher();
-		sjk.suppressSystemExit();
-		StringBuilder sb = new StringBuilder();
-		sb.append("SJK");
-		for(String c: cmd) {
-			sb.append(' ').append(escape(c));
-		}
-		System.out.println(sb);
-		Assert.assertTrue(sjk.start(cmd));		
-	}
+    @Test
+    public void mxdump_by_query() {
+        exec("mxdump", "-p", PID, "-q", "java.lang:type=GarbageCollector,name=*");
+    }
 
-	private Object escape(String c) {
-		if (c.split("\\s").length > 1) {
-			return '\"' + c + '\"';
-		}
-		else {
-			return c;
-		}
-	}	
+    private void exec(String... cmd) {
+        CommandLauncher sjk = new CommandLauncher();
+        sjk.suppressSystemExit();
+        StringBuilder sb = new StringBuilder();
+        sb.append("SJK");
+        for(String c: cmd) {
+            sb.append(' ').append(escape(c));
+        }
+        System.out.println(sb);
+        Assert.assertTrue(sjk.start(cmd));
+    }
+
+    private Object escape(String c) {
+        if (c.split("\\s").length > 1) {
+            return '\"' + c + '\"';
+        }
+        else {
+            return c;
+        }
+    }
 }
