@@ -22,7 +22,7 @@ public class SjkAgentLocatorCheck {
 
     @Test
     public void checkLocator() throws IOException, URISyntaxException {
-    	System.out.println(SjkAgentLocator.getJarPath());
+        System.out.println(SjkAgentLocator.getJarPath());
     }
 
 }
