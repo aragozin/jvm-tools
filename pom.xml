@@ -281,6 +281,19 @@
                 </indent>
                 <trimTrailingWhitespace/>                
               </format>
+              <format>
+                <!-- Java whitespace formatting -->
+	        <includes>
+                  <include>**/pom.xml</include>
+                </includes>
+                <endWithNewline/>
+                <indent>
+                  <spaces>true</spaces>
+                  <tabs>false</tabs>
+                  <spacesPerTab>2</spacesPerTab>
+                </indent>
+                <trimTrailingWhitespace/>                
+              </format>
             </formats>
           </configuration>
         </plugin>
