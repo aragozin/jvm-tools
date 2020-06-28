@@ -8,7 +8,7 @@ class PeriodCHMAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggr
     public ThreadDumpAggregator newInstance() {
         return new PeriodCHMAggregatorFactory();
     }
-    
+
     long count = 0;
     double total = 0;
     double totalSquares = 0;

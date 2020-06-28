@@ -9,7 +9,7 @@ import javax.management.ObjectName;
 
 /**
  * Additional methods available in modern JVMs.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
@@ -21,7 +21,7 @@ public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
     public long[] getThreadUserTime(long[] ids);
 
     public long[] getThreadAllocatedBytes(long[] ids);
-    
+
     public static class BeanHelper {
 
         private static ObjectName name(String name) {
@@ -31,7 +31,7 @@ public interface ThreadMXBeanEx extends java.lang.management.ThreadMXBean {
                 throw new RuntimeException(e);
             }
         }
-        
+
         public static ThreadMXBean connectThreadMXBean(MBeanServerConnection mserver) {
             ThreadMXBean bean;
             try {

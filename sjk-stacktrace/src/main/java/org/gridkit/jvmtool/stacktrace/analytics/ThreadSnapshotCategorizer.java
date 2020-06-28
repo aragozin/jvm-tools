@@ -9,5 +9,5 @@ public interface ThreadSnapshotCategorizer {
     public List<String> getCategories();
 
     public String categorize(ThreadSnapshot snap);
-    
+
 }

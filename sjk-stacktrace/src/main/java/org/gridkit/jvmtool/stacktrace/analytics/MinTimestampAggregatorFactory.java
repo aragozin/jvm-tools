@@ -13,11 +13,11 @@ class MinTimestampAggregatorFactory implements ThreadDumpAggregator, ThreadDumpA
 
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
-        min = Math.min(min, threadInfo.timestamp());        
+        min = Math.min(min, threadInfo.timestamp());
     }
 
     @Override
     public Object info() {
         return min;
-    }    
+    }
 }

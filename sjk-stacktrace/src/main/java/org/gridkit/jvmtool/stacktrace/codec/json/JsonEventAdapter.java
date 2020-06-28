@@ -7,9 +7,9 @@ import org.gridkit.jvmtool.spi.parsers.JsonEventSource;
 
 public interface JsonEventAdapter {
 
-	/**
-	 * @return next available event at source or null if no events available
-	 */
-	public CommonEvent parseNextEvent(JsonEventSource source) throws IOException;
-	
+    /**
+     * @return next available event at source or null if no events available
+     */
+    public CommonEvent parseNextEvent(JsonEventSource source) throws IOException;
+
 }

@@ -13,7 +13,7 @@ public class WaitCallsAggregatorFactory implements ThreadDumpAggregator, ThreadD
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override

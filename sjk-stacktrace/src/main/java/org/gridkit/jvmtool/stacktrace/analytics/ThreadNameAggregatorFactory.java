@@ -5,7 +5,7 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 class ThreadNameAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregatorFactory {
 
     int lengthLimit;
-    
+
     public ThreadNameAggregatorFactory(int lengthLimit) {
         this.lengthLimit = lengthLimit;
     }
@@ -16,7 +16,7 @@ class ThreadNameAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAgg
     }
 
     String name = null;
-    
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         name = threadInfo.threadName();

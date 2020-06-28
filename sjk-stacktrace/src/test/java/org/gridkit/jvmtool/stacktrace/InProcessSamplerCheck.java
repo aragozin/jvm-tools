@@ -13,16 +13,16 @@ public class InProcessSamplerCheck {
         ThreadDumpSampler sampler = new ThreadDumpSampler();
         sampler.connect(ManagementFactory.getThreadMXBean());
         sampler.collect(new StackTraceWriter() {
-            
+
             @Override
             public void write(ThreadSnapshot snap) throws IOException {
                 Assert.assertTrue(snap.counters().getValue(ThreadCounters.ALLOCATED_BYTES) >= 0);
             }
-            
+
             @Override
             public void close() {
             }
         });
     }
-    
+
 }

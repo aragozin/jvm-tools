@@ -5,10 +5,10 @@ import java.io.InputStream;
 
 /**
  * A simple interface for {@link InputStream} which can re reopen.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public interface InputStreamSource {
 
-	public InputStream open() throws IOException;
+    public InputStream open() throws IOException;
 }

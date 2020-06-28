@@ -23,7 +23,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class FilterParserCorpusTest {
 
     private static List<Object[]> cases = new ArrayList<Object[]>();
-    
+
     @Parameters(name = "\"{0}\" {1}")
     public static List<Object[]> getExpressions() {
         addCase(10912, "**");
@@ -46,17 +46,17 @@ public class FilterParserCorpusTest {
         addCase(428,   "**.CoyoteAdapter.service+org.jboss.seam.core.BijectionInterceptor.aroundInvoke,org.jboss.seam.core.SynchronizationInterceptor.aroundInvoke/!**.proceed+java.util.concurrent.locks.ReentrantLock");
         addCase(2891,   "org.hibernate/^+**.onAutoFlush");
         addCase(1542,   "org.hibernate/^!**.onAutoFlush");
-        
+
         return cases;
     }
-    
+
     private static void addCase(int matchCount, String filter) {
         cases.add(new Object[]{filter, matchCount});
     }
-    
+
     private String filter;
     private int matchCount;
-    
+
     public FilterParserCorpusTest(String filter, int matchCount) {
         this.filter = filter;
         this.matchCount = matchCount;
@@ -81,5 +81,5 @@ public class FilterParserCorpusTest {
         }
         Assert.assertEquals(matchCount, n);
     }
-    
+
 }

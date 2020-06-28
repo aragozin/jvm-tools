@@ -8,8 +8,8 @@ class FrequencyHMAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAg
     public ThreadDumpAggregator newInstance() {
         return new FrequencyHMAggregatorFactory();
     }
-    
-    
+
+
     long count = 0;
     double reciproicalTotal = 0;
     long lastTimestamp = Long.MAX_VALUE;
@@ -33,5 +33,5 @@ class FrequencyHMAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAg
         else {
             return Double.NaN;
         }
-    }    
+    }
 }

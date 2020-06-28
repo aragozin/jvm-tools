@@ -10,74 +10,74 @@ import org.gridkit.jvmtool.stacktrace.codec.json.JsonStreamHandler.JsonObjectHan
 
 class JfrObjectAllocationInNewTLAB implements JsonObjectHandler {
 
-	public static final String TYPE_ID = "jdk.ObjectAllocationInNewTLAB";
+    public static final String TYPE_ID = "jdk.ObjectAllocationInNewTLAB";
 
-	private final JfrEventParser parser;
-	private GenericEvent event = new GenericEvent();
-	private StackFrameList threadTrace;
+    private final JfrEventParser parser;
+    private GenericEvent event = new GenericEvent();
+    private StackFrameList threadTrace;
 
-	private ThreadInfoHandler threadInfo = new ThreadInfoHandler() {
+    private ThreadInfoHandler threadInfo = new ThreadInfoHandler() {
 
-		@Override
-		protected void onComplete() {
-			if (this.javaName != null) {
-				event.tags().put(JvmEvents.THREAD_NAME, this.javaName);
-			}
-			if (this.javaThreadId > 0) {
-				event.counters().set(JvmEvents.THREAD_ID, this.javaThreadId);
-			}
-		}
-	};
+        @Override
+        protected void onComplete() {
+            if (this.javaName != null) {
+                event.tags().put(JvmEvents.THREAD_NAME, this.javaName);
+            }
+            if (this.javaThreadId > 0) {
+                event.counters().set(JvmEvents.THREAD_ID, this.javaThreadId);
+            }
+        }
+    };
 
-	private StackTraceHandler stackTrace = new StackTraceHandler() {
+    private StackTraceHandler stackTrace = new StackTraceHandler() {
 
-		@Override
-		protected void onComplete() {
-			threadTrace = new StackFrameArray(frames);
-		}
-	};
+        @Override
+        protected void onComplete() {
+            threadTrace = new StackFrameArray(frames);
+        }
+    };
 
-	public JfrObjectAllocationInNewTLAB(JfrEventParser parser) {
-		this.parser = parser;
-	}
+    public JfrObjectAllocationInNewTLAB(JfrEventParser parser) {
+        this.parser = parser;
+    }
 
-	@Override
-	public void onScalarFieldValue(String fieldName, Object val) {
-		if ("startTime".equals(fieldName)) {
-			JfrHelper.setTimestamp(event, val);
-		}
-		else if ("state".equals(fieldName)) {
-			JfrHelper.setThreadState(event, val);
-		}
-		else if ("allocationSize".equals(fieldName)) {
-			JfrHelper.setAllocationSize(event, val);
-		}
-		else if ("tlabSize".equals(fieldName)) {
-			JfrHelper.setTLABSize(event, val);
-		}
-	}
+    @Override
+    public void onScalarFieldValue(String fieldName, Object val) {
+        if ("startTime".equals(fieldName)) {
+            JfrHelper.setTimestamp(event, val);
+        }
+        else if ("state".equals(fieldName)) {
+            JfrHelper.setThreadState(event, val);
+        }
+        else if ("allocationSize".equals(fieldName)) {
+            JfrHelper.setAllocationSize(event, val);
+        }
+        else if ("tlabSize".equals(fieldName)) {
+            JfrHelper.setTLABSize(event, val);
+        }
+    }
 
-	@Override
-	public JsonEntityHandler onEntityField(String fieldName) {
-		if ("eventThread".equals(fieldName)) {
-			return threadInfo;
-		}
-		else if ("stackTrace".equals(fieldName)) {
-			return stackTrace;
-		}
-		else {
-			return JsonStreamHandler.NULL_HANDLER;
-		}
-	}
+    @Override
+    public JsonEntityHandler onEntityField(String fieldName) {
+        if ("eventThread".equals(fieldName)) {
+            return threadInfo;
+        }
+        else if ("stackTrace".equals(fieldName)) {
+            return stackTrace;
+        }
+        else {
+            return JsonStreamHandler.NULL_HANDLER;
+        }
+    }
 
-	@Override
-	public void onObjectComplete() {
-		event.tags().put("jfr.typeId", TYPE_ID);
-		event.tags().put(JvmEvents.THREAD_STATE, "RUNNABLE"); // inferred from event JFR type
-		ThreadSnapshotEventPojo cevent = new ThreadSnapshotEventPojo();
-		cevent.loadFromRawEvent(event);
-		cevent.stackTrace(threadTrace);
-		parser.push(cevent);
-		event = new GenericEvent();
-	}
+    @Override
+    public void onObjectComplete() {
+        event.tags().put("jfr.typeId", TYPE_ID);
+        event.tags().put(JvmEvents.THREAD_STATE, "RUNNABLE"); // inferred from event JFR type
+        ThreadSnapshotEventPojo cevent = new ThreadSnapshotEventPojo();
+        cevent.loadFromRawEvent(event);
+        cevent.stackTrace(threadTrace);
+        parser.push(cevent);
+        event = new GenericEvent();
+    }
 }

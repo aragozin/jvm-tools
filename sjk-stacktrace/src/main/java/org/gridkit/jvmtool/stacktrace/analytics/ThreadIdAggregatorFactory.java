@@ -10,7 +10,7 @@ class ThreadIdAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggre
     }
 
     long id = -1;
-    
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         id = threadInfo.threadId();

@@ -16,6 +16,6 @@ public abstract class AbstractFilteringStackTraceReader extends StackTraceReader
         }
         return false;
     }
-    
+
     protected abstract boolean evaluate();
 }

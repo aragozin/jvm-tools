@@ -7,11 +7,11 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 class ThreadStateAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggregatorFactory {
 
     private final State state;
-    
+
     public ThreadStateAggregatorFactory(State state) {
         this.state = state;
     }
-    
+
     @Override
     public ThreadDumpAggregator newInstance() {
         return new ThreadStateAggregatorFactory(state);
@@ -19,7 +19,7 @@ class ThreadStateAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAg
 
     long total;
     long matched;
-    
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         ++total;

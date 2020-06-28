@@ -11,14 +11,14 @@ class NativeAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggrega
 
     long total;
     long matched;
-    
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         ++total;
         if (threadInfo.stackTrace().isEmpty() || threadInfo.stackTrace().frameAt(0).isNative()) {
             ++matched;
         }
-        
+
     }
 
     @Override

@@ -6,9 +6,9 @@ import org.gridkit.jvmtool.util.json.JsonStreamWriter;
 
 public interface JsonEventSource {
 
-	/**
-	 * @return <code>false</code> if no more data
-	 */
-	public boolean readNext(JsonStreamWriter writer) throws IOException;
+    /**
+     * @return <code>false</code> if no more data
+     */
+    public boolean readNext(JsonStreamWriter writer) throws IOException;
 
 }

@@ -13,8 +13,8 @@ class SysCpuAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggrega
         return new SysCpuAggregatorFactory();
     }
 
-    private Map<Long, ThreadTrack> info = new HashMap<Long, ThreadTrack>(); 
-    
+    private Map<Long, ThreadTrack> info = new HashMap<Long, ThreadTrack>();
+
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
         if (cpuTime(threadInfo) >= 0 && userTime(threadInfo) >= 0) {
@@ -41,16 +41,16 @@ class SysCpuAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggrega
     }
 
     private long sysTime(ThreadSnapshot threadInfo) {
-    	return cpuTime(threadInfo) - userTime(threadInfo);
+        return cpuTime(threadInfo) - userTime(threadInfo);
     }
 
     private long userTime(ThreadSnapshot threadInfo) {
-		return threadInfo.counters().getValue(ThreadCounters.USER_TIME_MS);
-	}
+        return threadInfo.counters().getValue(ThreadCounters.USER_TIME_MS);
+    }
 
-	private long cpuTime(ThreadSnapshot threadInfo) {
-		return threadInfo.counters().getValue(ThreadCounters.CPU_TIME_MS);
-	}
+    private long cpuTime(ThreadSnapshot threadInfo) {
+        return threadInfo.counters().getValue(ThreadCounters.CPU_TIME_MS);
+    }
 
     @Override
     public Object info() {
@@ -69,9 +69,9 @@ class SysCpuAggregatorFactory implements ThreadDumpAggregator, ThreadDumpAggrega
             return (((double)totalCPU) / (maxTs - minTs));
         }
     }
-    
+
     private static class ThreadTrack {
-        
+
         long firstTimestamp;
         long fisrtCPU;
 

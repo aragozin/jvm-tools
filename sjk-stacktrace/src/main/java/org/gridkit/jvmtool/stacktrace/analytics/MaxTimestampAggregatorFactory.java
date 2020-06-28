@@ -13,7 +13,7 @@ class MaxTimestampAggregatorFactory implements ThreadDumpAggregator, ThreadDumpA
 
     @Override
     public void aggregate(ThreadSnapshot threadInfo) {
-        max = Math.max(max, threadInfo.timestamp());        
+        max = Math.max(max, threadInfo.timestamp());
     }
 
     @Override

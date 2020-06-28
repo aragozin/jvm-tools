@@ -12,7 +12,7 @@ public class FilteredStackTraceReader extends ReaderProxy implements StackTraceR
 
     private final ThreadSnapshotFilter filter;
     private final StackTraceReader reader;
-    
+
     public FilteredStackTraceReader(ThreadSnapshotFilter filter, StackTraceReader reader) throws IOException {
         super(null);
         this.filter = filter;
@@ -76,7 +76,7 @@ public class FilteredStackTraceReader extends ReaderProxy implements StackTraceR
             reader.loadNext();
         }
     }
-    
+
     @Override
     public boolean loadNext() throws IOException {
         reader.loadNext();

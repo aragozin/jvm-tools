@@ -13,7 +13,7 @@ import org.gridkit.jvmtool.stacktrace.StackFrame;
  * matcher level. It also reusing matcher instance.
  * <br/>
  * These optimizations are not thread safe.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class CachingFilterFactory extends BasicFilterFactory {
@@ -27,10 +27,10 @@ public class CachingFilterFactory extends BasicFilterFactory {
     }
 
     protected static class CachingPatternFrameMatcher implements StackFrameMatcher {
-        
+
         private final Matcher regEx;
         private final Map<StackFrame, Boolean> hitCahce = new HashMap<StackFrame, Boolean>();
-        
+
         CachingPatternFrameMatcher(Collection<String> patterns) {
             StringBuilder sb = new StringBuilder();
             sb.append('(');
@@ -51,7 +51,7 @@ public class CachingFilterFactory extends BasicFilterFactory {
             else {
                 regEx.reset(frame);
                 hit = regEx.lookingAt();
-                hitCahce.put(frame, hit);                
+                hitCahce.put(frame, hit);
             }
             return hit;
         }

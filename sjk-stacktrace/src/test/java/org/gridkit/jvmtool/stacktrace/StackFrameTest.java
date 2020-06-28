@@ -120,7 +120,7 @@ public class StackFrameTest {
         StackFrame frame2 = new StackFrame("mypackage", "MyClass", "myMethod", "MyClass.java", 15);
 
         Assert.assertNotEquals(frame1.hashCode(), frame2.hashCode());
-        
+
         zeroHash(frame1);
         zeroHash(frame2);
 

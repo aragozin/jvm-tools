@@ -13,7 +13,7 @@ public class TraceLoader {
     public static StackFrame[] loadFrames(String res) {
         return loadFrames(res);
     }
-    
+
     public static StackFrame[] loadFrames(String res, int multiplier) {
         try {
             List<StackFrame> frames = new ArrayList<StackFrame>();

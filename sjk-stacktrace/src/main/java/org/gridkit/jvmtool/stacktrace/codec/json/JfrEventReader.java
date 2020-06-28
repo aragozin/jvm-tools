@@ -13,59 +13,59 @@ import org.gridkit.jvmtool.spi.parsers.JsonEventSource;
 
 public class JfrEventReader implements EventReader<CommonEvent> {
 
-	private final JsonEventSource source;
-	private final JsonEventAdapter adapter;
-	private CommonEvent next;
-	
-	public JfrEventReader(JsonEventSource source, JsonEventAdapter adapter) {
-		this.source = source;
-		this.adapter = adapter;
-	}
-	
-	@Override
-	public boolean hasNext() {
-		try {
-			if (next == null) {
-				next = adapter.parseNextEvent(source);
-			}
-			return next != null;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    private final JsonEventSource source;
+    private final JsonEventAdapter adapter;
+    private CommonEvent next;
 
-	@Override
-	public CommonEvent next() {
-		if (!hasNext()) {
-			throw new NoSuchElementException();
-		}
-		CommonEvent e = next;
-		next = null;
-		return e;
-	}
+    public JfrEventReader(JsonEventSource source, JsonEventAdapter adapter) {
+        this.source = source;
+        this.adapter = adapter;
+    }
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException();		
-	}
+    @Override
+    public boolean hasNext() {
+        try {
+            if (next == null) {
+                next = adapter.parseNextEvent(source);
+            }
+            return next != null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public Iterator<CommonEvent> iterator() {
-		return this;
-	}
+    @Override
+    public CommonEvent next() {
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        CommonEvent e = next;
+        next = null;
+        return e;
+    }
 
-	@Override
-	public <M extends Event> EventReader<M> morph(EventMorpher<CommonEvent, M> morpher) {
-		return MorphingEventReader.morph(this, morpher);
-	}
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public CommonEvent peekNext() {
-		return next;
-	}
+    @Override
+    public Iterator<CommonEvent> iterator() {
+        return this;
+    }
 
-	@Override
-	public void dispose() {
-		// TODO
-	}
+    @Override
+    public <M extends Event> EventReader<M> morph(EventMorpher<CommonEvent, M> morpher) {
+        return MorphingEventReader.morph(this, morpher);
+    }
+
+    @Override
+    public CommonEvent peekNext() {
+        return next;
+    }
+
+    @Override
+    public void dispose() {
+        // TODO
+    }
 }

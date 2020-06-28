@@ -7,11 +7,11 @@ import java.util.NoSuchElementException;
 public abstract class AbstractStackFrameArray implements StackFrameList {
 
     protected abstract StackFrame[] array();
-    
+
     protected abstract int from();
 
     protected abstract int to();
-    
+
     @Override
     public Iterator<StackFrame> iterator() {
         return new Iterator<StackFrame>() {
@@ -78,7 +78,7 @@ public abstract class AbstractStackFrameArray implements StackFrameList {
     public StackFrame[] toArray() {
         return Arrays.copyOfRange(array(), from(), to());
     }
-    
+
     @Override
     public String toString() {
         return Arrays.asList(array()).subList(from(), to()).toString();

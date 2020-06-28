@@ -18,10 +18,10 @@ public class CounterArray implements CounterCollection {
             throw new UnsupportedOperationException("Immutable");
         }
     };
-    
+
     String[] counterNames;
     long[] values;
-    
+
     public CounterArray() {
         this(new String[0], new long[0]);
     }
@@ -38,7 +38,7 @@ public class CounterArray implements CounterCollection {
     public Iterator<String> iterator() {
         return new Iterator<String>() {
             int n = 0;
-            
+
             {seek();}
 
             protected void seek() {
@@ -68,7 +68,7 @@ public class CounterArray implements CounterCollection {
 
             @Override
             public void remove() {
-                throw new UnsupportedOperationException();                
+                throw new UnsupportedOperationException();
             }
         };
     }
@@ -101,14 +101,14 @@ public class CounterArray implements CounterCollection {
         }
         return new CounterArray(keys, vals);
     }
-    
+
     public void copyFrom(CounterCollection cc) {
         reset();
         for(String key: cc) {
             set(key, cc.getValue(key));
         }
     }
-    
+
     public void set(String key, long value) {
         if (key == null) {
             throw new NullPointerException("key is null");
@@ -127,11 +127,11 @@ public class CounterArray implements CounterCollection {
             values[n] = value;
         }
     }
-    
+
     public void reset() {
         Arrays.fill(values, Long.MIN_VALUE);
     }
-    
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');

@@ -5,7 +5,7 @@ import java.util.Comparator;
 public class StackFrame implements CharSequence, GenericStackElement {
 
     public static final Comparator<StackFrame> COMPARATOR = new FrameComparator();
-    
+
     private static final String NATIVE_METHOD = "Native Method";
     private static final String UNKNOWN_SOURCE = "Unknown Source";
 
@@ -292,7 +292,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
     public String toString() {
         return toString(this);
     }
-    
+
     public void toString(StringBuilder builder) {
         if (classPrefix != null) {
             builder.append(classPrefix).append('.');
@@ -340,7 +340,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
         }
         return hash;
     }
-    
+
     private int hashText(int hash, String text) {
         for(int i = 0; i != text.length(); ++i) {
             hash = 31 * hash + text.charAt(i);
@@ -474,7 +474,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
             return StackFrame.toString(this);
         }
     }
-    
+
     private static class FrameComparator implements Comparator<StackFrame> {
 
         @Override
@@ -495,7 +495,7 @@ public class StackFrame implements CharSequence, GenericStackElement {
             return 0;
         }
 
-        private int compare(int n1, int n2) {            
+        private int compare(int n1, int n2) {
             return Long.signum(((long)n1) - ((long)n2));
         }
 
@@ -511,5 +511,5 @@ public class StackFrame implements CharSequence, GenericStackElement {
             }
             return str1.compareTo(str2);
         }
-    }    
+    }
 }

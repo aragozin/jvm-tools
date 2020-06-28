@@ -7,7 +7,7 @@ import org.gridkit.jvmtool.stacktrace.ThreadSnapshot;
 public class TimeRangeFilter implements ThreadSnapshotFilter {
 
     private TimeRangeChecker checker;
-    
+
     public TimeRangeFilter(String lower, String upper, TimeZone tz) {
         this.checker = new TimeRangeChecker(lower, upper, tz);
     }

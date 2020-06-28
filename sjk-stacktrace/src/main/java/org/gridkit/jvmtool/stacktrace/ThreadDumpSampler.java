@@ -41,7 +41,7 @@ public class ThreadDumpSampler {
             if (bean instanceof com.sun.management.ThreadMXBean) {
                 final com.sun.management.ThreadMXBean beanX = (com.sun.management.ThreadMXBean) bean;
                 bean = new ThreadMXBeanEx() {
-                    
+
                     @SuppressWarnings("unused")
                     /* Method added in Java 7, required for compilation */
                     public ObjectName getObjectName() {
@@ -180,76 +180,76 @@ public class ThreadDumpSampler {
     }
 
     boolean collectTraces = true;
-	boolean collectCpu = true;
-	boolean collectUserCpu = true;
-	boolean collectAllocation = true;
-	private ThreadMXBean threading;
+    boolean collectCpu = true;
+    boolean collectUserCpu = true;
+    boolean collectAllocation = true;
+    private ThreadMXBean threading;
 
-	private ThreadNameFilter threadFilter;
-	private long[] threadSet;
-	private List<CounterCollector> collectors = new ArrayList<CounterCollector>();
+    private ThreadNameFilter threadFilter;
+    private long[] threadSet;
+    private List<CounterCollector> collectors = new ArrayList<CounterCollector>();
 
-	public ThreadDumpSampler() {
-	}
+    public ThreadDumpSampler() {
+    }
 
-	public void setThreadFilter(final String pattern) {
-	    this.threadFilter = new ThreadNameFilter() {
-            
-	        final Matcher matcher = Pattern.compile(pattern).matcher(""); 
-	        
+    public void setThreadFilter(final String pattern) {
+        this.threadFilter = new ThreadNameFilter() {
+
+            final Matcher matcher = Pattern.compile(pattern).matcher("");
+
             @Override
             public boolean accept(String threadName) {
-            	if (threadName != null) {
-	                matcher.reset(threadName);
-	                return matcher.matches();
-            	}
-            	else {
-            		return false;
-            	}
+                if (threadName != null) {
+                    matcher.reset(threadName);
+                    return matcher.matches();
+                }
+                else {
+                    return false;
+                }
             }
         };
-	}
+    }
 
-	public void setThreadFilter(final ThreadNameFilter filter) {
-	    this.threadFilter = filter;
-	}
-	
-	public void enableThreadStackTrace(boolean enable) {
-	    collectTraces = enable;
-	}
-	
-	public void enableThreadCpu(boolean enable) {
-	    collectCpu = true;
-	}
+    public void setThreadFilter(final ThreadNameFilter filter) {
+        this.threadFilter = filter;
+    }
 
-	public void enableThreadUserCpu(boolean enable) {
-	    collectUserCpu = true;
-	}
+    public void enableThreadStackTrace(boolean enable) {
+        collectTraces = enable;
+    }
 
-	public void enableThreadAllocation(boolean enable) {
-	    collectAllocation = true;
-	}
+    public void enableThreadCpu(boolean enable) {
+        collectCpu = true;
+    }
 
-	public void connect(ThreadMXBean threadingMBean) {
-	    this.threading = adaptThreadMXBean(threadingMBean);
-	    collectors.clear();
-	    if (collectCpu) {
-	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.CPU_TIME));
-	    }
-	    if (collectUserCpu) {
-	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.USER_TIME));
-	    }
-	    if (collectAllocation) {
-	        collectors.add(new GenericMBeanThreadCounter(threading, CounterType.ALLOCATED_BYTES));
-	    }
-	}
+    public void enableThreadUserCpu(boolean enable) {
+        collectUserCpu = true;
+    }
 
-	/**
-	 * Find threads according to thread name filters and memorise their IDs.
-	 * <br/>
-	 * Optional method to avoid dump all threads at every collection.
-	 */
-	public void prime() {
+    public void enableThreadAllocation(boolean enable) {
+        collectAllocation = true;
+    }
+
+    public void connect(ThreadMXBean threadingMBean) {
+        this.threading = adaptThreadMXBean(threadingMBean);
+        collectors.clear();
+        if (collectCpu) {
+            collectors.add(new GenericMBeanThreadCounter(threading, CounterType.CPU_TIME));
+        }
+        if (collectUserCpu) {
+            collectors.add(new GenericMBeanThreadCounter(threading, CounterType.USER_TIME));
+        }
+        if (collectAllocation) {
+            collectors.add(new GenericMBeanThreadCounter(threading, CounterType.ALLOCATED_BYTES));
+        }
+    }
+
+    /**
+     * Find threads according to thread name filters and memorise their IDs.
+     * <br/>
+     * Optional method to avoid dump all threads at every collection.
+     */
+    public void prime() {
         ThreadInfo[] ti = threading.dumpAllThreads(false, false);
         long[] tids = new long[ti.length];
         int n = 0;
@@ -262,59 +262,59 @@ public class ThreadDumpSampler {
         }
         tids = Arrays.copyOf(tids, n);
         threadSet = tids;
-	}
+    }
 
-	public void collect(StackTraceWriter writer) throws IOException {
-	    long timestamp = System.currentTimeMillis();
-	    ThreadInfo[] dump;
-	    if (threadSet != null) {
-	        if (collectTraces) {
-	            dump = compactThreads(threading.getThreadInfo(threadSet, Integer.MAX_VALUE));
-	        }
-	        else {
-	            dump = compactThreads(threading.getThreadInfo(threadSet));
-	        }
-	    }
-	    else {
-	        if (collectTraces) {
-	            dump = filterThreads(threading.dumpAllThreads(false, false));
-	        }
-	        else {
-	            dump = filterThreads(threading.getThreadInfo(threading.getAllThreadIds()));
-	        }
+    public void collect(StackTraceWriter writer) throws IOException {
+        long timestamp = System.currentTimeMillis();
+        ThreadInfo[] dump;
+        if (threadSet != null) {
+            if (collectTraces) {
+                dump = compactThreads(threading.getThreadInfo(threadSet, Integer.MAX_VALUE));
+            }
+            else {
+                dump = compactThreads(threading.getThreadInfo(threadSet));
+            }
+        }
+        else {
+            if (collectTraces) {
+                dump = filterThreads(threading.dumpAllThreads(false, false));
+            }
+            else {
+                dump = filterThreads(threading.getThreadInfo(threading.getAllThreadIds()));
+            }
 
-	    }
-	    long[] ids = new long[dump.length];
-	    for(int i = 0; i != dump.length; ++i) {
-	        ids[i] = dump[i].getThreadId();
-	    }
-	    for(CounterCollector cc: collectors) {
-	        try {
-	            cc.collect(ids);
-	        }
-	        catch(Exception e) {
-	            // ignore
-	        }
-	    }
-	    ThreadCapture ts = new ThreadCapture();
-	    for(ThreadInfo ti: dump) {
-	        ts.reset();
-	        ts.timestamp = timestamp;
-	        ts.copyFrom(ti);
-	        for (CounterCollector cc: collectors) {
-	            try {
-	                cc.fillIntoSnapshot(ts);
-	            }
-	            catch(Exception e) {
-	                // ignore
-	            }
-	        }
-	        writer.write(ts);
-	    }
-	}
+        }
+        long[] ids = new long[dump.length];
+        for(int i = 0; i != dump.length; ++i) {
+            ids[i] = dump[i].getThreadId();
+        }
+        for(CounterCollector cc: collectors) {
+            try {
+                cc.collect(ids);
+            }
+            catch(Exception e) {
+                // ignore
+            }
+        }
+        ThreadCapture ts = new ThreadCapture();
+        for(ThreadInfo ti: dump) {
+            ts.reset();
+            ts.timestamp = timestamp;
+            ts.copyFrom(ti);
+            for (CounterCollector cc: collectors) {
+                try {
+                    cc.fillIntoSnapshot(ts);
+                }
+                catch(Exception e) {
+                    // ignore
+                }
+            }
+            writer.write(ts);
+        }
+    }
 
-	private ThreadInfo[] compactThreads(ThreadInfo[] dumpAllThreads) {
-	    int n = 0;
+    private ThreadInfo[] compactThreads(ThreadInfo[] dumpAllThreads) {
+        int n = 0;
         for(int i = 0; i != dumpAllThreads.length; ++i) {
             if (dumpAllThreads[i] != null) {
                 ++n;
@@ -333,13 +333,13 @@ public class ThreadDumpSampler {
             }
             return result;
         }
-	}
+    }
 
-	private ThreadInfo[] filterThreads(ThreadInfo[] dumpAllThreads) {
-	    if (threadFilter == null) {
-	        return compactThreads(dumpAllThreads);
-	    }
-	    else {
+    private ThreadInfo[] filterThreads(ThreadInfo[] dumpAllThreads) {
+        if (threadFilter == null) {
+            return compactThreads(dumpAllThreads);
+        }
+        else {
             int n = 0;
             for(int i = 0; i != dumpAllThreads.length; ++i) {
                 if (dumpAllThreads[i] != null) {
@@ -364,17 +364,17 @@ public class ThreadDumpSampler {
                 }
                 return result;
             }
-	    }
+        }
     }
 
     @SuppressWarnings("serial")
     public static class Trace implements Serializable {
 
-	    private long threadId;
-	    private long timestamp;
-	    private int[] trace;
+        private long threadId;
+        private long timestamp;
+        private int[] trace;
 
-	    private StackTraceElement[] traceDictionary;
+        private StackTraceElement[] traceDictionary;
 
         public Trace(long threadId, long timestamp, int[] trace) {
             this.threadId = threadId;
@@ -404,7 +404,7 @@ public class ThreadDumpSampler {
             snap.timestamp = timestamp;
             snap.elements = getTrace();
         }
-	}
+    }
 
     static interface CounterCollector {
 
@@ -489,7 +489,7 @@ public class ThreadDumpSampler {
         @Override
         public void fillIntoSnapshot(ThreadCapture snap) {
             int n = indexOf(snap.threadId);
-            String counterKey;            
+            String counterKey;
             switch(counter) {
                 case CPU_TIME: counterKey = ThreadCounters.CPU_TIME_MS; break;
                 case USER_TIME: counterKey = ThreadCounters.USER_TIME_MS; break;

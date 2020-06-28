@@ -14,7 +14,7 @@ public class TimeRangeCheckerTest {
     private static String DATE_FORMAT = "yyyy.MM.dd_HH:mm:ss";
     private static TimeZone UTC = TimeZone.getTimeZone("UTC");
 
-    
+
     @Test
     public void verify_hour_wrap_range() {
         TimeRangeChecker checker = new TimeRangeChecker("10:10", "12:20", UTC);
@@ -60,7 +60,7 @@ public class TimeRangeCheckerTest {
     @Test
     public void verify_hour_wrap_range_inverted() {
         TimeRangeChecker checker = new TimeRangeChecker("18:10", "02:20", UTC);
-        
+
         assertFalse(checker.evaluate(date("2016.02.21_08:17:00")));
         assertFalse(checker.evaluate(date("2016.02.21_09:18:09")));
         assertTrue (checker.evaluate(date("2016.02.21_10:18:10")));
@@ -70,7 +70,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2016.02.21_14:02:19")));
         assertFalse(checker.evaluate(date("2016.02.21_15:02:20")));
         assertFalse(checker.evaluate(date("2016.02.21_16:02:21")));
-        
+
         // Second pass
         assertFalse(checker.evaluate(date("2016.02.21_08:17:00")));
         assertFalse(checker.evaluate(date("2016.02.21_09:18:09")));
@@ -106,7 +106,7 @@ public class TimeRangeCheckerTest {
     @Test
     public void verify_day_wrap_range() {
         TimeRangeChecker checker = new TimeRangeChecker("10:10:00", "12:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2016.02.10_08:09:00")));
         assertTrue (checker.evaluate(date("2016.02.11_10:10:00")));
         assertTrue (checker.evaluate(date("2016.02.12_10:11:00")));
@@ -115,7 +115,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2016.02.15_12:19:59")));
         assertFalse(checker.evaluate(date("2016.02.16_12:20:00")));
         assertFalse(checker.evaluate(date("2016.02.17_12:21:00")));
-        
+
         // Second pass
         assertFalse(checker.evaluate(date("2016.02.10_08:09:00")));
         assertTrue (checker.evaluate(date("2016.02.11_10:10:00")));
@@ -125,7 +125,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2016.02.15_12:19:59")));
         assertFalse(checker.evaluate(date("2016.02.16_12:20:00")));
         assertFalse(checker.evaluate(date("2016.02.17_12:21:00")));
-        
+
         assertTrue (checker.isCached(date("2016.02.10_08:09:00")));
         assertTrue (checker.isCached(date("2016.02.11_10:10:00")));
         assertTrue (checker.isCached(date("2016.02.12_10:11:00")));
@@ -135,11 +135,11 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.isCached(date("2016.02.16_12:20:00")));
         assertTrue (checker.isCached(date("2016.02.17_12:21:00")));
     }
-    
+
     @Test
     public void verify_day_wrap_range_inverted() {
         TimeRangeChecker checker = new TimeRangeChecker("18:10:00", "02:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2016.02.10_17:00:00")));
         assertFalse(checker.evaluate(date("2016.02.11_18:09:00")));
         assertTrue (checker.evaluate(date("2016.02.12_18:10:00")));
@@ -149,7 +149,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2016.02.16_02:19:59")));
         assertFalse(checker.evaluate(date("2016.02.17_02:20:00")));
         assertFalse(checker.evaluate(date("2016.02.18_02:21:00")));
-        
+
         // Second pass
         assertFalse(checker.evaluate(date("2016.02.10_17:00:00")));
         assertFalse(checker.evaluate(date("2016.02.11_18:09:00")));
@@ -160,7 +160,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2016.02.16_02:19:59")));
         assertFalse(checker.evaluate(date("2016.02.17_02:20:00")));
         assertFalse(checker.evaluate(date("2016.02.18_02:21:00")));
-        
+
         assertTrue (checker.isCached(date("2016.02.10_17:00:00")));
         assertTrue (checker.isCached(date("2016.02.11_18:09:00")));
         assertTrue (checker.isCached(date("2016.02.12_18:10:00")));
@@ -172,11 +172,11 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.isCached(date("2016.02.18_02:21:00")));
     }
 
-    
+
     @Test
     public void verify_month_wrap_range() {
         TimeRangeChecker checker = new TimeRangeChecker("10_18:10:00", "20_02:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2016.02.10_18:09:00")));
         assertTrue (checker.evaluate(date("2016.03.10_18:10:00")));
         assertTrue (checker.evaluate(date("2016.04.12_10:11:00")));
@@ -200,7 +200,7 @@ public class TimeRangeCheckerTest {
     @Test
     public void verify_year_wrap_range() {
         TimeRangeChecker checker = new TimeRangeChecker("02.20_18:10:00", "04.10_02:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2016.02.20_18:09:00")));
         assertTrue (checker.evaluate(date("2017.02.20_18:10:00")));
         assertTrue (checker.evaluate(date("2018.02.25_10:11:00")));
@@ -209,7 +209,7 @@ public class TimeRangeCheckerTest {
         assertTrue (checker.evaluate(date("2021.04.10_02:19:59")));
         assertFalse(checker.evaluate(date("2022.04.10_02:20:00")));
         assertFalse(checker.evaluate(date("2023.09.20_02:21:00")));
-        
+
         // Second pass
         assertFalse(checker.evaluate(date("2016.02.20_18:09:00")));
         assertTrue (checker.evaluate(date("2017.02.20_18:10:00")));
@@ -224,7 +224,7 @@ public class TimeRangeCheckerTest {
     @Test
     public void verify_year_accurate_range() {
         TimeRangeChecker checker = new TimeRangeChecker("16.02.20_18:10:00", "16.04.10_02:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2015.02.20_18:10:00")));
         assertFalse(checker.evaluate(date("2016.02.20_18:09:00")));
         assertTrue (checker.evaluate(date("2016.02.20_18:10:00")));
@@ -239,7 +239,7 @@ public class TimeRangeCheckerTest {
     @Test
     public void verify_millenium_accurate_range() {
         TimeRangeChecker checker = new TimeRangeChecker("2016.02.20_18:10:00", "2016.04.10_02:20:00", UTC);
-        
+
         assertFalse(checker.evaluate(date("2015.02.20_18:10:00")));
         assertFalse(checker.evaluate(date("2016.02.20_18:09:00")));
         assertTrue (checker.evaluate(date("2016.02.20_18:10:00")));
@@ -259,5 +259,5 @@ public class TimeRangeCheckerTest {
         } catch (ParseException e) {
             throw new IllegalArgumentException(e);
         }
-    }    
+    }
 }

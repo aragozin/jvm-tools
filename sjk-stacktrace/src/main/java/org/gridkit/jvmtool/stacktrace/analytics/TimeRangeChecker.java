@@ -12,16 +12,16 @@ import java.util.regex.Pattern;
 public class TimeRangeChecker {
 
     private static String DATE_FORMAT = "yyyy.MM.dd_HH:mm:ss";
-    
+
     private static String DATE_PATTERN = "(((((((\\d\\d)?\\d\\d[.])?\\d\\d[.])?\\d\\d[_])?\\d\\d[:])?\\d\\d[:])\\d\\d)";
-    
+
     private long[] whiteCache = new long[0];
     private long[] blackCache = new long[0];
     private int[] lowerBound;
     private int[] upperBound;
     private TimeZone tz;
     private boolean inverted = false;
-    
+
     public TimeRangeChecker(String lower, String upper, TimeZone tz) {
         lowerBound = parse(lower);
         upperBound = parse(upper);
@@ -29,7 +29,7 @@ public class TimeRangeChecker {
         if (tz == null) {
             throw new NullPointerException("tz is null");
         }
-        
+
         for(int i = 0; i != lowerBound.length; ++i) {
             if ((lowerBound[i] == -1 && upperBound[i] != -1) || (lowerBound[i] != -1 && upperBound[i] == -1)) {
                 throw new IllegalArgumentException("Bounds length mismatch '" + lower + "', '" + upper + "'");
@@ -45,7 +45,7 @@ public class TimeRangeChecker {
             }
         }
     }
-    
+
     private int[] parse(String bound) {
         try {
             Matcher m = Pattern.compile(DATE_PATTERN).matcher(bound);
@@ -58,22 +58,22 @@ public class TimeRangeChecker {
                 p[0] = Integer.parseInt(m.group(7));
             }
             if (m.group(6) != null) {
-                p[1] = Integer.parseInt(substring(m.group(6), 2, 1));            
+                p[1] = Integer.parseInt(substring(m.group(6), 2, 1));
             }
             if (m.group(5) != null) {
-                p[2] = Integer.parseInt(substring(m.group(5), 2, 1));            
+                p[2] = Integer.parseInt(substring(m.group(5), 2, 1));
             }
             if (m.group(4) != null) {
-                p[3] = Integer.parseInt(substring(m.group(4), 2, 1));            
+                p[3] = Integer.parseInt(substring(m.group(4), 2, 1));
             }
             if (m.group(3) != null) {
-                p[4] = Integer.parseInt(substring(m.group(3), 2, 1));            
+                p[4] = Integer.parseInt(substring(m.group(3), 2, 1));
             }
             if (m.group(2) != null) {
-                p[5] = Integer.parseInt(substring(m.group(2), 2, 1));            
+                p[5] = Integer.parseInt(substring(m.group(2), 2, 1));
             }
             if (m.group(1) != null) {
-                p[6] = Integer.parseInt(substring(m.group(1), 2, 0));            
+                p[6] = Integer.parseInt(substring(m.group(1), 2, 0));
             }
             return p;
         }
@@ -85,7 +85,7 @@ public class TimeRangeChecker {
     private String substring(String txt, int n, int m) {
         return txt.substring(txt.length() - n -m, txt.length() - m);
     }
-    
+
     // Exposed for testing
     boolean isCached(long timestamp) {
         return match(whiteCache, timestamp) || match(blackCache, timestamp);
@@ -98,15 +98,15 @@ public class TimeRangeChecker {
         if (match(blackCache, timestamp)) {
             return false;
         }
-        
+
         SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
         fmt.setTimeZone(tz);
         String date = fmt.format(timestamp);
-        
+
         int[] p = parse(date);
         int[] rl = Arrays.copyOf(p, p.length);
         int[] ru = Arrays.copyOf(p, p.length);
-        
+
         boolean match = match(p, lowerBound, upperBound);
 
         for(int j = 0; j != rl.length; ++j) {
@@ -155,7 +155,7 @@ public class TimeRangeChecker {
                 blackCache = add(blackCache, udate, ldate);
             }
             return false;
-        }        
+        }
     }
 
     private boolean match(int[] p, int[] lower, int[] upper) {
@@ -163,7 +163,7 @@ public class TimeRangeChecker {
         boolean matchLower = true;
         for(int i = 0; i != lowerBound.length; ++i) {
             if (lowerBound[i] != -1) {
-                if (checkInRange(p, i, matchLower, matchUpper)) {                    
+                if (checkInRange(p, i, matchLower, matchUpper)) {
                     if (upperBound[i] != p[i]) {
                         matchUpper = false;
                     }
@@ -193,7 +193,7 @@ public class TimeRangeChecker {
     }
 
     private static int[] FIELDS = {Calendar.YEAR, Calendar.YEAR, Calendar.MONTH, Calendar.DAY_OF_MONTH, Calendar.HOUR_OF_DAY, Calendar.MINUTE, Calendar.SECOND};
-    
+
     private long adjust(long ldate, int step) {
         Calendar cal = Calendar.getInstance(tz);
         cal.setTime(new Date(ldate));
@@ -212,7 +212,7 @@ public class TimeRangeChecker {
         else {
             cal.add(FIELDS[n], step);
         }
-        return cal.getTimeInMillis();        
+        return cal.getTimeInMillis();
     }
 
     private long[] add(long[] cache, long ldate, long udate) {
