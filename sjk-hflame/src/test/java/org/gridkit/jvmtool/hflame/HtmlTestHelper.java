@@ -22,12 +22,12 @@ import java.net.URI;
 
 public class HtmlTestHelper {
 
-	public static void openBrowser(String content) throws IOException {
-		File file = new File("target/html_out/" + System.currentTimeMillis() + ".html");
-		file.getParentFile().mkdirs();
-		FileWriter fw = new FileWriter(file);
-		fw.append(content);
-		fw.close();
+    public static void openBrowser(String content) throws IOException {
+        File file = new File("target/html_out/" + System.currentTimeMillis() + ".html");
+        file.getParentFile().mkdirs();
+        FileWriter fw = new FileWriter(file);
+        fw.append(content);
+        fw.close();
         try {
             Class<?> desktopClass = Class.forName("java.awt.Desktop");
             // Desktop.isDesktopSupported()
@@ -47,6 +47,6 @@ public class HtmlTestHelper {
         } catch (Exception e) {
             // ignore
         }
-		
-	}	
+
+    }
 }

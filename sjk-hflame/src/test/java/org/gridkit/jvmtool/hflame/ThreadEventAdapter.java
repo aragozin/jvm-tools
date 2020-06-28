@@ -39,11 +39,11 @@ class ThreadEventAdapter implements StackTraceWriter {
 
     @Override
     public void close() {
-    	try {
-    		writer.close();
-    	}
-    	catch(IOException e) {
-    		throw new RuntimeException(e);
-    	}
+        try {
+            writer.close();
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

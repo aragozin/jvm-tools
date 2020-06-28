@@ -21,60 +21,60 @@ import org.gridkit.jvmtool.stacktrace.StackFrame;
 
 public class DefaultFrameColorChooser implements FrameColorChooser {
 
-	private final int baseHue; 
-	private final int deltaHue; 
-	
-	public DefaultFrameColorChooser() {
-		baseHue = 12;
-		deltaHue = 10;
-	}
-	
-	@Override
-	public int getFrameColor(String frame) {
-		if (frame.startsWith("(")) {
-			return -1;
-		}
+    private final int baseHue;
+    private final int deltaHue;
+
+    public DefaultFrameColorChooser() {
+        baseHue = 12;
+        deltaHue = 10;
+    }
+
+    @Override
+    public int getFrameColor(String frame) {
+        if (frame.startsWith("(")) {
+            return -1;
+        }
         int c = hashColor(baseHue, deltaHue, className(frame), methodName(frame));
-		return c;
-	}
-	
-	private String className(String frame) {
-		int ch = frame.indexOf('(');
-		if (ch >= 0) {
-			frame = frame.substring(0, ch);
-		}
-		ch = frame.lastIndexOf('.');
-		if (ch >= 0) {
-			return frame.substring(0, ch);
-		}
-		else {
-			return frame;
-		}
-	}
+        return c;
+    }
 
-	private String methodName(String frame) {
-		int ch = frame.indexOf('(');
-		if (ch >= 0) {
-			frame = frame.substring(0, ch);
-		}
-		ch = frame.lastIndexOf('.');
-		if (ch >= 0) {
-			return frame.substring(ch + 1);
-		}
-		else {
-			return "";
-		}
-	}
+    private String className(String frame) {
+        int ch = frame.indexOf('(');
+        if (ch >= 0) {
+            frame = frame.substring(0, ch);
+        }
+        ch = frame.lastIndexOf('.');
+        if (ch >= 0) {
+            return frame.substring(0, ch);
+        }
+        else {
+            return frame;
+        }
+    }
 
-	public static int hashColor(int baseHue, int deltaHue, String className, String methodName) {
+    private String methodName(String frame) {
+        int ch = frame.indexOf('(');
+        if (ch >= 0) {
+            frame = frame.substring(0, ch);
+        }
+        ch = frame.lastIndexOf('.');
+        if (ch >= 0) {
+            return frame.substring(ch + 1);
+        }
+        else {
+            return "";
+        }
+    }
+
+    public static int hashColor(int baseHue, int deltaHue, String className, String methodName) {
         int hP = packageNameHash(className);
         int hC = classNameHash(className);
         int hM = methodName.hashCode();
-        
+
         int hue = (0xFF) & (deltaHue == 0 ? baseHue : baseHue + (hP % (2 * deltaHue)) - deltaHue);
         int sat = 180 + (hC % 20) - 10;
         int lum = 220 + (hM % 20) - 10;
-        
+
         int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
         return 0xFFFFFF & c;
     }
@@ -82,11 +82,11 @@ public class DefaultFrameColorChooser implements FrameColorChooser {
     public static int hashGrayColor(StackFrame sf) {
         int hC = classNameHash(sf.getClassName());
         int hM = sf.getMethodName().hashCode();
-        
+
         int hue = 0;
         int sat = 0;
         int lum = 220 + ((hM + hC) % 20) - 10;
-        
+
         int c = Color.HSBtoRGB(hue / 255f, sat / 255f, lum / 255f);
         return c;
     }
@@ -106,7 +106,7 @@ public class DefaultFrameColorChooser implements FrameColorChooser {
         if (c >= 0) {
             className = className.substring(c + 1);
         }
-        
+
         c = className.indexOf('$');
         if (c >= 0) {
             int nhash = className.substring(0, c).hashCode();

@@ -19,5 +19,5 @@ import org.gridkit.jvmtool.stacktrace.GenericStackElement;
 
 public interface FrameFormater {
 
-	public String toString(GenericStackElement element);
+    public String toString(GenericStackElement element);
 }

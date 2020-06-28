@@ -38,93 +38,93 @@ import org.xml.sax.InputSource;
 
 public class XmlUtil {
 
-	public static Document newDocument() {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			return dbf.newDocumentBuilder().newDocument();
-		} catch (ParserConfigurationException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public static Document parseFromResource(String path) throws FileNotFoundException {
-		InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
-		if (is == null) {
-			throw new FileNotFoundException("Unable locate resource: " + path);
-		}
-		InputStreamReader reader = new InputStreamReader(is, Charset.forName("UTF8"));
-		return parse(reader);
-	}
-	
-	public static Document parse(Reader reader) {
-    	try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			return db.parse(new InputSource(reader));
-    	} catch (Exception e) {
-    		throw new RuntimeException(e);
-    	} 
-	}
-	
-	public static List<Element> elementsOf(Element el) {
-		List<Element> r = new ArrayList<Element>();
-		NodeList nl = el.getChildNodes();
-		for(int i = 0; i != nl.getLength(); ++i) {
-			Node n = nl.item(i);
-			if (n instanceof Element) {
-				r.add((Element)n);
-			}
-		}
-		return r;
-	}
+    public static Document newDocument() {
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            return dbf.newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public static List<Text> textOf(Element el) {
-		List<Text> r = new ArrayList<Text>();
-		NodeList nl = el.getChildNodes();
-		for(int i = 0; i != nl.getLength(); ++i) {
-			Node n = nl.item(i);
-			if (n instanceof Text) {
-				r.add((Text)n);
-			}
-		}
-		return r;
-	}
-	
-	public static String id(Element el) {
-		return attr(el, "id");
-	}
-	
-	public static String href(Element el) {
-		return attr(el, "src", "href");
-	}
-	
-	public static boolean isStyleSheet(Element el) {
-		if (el.getNodeName().equalsIgnoreCase("link")) {
-			return "stylesheet".equalsIgnoreCase(attr(el, "rel"));
-		}
-		else if (el.getNodeName().equalsIgnoreCase("style")) {
-			return true;
-		}
-		return false;
-	}
-	
-	public static boolean isScript(Element el) {
-		return el.getNodeName().equalsIgnoreCase("script");
-	}
-	
-	public static String attr(Element el, String... attr) {
-		NamedNodeMap nnm = el.getAttributes();
-		for(int i = 0; i != nnm.getLength(); ++i) {
-			Node node = nnm.item(i);
-			if (node instanceof Attr) {
-				Attr a = (Attr) node;
-				for(String at: attr) {
-					if (a.getName().equalsIgnoreCase(at)) {
-						return a.getValue();
-					}
-				}
-			}
- 		}
-		return null;
-	}
+    public static Document parseFromResource(String path) throws FileNotFoundException {
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+        if (is == null) {
+            throw new FileNotFoundException("Unable locate resource: " + path);
+        }
+        InputStreamReader reader = new InputStreamReader(is, Charset.forName("UTF8"));
+        return parse(reader);
+    }
+
+    public static Document parse(Reader reader) {
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            return db.parse(new InputSource(reader));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<Element> elementsOf(Element el) {
+        List<Element> r = new ArrayList<Element>();
+        NodeList nl = el.getChildNodes();
+        for(int i = 0; i != nl.getLength(); ++i) {
+            Node n = nl.item(i);
+            if (n instanceof Element) {
+                r.add((Element)n);
+            }
+        }
+        return r;
+    }
+
+    public static List<Text> textOf(Element el) {
+        List<Text> r = new ArrayList<Text>();
+        NodeList nl = el.getChildNodes();
+        for(int i = 0; i != nl.getLength(); ++i) {
+            Node n = nl.item(i);
+            if (n instanceof Text) {
+                r.add((Text)n);
+            }
+        }
+        return r;
+    }
+
+    public static String id(Element el) {
+        return attr(el, "id");
+    }
+
+    public static String href(Element el) {
+        return attr(el, "src", "href");
+    }
+
+    public static boolean isStyleSheet(Element el) {
+        if (el.getNodeName().equalsIgnoreCase("link")) {
+            return "stylesheet".equalsIgnoreCase(attr(el, "rel"));
+        }
+        else if (el.getNodeName().equalsIgnoreCase("style")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isScript(Element el) {
+        return el.getNodeName().equalsIgnoreCase("script");
+    }
+
+    public static String attr(Element el, String... attr) {
+        NamedNodeMap nnm = el.getAttributes();
+        for(int i = 0; i != nnm.getLength(); ++i) {
+            Node node = nnm.item(i);
+            if (node instanceof Attr) {
+                Attr a = (Attr) node;
+                for(String at: attr) {
+                    if (a.getName().equalsIgnoreCase(at)) {
+                        return a.getValue();
+                    }
+                }
+            }
+         }
+        return null;
+    }
 }
