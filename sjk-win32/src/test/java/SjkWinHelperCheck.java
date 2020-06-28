@@ -34,7 +34,7 @@ public class SjkWinHelperCheck {
             SjkWinHelper helper = new SjkWinHelper();
             long[] buf = new long[2];
             int pid = 3164;
-            
+
             for(int i = 0; i != 10; ++i) {
                 if (helper.getThreadCpuTimes(pid, buf)) {
                     System.out.println("Thread [" + pid + "]  kernel: " + toSec(buf[0]) + " user: " +  toSec(buf[1]));
@@ -55,12 +55,12 @@ public class SjkWinHelperCheck {
     private String toSec(long us) {
         return String.format("%f", us * 0.000001d);
     }
-    
+
     @Test
     public void enum_threads() {
         SjkWinHelper helper = new SjkWinHelper();
         int pid = 10048;
-        
+
         int[] threads = helper.enumThreads(pid);
         System.out.println("PID " + pid + " threads " + threads.length);
         for(int t : threads) {

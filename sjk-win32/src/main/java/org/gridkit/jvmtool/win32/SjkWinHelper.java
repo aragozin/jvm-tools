@@ -40,10 +40,10 @@ public class SjkWinHelper {
         InputStream is = SjkWinHelper.class.getClassLoader().getResourceAsStream("sjkwinh.prop");
         Properties prop = new Properties();
         prop.load(is);
-        
+
         String dllName = "sjkwinh" + arch + "." + prop.getProperty("dll" + arch + ".hash") + ".dll";
         int len = Integer.valueOf(prop.getProperty("dll" + arch + ".len"));
-        
+
         File tgt = new File(tmp, dllName);
         if (tgt.isFile() && tgt.length() == len) {
             // dll is present
@@ -60,7 +60,7 @@ public class SjkWinHelper {
             fos.write(buf);
             fos.close();
         }
-        
+
         System.load(tgt.getPath());
     }
 
@@ -69,16 +69,16 @@ public class SjkWinHelper {
     private native long QueryProcessCycleTime(int pid);
     private native long QueryThreadCycleTime(int pid);
     private native int EnumThreads(int pid, int[] buf);
-    
+
     int[] callBuf = new int[8];
-    
+
     /**
      * Call kernel32::GetProcessTimes.
      * If successful kernel and user times are set to
      * first two slots in array.
      * <p>
      * Time units are microseconds.
-     * 
+     *
      * @param pid
      * @return <code>false</code> is not successful
      */
@@ -104,7 +104,7 @@ public class SjkWinHelper {
      * first two slots in array.
      * <p>
      * Time units are microseconds.
-     * 
+     *
      * @param pid
      * @return <code>false</code> is not successful
      */
@@ -113,7 +113,7 @@ public class SjkWinHelper {
         if (rc == 0) {
             long ktime = (0xFFFFFFFFl & callBuf[4]) | ((long)callBuf[5]) << 32;
             long utime = (0xFFFFFFFFl & callBuf[6]) | ((long)callBuf[7]) << 32;
-            
+
             result[0] = ktime / 10;
             result[1] = utime / 10;
             return true;
@@ -131,7 +131,7 @@ public class SjkWinHelper {
     public synchronized long getThreadCpuCycles(int pid) {
         return QueryThreadCycleTime(pid);
     }
-    
+
     public synchronized int[] enumThreads(int pid) {
         int[] buf = new int[128];
         int n = EnumThreads(pid, buf);
