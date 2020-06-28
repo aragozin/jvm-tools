@@ -45,7 +45,6 @@
     <module>gcflow</module>
     <module>sjk</module>
     <module>sjk-plus</module>
-    <module>hprof-heap</module>
     <module>ygc-bench</module>
   </modules>
 
