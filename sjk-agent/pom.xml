@@ -18,42 +18,42 @@
 
 -->
 
-    <modelVersion>4.0.0</modelVersion>
-    
-    <parent>
-      <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>jvmtool-umbrella-pom</artifactId>
-      <version>0.17-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>sjk-agent</artifactId>
-    <name>${project.groupId}::${project.artifactId}</name>
-    <description>JVM agent libary</description>
-   
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.17-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <artifactId>sjk-agent</artifactId>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>JVM agent libary</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

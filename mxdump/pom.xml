@@ -18,50 +18,50 @@
 
 -->
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.17-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>mxdump</artifactId>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>MBean to JSON dump command for Swiss Java Knife (SJK) tool</description>
+
+  <dependencies>
+    <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>jvmtool-umbrella-pom</artifactId>
-      <version>0.17-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
-    </parent>
-
-    <artifactId>mxdump</artifactId>
-    <name>${project.groupId}::${project.artifactId}</name>
-    <description>MBean to JSON dump command for Swiss Java Knife (SJK) tool</description>
-   
-    <dependencies>
-        <dependency>
-            <groupId>org.gridkit.jvmtool</groupId>
-            <artifactId>sjk-core</artifactId>
-        </dependency>
-        <dependency>
-        	<groupId>org.gridkit.jvmtool</groupId>
-        	<artifactId>sjk-json</artifactId>
-        </dependency>
-        <dependency>
-        	<groupId>org.apache.tomcat.embed</groupId>
-        	<artifactId>tomcat-embed-core</artifactId>
-        	<version>8.5.16</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+      <artifactId>sjk-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gridkit.jvmtool</groupId>
+      <artifactId>sjk-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <version>8.5.16</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

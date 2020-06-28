@@ -47,7 +47,7 @@
       <groupId>org.gridkit.lab</groupId>
       <artifactId>jvm-attach-api</artifactId>
       <version>${jvm-attach.version}</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.gridkit.3rd.btrace</groupId>
       <artifactId>btrace-boot</artifactId>

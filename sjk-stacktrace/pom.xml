@@ -18,51 +18,51 @@
 
 -->
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.17-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>sjk-stacktrace</artifactId>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>Thread dumps: capture and encoding</description>
+
+  <dependencies>
+    <dependency>
       <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>jvmtool-umbrella-pom</artifactId>
-      <version>0.17-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
-    </parent>
+      <artifactId>sjk-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch</groupId>
+      <artifactId>junit-benchmarks</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
-    <artifactId>sjk-stacktrace</artifactId>
-    <name>${project.groupId}::${project.artifactId}</name>
-    <description>Thread dumps: capture and encoding</description>
-
-    <dependencies>
-    	<dependency>
-    		<groupId>org.gridkit.jvmtool</groupId>
-    		<artifactId>sjk-json</artifactId>
-    	</dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.carrotsearch</groupId>
-            <artifactId>junit-benchmarks</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

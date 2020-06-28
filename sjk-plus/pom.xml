@@ -69,7 +69,8 @@
                 </includes>
               </artifactSet>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>org.gridkit.jvmtool.SJK</Main-Class>
                     <Premain-Class>org.gridkit.jvmtool.agent.SjkAgent</Premain-Class>
@@ -77,7 +78,8 @@
                     <Can-Redefine-Classes>false</Can-Redefine-Classes>
                   </manifestEntries>
                 </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
               <filters>
                 <filter>

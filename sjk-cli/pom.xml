@@ -18,42 +18,42 @@
 
 -->
 
-    <modelVersion>4.0.0</modelVersion>
-    
-    <parent>
-      <groupId>org.gridkit.jvmtool</groupId>
-      <artifactId>jvmtool-umbrella-pom</artifactId>
-      <version>0.17-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>sjk-cli</artifactId>
-    <name>${project.groupId}::${project.artifactId}</name>
-    <description>Command line parsing stuff</description>
-   
-    <dependencies>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>1.30</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+  <parent>
+    <groupId>org.gridkit.jvmtool</groupId>
+    <artifactId>jvmtool-umbrella-pom</artifactId>
+    <version>0.17-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <artifactId>sjk-cli</artifactId>
+  <name>${project.groupId}::${project.artifactId}</name>
+  <description>Command line parsing stuff</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>1.30</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
