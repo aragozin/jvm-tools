@@ -29,7 +29,7 @@ public abstract class CharacterEscapes
      * sequence to output.
      */
     public final static int ESCAPE_CUSTOM = -2;
-    
+
     /**
      * Helper method that can be used to get a copy of standard JSON
      * escape definitions; this is useful when just wanting to slightly

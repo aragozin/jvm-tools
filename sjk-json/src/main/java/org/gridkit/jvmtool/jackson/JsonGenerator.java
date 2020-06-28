@@ -75,7 +75,7 @@ public abstract class JsonGenerator
          * Feature that determines whether "exceptional" (not real number)
          * float/double values are output as quoted strings.
          * The values checked are Double.Nan,
-         * Double.POSITIVE_INFINITY and Double.NEGATIVE_INIFINTY (and 
+         * Double.POSITIVE_INFINITY and Double.NEGATIVE_INIFINTY (and
          * associated Float values).
          * If feature is disabled, these numbers are still output using
          * associated literal values, resulting in non-conformant
@@ -114,28 +114,28 @@ public abstract class JsonGenerator
          * party libraries).
          *<p>
          * Feature is enabled by default.
-         * 
+         *
          * @since 1.7
          */
         FLUSH_PASSED_TO_STREAM(true),
-        
+
         /**
          * Feature that specifies that all characters beyond 7-bit ASCII
          * range (i.e. code points of 128 and above) need to be output
          * using format-specific escapes (for JSON, backslash escapes),
          * if format uses escaping mechanisms (which is generally true
          * for textual formats but not for binary formats).
-         * 
+         *
          * @since 1.8
          */
         ESCAPE_NON_ASCII(false)
-        
+
             ;
 
         final boolean _defaultState;
 
         final int _mask;
-        
+
         /**
          * Method that calculates bit set (flags) of all features that
          * are enabled by default.
@@ -150,14 +150,14 @@ public abstract class JsonGenerator
             }
             return flags;
         }
-        
+
         private Feature(boolean defaultState) {
             _defaultState = defaultState;
             _mask = (1 << ordinal());
         }
-        
+
         public boolean enabledByDefault() { return _defaultState; }
-    
+
         public int getMask() { return _mask; }
     }
 
@@ -179,9 +179,9 @@ public abstract class JsonGenerator
     /* Construction, configuration, initialization
     /**********************************************************
      */
-    
+
     protected JsonGenerator() { }
-    
+
     /**
      * Method that can be used to get access to object that is used
      * as target for generated output; this is usually either
@@ -196,13 +196,13 @@ public abstract class JsonGenerator
      *<p>
      * In general use of this accessor should be considered as
      * "last effort", i.e. only used if no other mechanism is applicable.
-     * 
+     *
      * @since 1.8
      */
     public Object getOutputTarget() {
         return null;
     }
-    
+
     /*
     /**********************************************************
     /* Public API, configuration
@@ -302,11 +302,11 @@ public abstract class JsonGenerator
      *<p>
      * Default implementation does nothing; sub-classes need to redefine
      * it according to rules of supported data format.
-     * 
+     *
      * @param charCode Either -1 to indicate that no additional escaping
      *   is to be done; or highest code point not to escape (meaning higher
      *   ones will be), if positive value.
-     * 
+     *
      * @since 1.8
      */
     public JsonGenerator setHighestNonEscapedChar(int charCode) {
@@ -321,7 +321,7 @@ public abstract class JsonGenerator
      * Some generators may not support additional escaping: for example,
      * generators for binary formats that do not use escaping should
      * simply return 0.
-     * 
+     *
      * @return Currently active limitation for highest non-escaped character,
      *   if defined; or -1 to indicate no additional escaping is performed.
      */
@@ -331,7 +331,7 @@ public abstract class JsonGenerator
     /**
      * Method for accessing custom escapes factory uses for {@link JsonGenerator}s
      * it creates.
-     * 
+     *
      * @since 1.8
      */
     public CharacterEscapes getCharacterEscapes() {
@@ -341,7 +341,7 @@ public abstract class JsonGenerator
     /**
      * Method for defining custom escapes factory uses for {@link JsonGenerator}s
      * it creates.
-     * 
+     *
      * @since 1.8
      */
     public JsonGenerator setCharacterEscapes(CharacterEscapes esc) {
@@ -453,7 +453,7 @@ public abstract class JsonGenerator
      * If so, implementation may instead choose to throw a
      * {@link UnsupportedOperationException} due to ineffectiveness
      * of having to decode input.
-     * 
+     *
      * @since 1.7
      */
     public abstract void writeRawUTF8String(byte[] text, int offset, int length)
@@ -476,18 +476,18 @@ public abstract class JsonGenerator
      * generator implementation may instead choose to throw a
      * {@link UnsupportedOperationException} due to ineffectiveness
      * of having to decode input.
-     * 
+     *
      * @since 1.7
      */
     public abstract void writeUTF8String(byte[] text, int offset, int length)
         throws IOException, JsonGenerationException;
-    
+
     /*
     /**********************************************************
     /* Public API, write methods, binary/raw content
     /**********************************************************
      */
-    
+
     /**
      * Method that will force generator to copy
      * input text verbatim with <b>no</b> modifications (including

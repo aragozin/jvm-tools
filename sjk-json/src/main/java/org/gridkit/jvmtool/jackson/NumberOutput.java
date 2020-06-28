@@ -48,7 +48,7 @@ public final class NumberOutput
             FULL_TRIPLETS_B[i] = (byte) FULL_TRIPLETS[i];
         }
     }
-    
+
     final static String[] sSmallIntStrs = new String[] {
         "0","1","2","3","4","5","6","7","8","9","10"
     };
@@ -114,7 +114,7 @@ public final class NumberOutput
         value = newValue;
         newValue /= 1000;
         int thousands = (value - (newValue * 1000));
-        
+
         // value now has millions, which have 1, 2 or 3 digits
         if (hasBillions) {
             offset = outputFullTriplet(newValue, buffer, offset);
@@ -166,7 +166,7 @@ public final class NumberOutput
         value = newValue;
         newValue /= 1000;
         int thousands = (value - (newValue * 1000));
-        
+
         if (hasBillions) {
             offset = outputFullTriplet(newValue, buffer, offset);
         } else {
@@ -176,7 +176,7 @@ public final class NumberOutput
         offset = outputFullTriplet(ones, buffer, offset);
         return offset;
     }
-    
+
     /**
      * @return Offset within buffer after outputting int
      */
@@ -279,7 +279,7 @@ public final class NumberOutput
         outputLeadingTriplet(ivalue, buffer, origOffset);
         return offset;
     }
-    
+
     /*
     /**********************************************************
     /* Secondary convenience serialization methods
@@ -356,7 +356,7 @@ public final class NumberOutput
         buffer[offset++] = (byte) LEADING_TRIPLETS[digitOffset];
         return offset;
     }
-    
+
     private static int outputFullTriplet(int triplet, char[] buffer, int offset)
     {
         int digitOffset = (triplet << 2);
@@ -374,7 +374,7 @@ public final class NumberOutput
         buffer[offset++] = FULL_TRIPLETS_B[digitOffset];
         return offset;
     }
-    
+
     /**
      *<p>
      * Pre-conditions: posValue is positive, and larger than

@@ -24,7 +24,7 @@ public class JsonWriteContext
      * used for OBJECT contexts
      */
     protected String _currentName;
-    
+
     /*
     /**********************************************************
     /* Simple instance reuse slots; speed up things
@@ -48,7 +48,7 @@ public class JsonWriteContext
         _parent = parent;
         _index = -1;
     }
-    
+
     // // // Factory methods
 
     public static JsonWriteContext createRootContext()
@@ -62,7 +62,7 @@ public class JsonWriteContext
         _currentName = null;
         return this;
     }
-    
+
     public final JsonWriteContext createChildArrayContext()
     {
         JsonWriteContext ctxt = _child;
@@ -90,7 +90,7 @@ public class JsonWriteContext
 
     @Override
     public final String getCurrentName() { return _currentName; }
-    
+
     // // // API sub-classes are to implement
 
     /**
@@ -109,7 +109,7 @@ public class JsonWriteContext
         }
         return STATUS_EXPECT_VALUE;
     }
-    
+
     public final int writeValue()
     {
         // Most likely, object:
@@ -128,7 +128,7 @@ public class JsonWriteContext
             ++_index;
             return (ix < 0) ? STATUS_OK_AS_IS : STATUS_OK_AFTER_COMMA;
         }
-        
+
         // Nope, root context
         // No commas within root context, but need space
         ++_index;

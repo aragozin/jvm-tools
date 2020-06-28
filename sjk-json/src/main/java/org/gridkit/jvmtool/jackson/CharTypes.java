@@ -102,7 +102,7 @@ public final class CharTypes
     final static int[] sInputCodesUtf8JsNames;
     static {
         int[] table = new int[256];
-        // start with 8-bit JS names 
+        // start with 8-bit JS names
         System.arraycopy(sInputCodesJsNames, 0, table, 0, sInputCodesJsNames.length);
         Arrays.fill(table, 128, 128, 0);
         sInputCodesUtf8JsNames = table;
@@ -116,7 +116,7 @@ public final class CharTypes
     static {
         // but first: let's start with UTF-8 multi-byte markers:
         System.arraycopy(sInputCodesUtf8, 128, sInputCodesComment, 128, 128);
-    
+
         // default (0) means "ok" (skip); -1 invalid, others marked by char itself
         Arrays.fill(sInputCodesComment, 0, 32, -1); // invalid white space
         sInputCodesComment['\t'] = 0; // tab is still fine
@@ -126,7 +126,7 @@ public final class CharTypes
     }
 
     /**
-     * Lookup table used for determining which output characters in 
+     * Lookup table used for determining which output characters in
      * 7-bit ASCII range need to be quoted.
      */
     final static int[] sOutputEscapes128;
@@ -175,7 +175,7 @@ public final class CharTypes
     public final static int[] getInputCodeUtf8JsNames() { return sInputCodesUtf8JsNames; }
 
     public final static int[] getInputCodeComment() { return sInputCodesComment; }
-    
+
     /**
      * Accessor for getting a read-only encoding table for first 128 Unicode
      * code points (single-byte UTF-8 characters).
@@ -232,4 +232,3 @@ public final class CharTypes
         return (byte[]) HEX_BYTES.clone();
     }
 }
-

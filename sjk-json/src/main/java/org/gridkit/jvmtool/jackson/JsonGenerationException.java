@@ -10,7 +10,7 @@ public class JsonGenerationException
 {
     @SuppressWarnings("hiding")
     final static long serialVersionUID = 123; // Stupid eclipse...
-    
+
     public JsonGenerationException(Throwable rootCause)
     {
         super(rootCause);

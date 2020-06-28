@@ -22,7 +22,7 @@ import org.gridkit.jvmtool.jackson.JsonGenerator;
 
 /**
  * This is stripped down version of {@link JsonGenerator}.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public interface JsonStreamWriter {
@@ -125,7 +125,7 @@ public interface JsonStreamWriter {
      * If so, implementation may instead choose to throw a
      * {@link UnsupportedOperationException} due to ineffectiveness
      * of having to decode input.
-     * 
+     *
      * @since 1.7
      */
     public void writeRawUTF8String(byte[] text, int offset, int length) throws IOException;
@@ -147,17 +147,17 @@ public interface JsonStreamWriter {
      * generator implementation may instead choose to throw a
      * {@link UnsupportedOperationException} due to ineffectiveness
      * of having to decode input.
-     * 
+     *
      * @since 1.7
      */
     public void writeUTF8String(byte[] text, int offset, int length) throws IOException;
-    
+
     /*
     /**********************************************************
     /* Public API, write methods, binary/raw content
     /**********************************************************
      */
-    
+
     /**
      * Method that will force generator to copy
      * input text verbatim with <b>no</b> modifications (including

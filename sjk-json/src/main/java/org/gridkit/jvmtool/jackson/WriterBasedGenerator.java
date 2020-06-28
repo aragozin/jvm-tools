@@ -23,7 +23,7 @@ public final class WriterBasedGenerator extends JsonGenerator
      * (first 128 character codes), used for single-byte UTF-8 characters.
      */
     protected final static int[] sOutputEscapes = CharTypes.get7BitOutputEscapes();
-    
+
     /*
     /**********************************************************
     /* Configuration
@@ -31,7 +31,7 @@ public final class WriterBasedGenerator extends JsonGenerator
      */
 
     final protected Writer _writer;
-    
+
     /*
     /**********************************************************
     /* Configuration, output escaping
@@ -92,32 +92,32 @@ public final class WriterBasedGenerator extends JsonGenerator
      */
     protected char[] _entityBuffer;
 
-	/**
-	 * Bit flag composed of bits that indicate which
-	 * {@link org.gridkit.jvmtool.jackson.JsonGenerator.Feature}s
-	 * are enabled.
-	 */
-	protected int _features;
+    /**
+     * Bit flag composed of bits that indicate which
+     * {@link org.gridkit.jvmtool.jackson.JsonGenerator.Feature}s
+     * are enabled.
+     */
+    protected int _features;
 
-	/**
-	 * Flag set to indicate that implicit conversion from number
-	 * to JSON String is needed (as per
-	 * {@link org.gridkit.jvmtool.jackson.JsonGenerator.Feature#WRITE_NUMBERS_AS_STRINGS}).
-	 */
-	protected boolean _cfgNumbersAsStrings;
+    /**
+     * Flag set to indicate that implicit conversion from number
+     * to JSON String is needed (as per
+     * {@link org.gridkit.jvmtool.jackson.JsonGenerator.Feature#WRITE_NUMBERS_AS_STRINGS}).
+     */
+    protected boolean _cfgNumbersAsStrings;
 
-	/**
-	 * Object that keeps track of the current contextual state
-	 * of the generator.
-	 */
-	protected JsonWriteContext _writeContext;
+    /**
+     * Object that keeps track of the current contextual state
+     * of the generator.
+     */
+    protected JsonWriteContext _writeContext;
 
-	/**
-	 * Flag that indicates whether generator is closed or not. Gets
-	 * set when it is closed by an explicit call
-	 * ({@link #close}).
-	 */
-	protected boolean _closed;
+    /**
+     * Flag that indicates whether generator is closed or not. Gets
+     * set when it is closed by an explicit call
+     * ({@link #close}).
+     */
+    protected boolean _closed;
 
     /*
     /**********************************************************
@@ -138,13 +138,13 @@ public final class WriterBasedGenerator extends JsonGenerator
             setHighestNonEscapedChar(127);
         }
     }
- 
+
     /*
     /**********************************************************
     /* Overridden configuration methods
     /**********************************************************
      */
-    
+
     @Override
     public JsonGenerator setHighestNonEscapedChar(int charCode) {
         _maximumNonEscapedChar = (charCode < 0) ? 0 : charCode;
@@ -160,7 +160,7 @@ public final class WriterBasedGenerator extends JsonGenerator
     public Object getOutputTarget() {
         return _writer;
     }
-    
+
     /*
     /**********************************************************
     /* Overridden methods
@@ -188,7 +188,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         writeFieldName(fieldName);
         writeString(value);
     }
-    
+
     /*
     /**********************************************************
     /* Output method implementations, structural
@@ -380,7 +380,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         // could add support for buffering if we really want it...
         _reportUnsupportedOperation();
     }
-    
+
     /*
     /**********************************************************
     /* Output method implementations, unprocessed ("raw")
@@ -423,7 +423,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         if (room >= len) {
             text.getChars(start, start+len, _outputBuffer, _outputTail);
             _outputTail += len;
-        } else {            	
+        } else {
             writeRawLong(text.substring(start, start+len));
         }
     }
@@ -439,10 +439,10 @@ public final class WriterBasedGenerator extends JsonGenerator
                 _flushBuffer();
             }
             try {
-            	System.arraycopy(text, offset, _outputBuffer, _outputTail, len);
+                System.arraycopy(text, offset, _outputBuffer, _outputTail, len);
             }
             catch(ArrayIndexOutOfBoundsException e) {
-            	new String();
+                new String();
             }
             _outputTail += len;
             return;
@@ -523,7 +523,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         _outputBuffer[_outputTail++] = '"';
         _outputTail = NumberOutput.outputInt(i, _outputBuffer, _outputTail);
         _outputBuffer[_outputTail++] = '"';
-    }    
+    }
 
     @Override
     public void writeNumber(long l)
@@ -566,7 +566,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         }
     }
 
-    
+
     @Override
     public void writeNumber(double d)
         throws IOException, JsonGenerationException
@@ -620,7 +620,7 @@ public final class WriterBasedGenerator extends JsonGenerator
     {
         _verifyValueWrite("write number");
         if (_cfgNumbersAsStrings) {
-            _writeQuotedRaw(encodedValue);            
+            _writeQuotedRaw(encodedValue);
         } else {
             writeRaw(encodedValue);
         }
@@ -638,7 +638,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         }
         _outputBuffer[_outputTail++] = '"';
     }
-    
+
     @Override
     public void writeBoolean(boolean state)
         throws IOException, JsonGenerationException
@@ -890,7 +890,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         // First things first: let's flush the buffer to get some more room
         _flushBuffer();
 
-        // Then we can write 
+        // Then we can write
         final int textLen = text.length();
         int offset = 0;
         do {
@@ -921,7 +921,7 @@ public final class WriterBasedGenerator extends JsonGenerator
     {
         final int[] escCodes = _outputEscapes;
         final int escLen = escCodes.length;
-    
+
         int ptr = 0;
         int start = ptr;
 
@@ -955,7 +955,7 @@ public final class WriterBasedGenerator extends JsonGenerator
             start = _prependOrWriteCharacterEscape(_outputBuffer, ptr, end, c, escCodes[c]);
         }
     }
-    
+
     /**
      * This method called when the string content is already in
      * a char buffer, and need not be copied for processing.
@@ -967,7 +967,7 @@ public final class WriterBasedGenerator extends JsonGenerator
             _writeStringASCII(text, offset, len, _maximumNonEscapedChar);
             return;
         }
-        
+
         /* Let's just find longest spans of non-escapable
          * content, and for each see if it makes sense
          * to copy them, or write through
@@ -1009,7 +1009,7 @@ public final class WriterBasedGenerator extends JsonGenerator
             }
             // Nope, need to escape the char.
             char c = text[offset++];
-            _appendCharacterEscape(c, escCodes[c]);          
+            _appendCharacterEscape(c, escCodes[c]);
         }
     }
 
@@ -1032,7 +1032,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         final int[] escCodes = _outputEscapes;
         final int escLimit = Math.min(escCodes.length, maxNonEscaped+1);
         int escCode = 0;
-        
+
         output_loop:
         while (_outputTail < end) {
             char c;
@@ -1067,11 +1067,11 @@ public final class WriterBasedGenerator extends JsonGenerator
     {
         final int[] escCodes = _outputEscapes;
         final int escLimit = Math.min(escCodes.length, maxNonEscaped+1);
-    
+
         int ptr = 0;
         int escCode = 0;
         int start = ptr;
-    
+
         output_loop:
         while (ptr < end) {
             // Fast loop for chars not needing escaping
@@ -1112,11 +1112,11 @@ public final class WriterBasedGenerator extends JsonGenerator
         final int escLimit = Math.min(escCodes.length, maxNonEscaped+1);
 
         int escCode = 0;
-        
+
         while (offset < len) {
             int start = offset;
             char c;
-            
+
             while (true) {
                 c = text[offset];
                 if (c < escLimit) {
@@ -1163,7 +1163,7 @@ public final class WriterBasedGenerator extends JsonGenerator
     /* Internal methods, low-level writing, other
     /**********************************************************
      */
-    
+
     private final void _writeNull() throws IOException
     {
         if ((_outputTail + 4) >= _outputEnd) {
@@ -1177,7 +1177,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         buf[++ptr] = 'l';
         _outputTail = ptr+1;
     }
-        
+
     /*
     /**********************************************************
     /* Internal methods, low-level writing, escapes
@@ -1257,7 +1257,7 @@ public final class WriterBasedGenerator extends JsonGenerator
     /**
      * Method called to try to either prepend character escape at front of
      * given buffer; or if not possible, to write it out directly.
-     * 
+     *
      * @return Pointer to start of prepended entity (if prepended); or 'ptr'
      *   if not.
      */
@@ -1362,7 +1362,7 @@ public final class WriterBasedGenerator extends JsonGenerator
             return;
         }
     }
-    
+
     private char[] _allocateEntityBuffer()
     {
         char[] buf = new char[14];
@@ -1379,7 +1379,7 @@ public final class WriterBasedGenerator extends JsonGenerator
         _entityBuffer = buf;
         return buf;
     }
-    
+
     protected final void _flushBuffer() throws IOException
     {
         int len = _outputTail - _outputHead;
@@ -1390,159 +1390,159 @@ public final class WriterBasedGenerator extends JsonGenerator
         }
     }
 
-	@Override
-	public JsonGenerator enable(Feature f) {
-	    _features |= f.getMask();
-	    if (f == Feature.WRITE_NUMBERS_AS_STRINGS) {
-	        _cfgNumbersAsStrings = true;
-	    } else if (f == Feature.ESCAPE_NON_ASCII) {
-	        setHighestNonEscapedChar(127);
-	    }
-	    return this;
-	}
+    @Override
+    public JsonGenerator enable(Feature f) {
+        _features |= f.getMask();
+        if (f == Feature.WRITE_NUMBERS_AS_STRINGS) {
+            _cfgNumbersAsStrings = true;
+        } else if (f == Feature.ESCAPE_NON_ASCII) {
+            setHighestNonEscapedChar(127);
+        }
+        return this;
+    }
 
-	@Override
-	public JsonGenerator disable(Feature f) {
-	    _features &= ~f.getMask();
-	    if (f == Feature.WRITE_NUMBERS_AS_STRINGS) {
-	        _cfgNumbersAsStrings = false;
-	    } else if (f == Feature.ESCAPE_NON_ASCII) {
-	        setHighestNonEscapedChar(0);
-	    }
-	    return this;
-	}
+    @Override
+    public JsonGenerator disable(Feature f) {
+        _features &= ~f.getMask();
+        if (f == Feature.WRITE_NUMBERS_AS_STRINGS) {
+            _cfgNumbersAsStrings = false;
+        } else if (f == Feature.ESCAPE_NON_ASCII) {
+            setHighestNonEscapedChar(0);
+        }
+        return this;
+    }
 
-	@Override
-	public final boolean isEnabled(Feature f) {
-	    return (_features & f.getMask()) != 0;
-	}
+    @Override
+    public final boolean isEnabled(Feature f) {
+        return (_features & f.getMask()) != 0;
+    }
 
-	@Override
-	public JsonGenerator useDefaultPrettyPrinter() {
-	    return setPrettyPrinter(new DefaultPrettyPrinter());
-	}
+    @Override
+    public JsonGenerator useDefaultPrettyPrinter() {
+        return setPrettyPrinter(new DefaultPrettyPrinter());
+    }
 
-	/**
-	 * Note: co-variant return type.
-	 */
-	@Override
-	public final JsonWriteContext getOutputContext() { return _writeContext; }
+    /**
+     * Note: co-variant return type.
+     */
+    @Override
+    public final JsonWriteContext getOutputContext() { return _writeContext; }
 
-	public void __writeStartArray() throws IOException, JsonGenerationException {
-	    // Array is a value, need to verify it's allowed
-	    _verifyValueWrite("start an array");
-	    _writeContext = _writeContext.createChildArrayContext();
-	    _cfgPrettyPrinter.writeStartArray(this);
-	}
+    public void __writeStartArray() throws IOException, JsonGenerationException {
+        // Array is a value, need to verify it's allowed
+        _verifyValueWrite("start an array");
+        _writeContext = _writeContext.createChildArrayContext();
+        _cfgPrettyPrinter.writeStartArray(this);
+    }
 
-	@Override
-	public void writeRawValue(String text) throws IOException, JsonGenerationException {
-	    _verifyValueWrite("write raw value");
-	    writeRaw(text);
-	}
+    @Override
+    public void writeRawValue(String text) throws IOException, JsonGenerationException {
+        _verifyValueWrite("write raw value");
+        writeRaw(text);
+    }
 
-	@Override
-	public void writeRawValue(String text, int offset, int len) throws IOException, JsonGenerationException {
-	    _verifyValueWrite("write raw value");
-	    writeRaw(text, offset, len);
-	}
+    @Override
+    public void writeRawValue(String text, int offset, int len) throws IOException, JsonGenerationException {
+        _verifyValueWrite("write raw value");
+        writeRaw(text, offset, len);
+    }
 
-	@Override
-	public void writeRawValue(char[] text, int offset, int len) throws IOException, JsonGenerationException {
-	    _verifyValueWrite("write raw value");
-	    writeRaw(text, offset, len);
-	}
+    @Override
+    public void writeRawValue(char[] text, int offset, int len) throws IOException, JsonGenerationException {
+        _verifyValueWrite("write raw value");
+        writeRaw(text, offset, len);
+    }
 
-	private void _close() throws IOException {
-	    _closed = true;
-	}
+    private void _close() throws IOException {
+        _closed = true;
+    }
 
-	@Override
-	public boolean isClosed() { return _closed; }
+    @Override
+    public boolean isClosed() { return _closed; }
 
-	protected void _reportError(String msg) throws JsonGenerationException {
-	    throw new JsonGenerationException(msg);
-	}
+    protected void _reportError(String msg) throws JsonGenerationException {
+        throw new JsonGenerationException(msg);
+    }
 
-	protected void _cantHappen() {
-	    throw new RuntimeException("Internal error: should never end up through this code path");
-	}
+    protected void _cantHappen() {
+        throw new RuntimeException("Internal error: should never end up through this code path");
+    }
 
-	/**
-	 * Helper method to try to call appropriate write method for given
-	 * untyped Object. At this point, no structural conversions should be done,
-	 * only simple basic types are to be coerced as necessary.
-	 *
-	 * @param value Non-null value to write
-	 */
-	protected void _writeSimpleObject(Object value) throws IOException, JsonGenerationException {
-	    /* 31-Dec-2009, tatu: Actually, we could just handle some basic
-	     *    types even without codec. This can improve interoperability,
-	     *    and specifically help with TokenBuffer.
-	     */
-	    if (value == null) {
-	        writeNull();
-	        return;
-	    }
-	    if (value instanceof String) {
-	        writeString((String) value);
-	        return;
-	    }
-	    if (value instanceof Number) {
-	        Number n = (Number) value;
-	        if (n instanceof Integer) {
-	            writeNumber(n.intValue());
-	            return;
-	        } else if (n instanceof Long) {
-	            writeNumber(n.longValue());
-	            return;
-	        } else if (n instanceof Double) {
-	            writeNumber(n.doubleValue());
-	            return;
-	        } else if (n instanceof Float) {
-	            writeNumber(n.floatValue());
-	            return;
-	        } else if (n instanceof Short) {
-	            writeNumber(n.shortValue());
-	            return;
-	        } else if (n instanceof Byte) {
-	            writeNumber(n.byteValue());
-	            return;
-	        } else if (n instanceof BigInteger) {
-	            writeNumber((BigInteger) n);
-	            return;
-	        } else if (n instanceof BigDecimal) {
-	            writeNumber((BigDecimal) n);
-	            return;
-	            
-	        // then Atomic types
-	            
-	        } else if (n instanceof AtomicInteger) {
-	            writeNumber(((AtomicInteger) n).get());
-	            return;
-	        } else if (n instanceof AtomicLong) {
-	            writeNumber(((AtomicLong) n).get());
-	            return;
-	        }
-	    } else if (value instanceof Boolean) {
-	        writeBoolean(((Boolean) value).booleanValue());
-	        return;
-	    } else if (value instanceof AtomicBoolean) {
-	        writeBoolean(((AtomicBoolean) value).get());
-	        return;
-	    }
-	    throw new IllegalStateException("No ObjectCodec defined for the generator, can only serialize simple wrapper types (type passed "
-	            +value.getClass().getName()+")");
-	}
+    /**
+     * Helper method to try to call appropriate write method for given
+     * untyped Object. At this point, no structural conversions should be done,
+     * only simple basic types are to be coerced as necessary.
+     *
+     * @param value Non-null value to write
+     */
+    protected void _writeSimpleObject(Object value) throws IOException, JsonGenerationException {
+        /* 31-Dec-2009, tatu: Actually, we could just handle some basic
+         *    types even without codec. This can improve interoperability,
+         *    and specifically help with TokenBuffer.
+         */
+        if (value == null) {
+            writeNull();
+            return;
+        }
+        if (value instanceof String) {
+            writeString((String) value);
+            return;
+        }
+        if (value instanceof Number) {
+            Number n = (Number) value;
+            if (n instanceof Integer) {
+                writeNumber(n.intValue());
+                return;
+            } else if (n instanceof Long) {
+                writeNumber(n.longValue());
+                return;
+            } else if (n instanceof Double) {
+                writeNumber(n.doubleValue());
+                return;
+            } else if (n instanceof Float) {
+                writeNumber(n.floatValue());
+                return;
+            } else if (n instanceof Short) {
+                writeNumber(n.shortValue());
+                return;
+            } else if (n instanceof Byte) {
+                writeNumber(n.byteValue());
+                return;
+            } else if (n instanceof BigInteger) {
+                writeNumber((BigInteger) n);
+                return;
+            } else if (n instanceof BigDecimal) {
+                writeNumber((BigDecimal) n);
+                return;
 
-	protected final void _throwInternal() {
-	    throw new RuntimeException("Internal error: this code path should never get executed");
-	}
+            // then Atomic types
 
-	/**
-	 * @since 1.7
-	 */
-	protected void _reportUnsupportedOperation() {
-	    throw new UnsupportedOperationException("Operation not supported by generator of type "+getClass().getName());
-	}
+            } else if (n instanceof AtomicInteger) {
+                writeNumber(((AtomicInteger) n).get());
+                return;
+            } else if (n instanceof AtomicLong) {
+                writeNumber(((AtomicLong) n).get());
+                return;
+            }
+        } else if (value instanceof Boolean) {
+            writeBoolean(((Boolean) value).booleanValue());
+            return;
+        } else if (value instanceof AtomicBoolean) {
+            writeBoolean(((AtomicBoolean) value).get());
+            return;
+        }
+        throw new IllegalStateException("No ObjectCodec defined for the generator, can only serialize simple wrapper types (type passed "
+                +value.getClass().getName()+")");
+    }
+
+    protected final void _throwInternal() {
+        throw new RuntimeException("Internal error: this code path should never get executed");
+    }
+
+    /**
+     * @since 1.7
+     */
+    protected void _reportUnsupportedOperation() {
+        throw new UnsupportedOperationException("Operation not supported by generator of type "+getClass().getName());
+    }
 }

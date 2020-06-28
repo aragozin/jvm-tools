@@ -11,7 +11,7 @@ public class JsonProcessingException
     extends java.io.IOException
 {
     final static long serialVersionUID = 123; // Stupid eclipse...
-	
+
     protected JsonLocation mLocation;
 
     protected JsonProcessingException(String msg, JsonLocation loc, Throwable rootCause)
