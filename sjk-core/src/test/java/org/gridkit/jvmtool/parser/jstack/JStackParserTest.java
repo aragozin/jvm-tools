@@ -30,7 +30,7 @@ public class JStackParserTest {
         name = name.substring(0, name.indexOf("@"));
         return Integer.parseInt(name);
     }
-    
+
     @Test
     public void test_thread_dump() throws Exception {
         spawnBusyThread("Blocker-1");
@@ -39,37 +39,37 @@ public class JStackParserTest {
         spawnBusyThread("Blocker \"abc\"");
 
         Thread.sleep(500);
-        
-    	String[] args = {};
+
+        String[] args = {};
         StringBuilder sb = new StringBuilder();
         AttachManager.getThreadDump(pid(), args, sb, 30000);
         System.out.println(sb);
-        
+
         StringReader sreader = new StringReader(sb.toString());
         JStackDumpParser parser = new JStackDumpParser(sreader);
-        
-        System.out.println("----------------------------------");        
+
+        System.out.println("----------------------------------");
         System.out.println("Dump parsed: " + parser.isValid());
         System.out.println("JVM: " + parser.getJvmDetails());
         for(String line: parser.getUnparsedContent()) {
-        	System.out.println("Unparsed: " + line);
+            System.out.println("Unparsed: " + line);
         }
         for(ThreadSnapshotEvent tse: parser.getThreads()) {
-        	print(tse);
+            print(tse);
         }
     }
 
     private void print(ThreadSnapshotEvent tse) {
-    	System.out.println();
-		System.out.println("Thread: " + tse.threadName());
-		System.out.println(tse.tags());
-		System.out.println(tse.counters());
-		if (tse.stackTrace() != null) {
-			for(StackFrame frame: tse.stackTrace()) {
-				System.out.println(" at " + frame);
-			}
-		}		
-	}
+        System.out.println();
+        System.out.println("Thread: " + tse.threadName());
+        System.out.println(tse.tags());
+        System.out.println(tse.counters());
+        if (tse.stackTrace() != null) {
+            for(StackFrame frame: tse.stackTrace()) {
+                System.out.println(" at " + frame);
+            }
+        }
+    }
 
     public synchronized void busyCall() {
         try {
@@ -77,7 +77,7 @@ public class JStackParserTest {
         } catch (InterruptedException e) {
         }
     }
-    
+
     public void spawnBusyThread(String name) {
         Thread t = new Thread(name) {
             @Override

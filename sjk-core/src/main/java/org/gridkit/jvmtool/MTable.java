@@ -23,33 +23,33 @@ import org.gridkit.util.formating.TextTable;
 
 public class MTable {
 
-	private List<String> header = new ArrayList<String>();
-	private List<String[]> rows = new ArrayList<String[]>();
-	
-	public boolean isEmpty() {
-		return rows.isEmpty();
-	}
-	
-	public void append(String[] hdr, String[] values) {
-		for(String h: hdr) {
-			if (!header.contains(h)) {
-				header.add(h);
-			}
-		}
-		String[] row = new String[header.size()];
-		for(int i = 0; i != hdr.length; ++i) {
-			int n = header.indexOf(hdr[i]);
-			row[n] = values[i];
-		}
-		rows.add(row);
-	}
-	
-	public void export(TextTable table) {
-		String[] hdr = header.toArray(new String[0]);
-		table.addRow(hdr);
-		for(String[] r: rows) {
-			String[] rr = Arrays.copyOf(r, hdr.length);
-			table.addRow(rr);
-		}
-	}	
+    private List<String> header = new ArrayList<String>();
+    private List<String[]> rows = new ArrayList<String[]>();
+
+    public boolean isEmpty() {
+        return rows.isEmpty();
+    }
+
+    public void append(String[] hdr, String[] values) {
+        for(String h: hdr) {
+            if (!header.contains(h)) {
+                header.add(h);
+            }
+        }
+        String[] row = new String[header.size()];
+        for(int i = 0; i != hdr.length; ++i) {
+            int n = header.indexOf(hdr[i]);
+            row[n] = values[i];
+        }
+        rows.add(row);
+    }
+
+    public void export(TextTable table) {
+        String[] hdr = header.toArray(new String[0]);
+        table.addRow(hdr);
+        for(String[] r: rows) {
+            String[] rr = Arrays.copyOf(r, hdr.length);
+            table.addRow(rr);
+        }
+    }
 }

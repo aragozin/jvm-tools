@@ -29,13 +29,13 @@ public class MemoryPoolPoller {
 
     private Map<String, MemPoolTracker> trackers = new HashMap<String, MemPoolTracker>();
     private MemoryPoolEventConsumer consumer;
-    
+
     public MemoryPoolPoller(MBeanServerConnection mserver, MemoryPoolEventConsumer consumer) {
         this.consumer = consumer;
         try {
             ObjectName name = new ObjectName("java.lang:type=MemoryPool,name=*");
             for(ObjectName on: mserver.queryNames(name, null)) {
-                
+
                 MemoryPoolMXBean mpool = JMX.newMXBeanProxy(mserver, on, MemoryPoolMXBean.class);
                 MemPoolTracker tracker = init(mpool);
                 trackers.put(tracker.poolName, tracker);
@@ -44,13 +44,13 @@ public class MemoryPoolPoller {
             throw new RuntimeException(e);
         }
     }
-    
+
     public void poll() {
         for(MemPoolTracker t: trackers.values()) {
             poll(t);
         }
     }
-    
+
     private MemPoolTracker init(MemoryPoolMXBean mpool) {
         MemPoolTracker tracker = new MemPoolTracker();
         tracker.poolName = mpool.getName();
@@ -65,11 +65,11 @@ public class MemoryPoolPoller {
         MemoryUsage peakUsage = tracker.poolBean.getPeakUsage();
         MemoryUsage collectionUsage = tracker.poolBean.getCollectionUsage();
         long ts = System.currentTimeMillis();
-        
+
         MemoryUsageBean busage = usage == null ? null : new MemoryUsageBean(usage);
         MemoryUsageBean bpeakUsage = peakUsage == null ? null : new MemoryUsageBean(peakUsage);
         MemoryUsageBean bcollectionUsage = collectionUsage == null ? null : new MemoryUsageBean(collectionUsage);
-        
+
         if (busage != null && !busage.equals(tracker.lastMemUsage)) {
             tracker.lastMemUsage = busage;
             fireUsageEvent(ts, tracker);
@@ -90,9 +90,9 @@ public class MemoryPoolPoller {
         pojo.name(tracker.poolName);
         pojo.nonHeap(tracker.nonHeap);
         pojo.currentUsage(tracker.lastMemUsage);
-        
+
         consumer.consumeUsageEvent(pojo);
-        
+
     }
 
     private void firePeakUsageEvent(long timestamp, MemPoolTracker tracker) {
@@ -101,7 +101,7 @@ public class MemoryPoolPoller {
         pojo.name(tracker.poolName);
         pojo.nonHeap(tracker.nonHeap);
         pojo.peakUsage(tracker.lastMemPeak);
-        
+
         consumer.consumePeakEvent(pojo);
     }
 
@@ -111,19 +111,19 @@ public class MemoryPoolPoller {
         pojo.name(tracker.poolName);
         pojo.nonHeap(tracker.nonHeap);
         pojo.collectionUsage(tracker.lastMemCollection);
-        
+
         consumer.consumeCollectionUsageEvent(pojo);
     }
 
     private class MemPoolTracker {
-        
+
         MemoryPoolMXBean poolBean;
         String poolName;
         boolean nonHeap;
-        
+
         MemoryUsageBean lastMemUsage;
         MemoryUsageBean lastMemPeak;
         MemoryUsageBean lastMemCollection;
-        
+
     }
 }

@@ -20,5 +20,5 @@ public interface GcCpuUsageMonitor {
     public long getYoungGcCpu();
 
     public long getOldGcCpu();
-    
+
 }

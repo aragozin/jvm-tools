@@ -43,83 +43,83 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Stack capture command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class StackDumpCopyCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "stcpy";
-	}
+    @Override
+    public String getCommandName() {
+        return "stcpy";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new StCpy(host);
-	}
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new StCpy(host);
+    }
 
-	@Parameters(commandDescription = "[Stack Copy] Stack dump copy/filtering utility")
-	public static class StCpy implements Runnable {
+    @Parameters(commandDescription = "[Stack Copy] Stack dump copy/filtering utility")
+    public static class StCpy implements Runnable {
 
-		@ParametersDelegate
-		private CommandLauncher host;
-				
-		@ParametersDelegate
-		private DumpInput input;
-		
-		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
-		private boolean retainEmptyTraces = false;
+        @ParametersDelegate
+        private CommandLauncher host;
+
+        @ParametersDelegate
+        private DumpInput input;
+
+        @Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
+        private boolean retainEmptyTraces = false;
 
         @Parameter(names = { "--mask" }, variableArity = true, description = "One or more masking rules. E.g. com.mycompany:com.somecomplany")
         private List<String> maskingRules = new ArrayList<String>();
-		
-	    @Parameter(names = {"-o", "--output"}, required = true, description = "Name of file to write thread dump")
-	    private String outputFile;
+
+        @Parameter(names = {"-o", "--output"}, required = true, description = "Name of file to write thread dump")
+        private String outputFile;
 
         @Parameter(names = {"-ss", "--subsample"}, required = false, description = "If below 1.0 some frames will be randomly throwen away. E.g. 0.1 - every 10th will be retained")
         private double subsample = 1d;
 
         @Parameter(names={"-tz", "--time-zone"}, required = false, description="Time zone used for timestamps and time ranges")
         private String timeZone = "UTC";
-	    
-	    private int traceCounter;
+
+        private int traceCounter;
         private StackTraceWriter writer;
         private List<MaskRule> masking = new ArrayList<MaskRule>();
         private Random rnd = new Random(1);
-		
-		public StCpy(CommandLauncher host) {
-			this.host = host;
-			this.input = new DumpInput(host);
-		}
-		
-		@Override
-		public void run() {
-			
-			try {
-				
-				TimeZone tz = TimeZone.getTimeZone(timeZone);
-				input.setTimeZone(tz);				
-			    
-			    for(String rule: maskingRules) {
-			        String[] parts = rule.split("[:]");
-			        if (parts.length != 2) {
-			            host.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
-			        }
-			        masking.add(new MaskRule(parts[0], parts[1]));
-			    }
-			    
-			    System.out.println("Input files");
-			    
-			    for(String f: input.sourceFiles()) {
-	                System.out.println("  " + f);
-			    }
-			    System.out.println();
-			    
-			    openWriter();
-			    
-			    final StackTraceReader rawReader = new LegacyStackReader(input.getFilteredReader());
-			    
-			    StackTraceReader reader = new StackTraceReader.StackTraceReaderDelegate() {
+
+        public StCpy(CommandLauncher host) {
+            this.host = host;
+            this.input = new DumpInput(host);
+        }
+
+        @Override
+        public void run() {
+
+            try {
+
+                TimeZone tz = TimeZone.getTimeZone(timeZone);
+                input.setTimeZone(tz);
+
+                for(String rule: maskingRules) {
+                    String[] parts = rule.split("[:]");
+                    if (parts.length != 2) {
+                        host.fail("Bad masking pattern [" + rule + "] should be int [match:replace] format");
+                    }
+                    masking.add(new MaskRule(parts[0], parts[1]));
+                }
+
+                System.out.println("Input files");
+
+                for(String f: input.sourceFiles()) {
+                    System.out.println("  " + f);
+                }
+                System.out.println();
+
+                openWriter();
+
+                final StackTraceReader rawReader = new LegacyStackReader(input.getFilteredReader());
+
+                StackTraceReader reader = new StackTraceReader.StackTraceReaderDelegate() {
 
                     @Override
                     protected StackTraceReader getReader() {
@@ -136,35 +136,35 @@ public class StackDumpCopyCmd implements CmdRef {
                             return false;
                         }
                     }
-			    };
-			    
-			    if (!reader.isLoaded()) {
-			        reader.loadNext();
-			    }
-			    
-			    ReaderProxy proxy = new ReaderProxy(reader) {
+                };
+
+                if (!reader.isLoaded()) {
+                    reader.loadNext();
+                }
+
+                ReaderProxy proxy = new ReaderProxy(reader) {
 
                     @Override
                     public StackFrameList stackTrace() {
                         return mask(reader.getStackTrace());
                     }
 
-			    };
-			    
-			    StackWriterProxy writerProxy = new StackWriterProxy();
-			    
-			    while(reader.isLoaded()) {
-			        writerProxy.write(proxy);
-			        reader.loadNext();
-			    }	
-			    
-			    System.out.println(traceCounter + " traces written");
-			    writer.close();
-				
-			} catch (Exception e) {
-				host.fail("Unexpected error: " + e.toString(), e);
-			}			
-		}
+                };
+
+                StackWriterProxy writerProxy = new StackWriterProxy();
+
+                while(reader.isLoaded()) {
+                    writerProxy.write(proxy);
+                    reader.loadNext();
+                }
+
+                System.out.println(traceCounter + " traces written");
+                writer.close();
+
+            } catch (Exception e) {
+                host.fail("Unexpected error: " + e.toString(), e);
+            }
+        }
 
         private class StackWriterProxy implements StackTraceWriter {
 
@@ -176,12 +176,12 @@ public class StackDumpCopyCmd implements CmdRef {
                 if ((snap.stackTrace() == null || snap.stackTrace().isEmpty()) && !retainEmptyTraces) {
                     return;
                 }
-                
+
                 if (rnd.nextDouble() > subsample) {
                     // ignore sample
                     return;
                 }
-                                
+
                 ++traceCounter;
                 writer.write(snap);
             }
@@ -225,30 +225,30 @@ public class StackDumpCopyCmd implements CmdRef {
             }
             return stackFrame;
         }
-	}
-	
-	static class MaskRule {
+    }
+
+    static class MaskRule {
         String match;
-	    String replace;
-	    public MaskRule(String match, String replace) {
-	        this.match = match;
-	        this.replace = replace;
-	    }
-	}
-	
-	static class DumpInput extends AbstractThreadDumpSource {
-		
-		@Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
-		private List<String> inputFiles = new ArrayList<String>();
+        String replace;
+        public MaskRule(String match, String replace) {
+            this.match = match;
+            this.replace = replace;
+        }
+    }
 
-		public DumpInput(CommandLauncher host) {
-			super(host);
-		}
+    static class DumpInput extends AbstractThreadDumpSource {
 
-		@Override
-		protected List<String> inputFiles() {
+        @Parameter(names = {"-i", "--input"}, description = "Input files", required = true, variableArity = true)
+        private List<String> inputFiles = new ArrayList<String>();
 
-			return inputFiles;
-		}
-	}
+        public DumpInput(CommandLauncher host) {
+            super(host);
+        }
+
+        @Override
+        protected List<String> inputFiles() {
+
+            return inputFiles;
+        }
+    }
 }

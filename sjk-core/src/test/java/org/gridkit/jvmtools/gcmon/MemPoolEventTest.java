@@ -14,9 +14,9 @@ public class MemPoolEventTest {
     @Test
     public void pollerSmoke() {
         MemoryPoolPoller poller = new MemoryPoolPoller(ManagementFactory.getPlatformMBeanServer(), new Consumer());
-        
+
         poller.poll();
-        
+
         List<Object> buf = new ArrayList<Object>();
         for(int i = 0; i != 10000; ++i) {
             if (i < 100) {
@@ -33,7 +33,7 @@ public class MemPoolEventTest {
 
         poller.poll();
     }
-    
+
     public class Consumer implements MemoryPoolEventConsumer {
 
         @Override

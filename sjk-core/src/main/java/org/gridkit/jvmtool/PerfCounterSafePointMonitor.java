@@ -24,18 +24,18 @@ public class PerfCounterSafePointMonitor implements SafePointMonitor {
     LongCounter safePointCount;
     TickCounter safePointTime;
     TickCounter safePointSyncTime;
-    
+
     public PerfCounterSafePointMonitor(long pid) {
         JStatData jd = JStatData.connect(pid);
         safePointCount = (LongCounter) jd.getAllCounters().get("sun.rt.safepoints");
         safePointTime = (TickCounter) jd.getAllCounters().get("sun.rt.safepointTime");
         safePointSyncTime = (TickCounter) jd.getAllCounters().get("sun.rt.safepointSyncTime");
     }
-    
+
     public boolean isAvailable() {
         return safePointCount != null && safePointTime != null && safePointSyncTime != null;
     }
-    
+
     @Override
     public long getSafePointCount() {
         return safePointCount == null ? 0 : safePointCount.getLong();
@@ -45,7 +45,7 @@ public class PerfCounterSafePointMonitor implements SafePointMonitor {
     public long getSafePointTime() {
         return safePointTime == null ? 0 : safePointTime.getNanos();
     }
-    
+
     @Override
     public long getSafePointSyncTime() {
         return safePointSyncTime == null ? 0 : safePointSyncTime.getNanos();

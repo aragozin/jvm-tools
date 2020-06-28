@@ -11,7 +11,7 @@ public class SafePointCheck {
     public void test_jmx() throws InterruptedException {
         Thread t = new Thread() {
             double x = 0.1;
-            
+
             @Override
             public void run() {
                 try {
@@ -30,14 +30,14 @@ public class SafePointCheck {
                         System.out.println("");
                     }
                 }
-            }            
+            }
         };
 
         t.setDaemon(true);
         t.start();
-        
+
         Thread.sleep(5000);
-        
+
         while(true) {
             long val = ((com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean()).getThreadCpuTime(t.getId());
 //            long val = ((com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean()).getThreadAllocatedBytes(t.getId());
@@ -45,5 +45,5 @@ public class SafePointCheck {
             Thread.sleep(2000);
         }
     }
-    
+
 }

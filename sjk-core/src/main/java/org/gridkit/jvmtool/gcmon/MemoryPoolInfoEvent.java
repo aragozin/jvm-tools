@@ -27,7 +27,7 @@ public interface MemoryPoolInfoEvent extends MemoryPoolInfo, CommonEvent {
     public static final String MEM_POOL_MEMORY_USAGE = "jvm.memory-pool.memoryUsage";
     public static final String MEM_POOL_MEMORY_PEAK = "jvm.memory-pool.memoryPeak";
     public static final String MEM_POOL_COLLECTION_USAGE = "jvm.memory-pool.collectionUsage";
-    
+
     public static final String MEM_USAGE_INIT = "init";
     public static final String MEM_USAGE_USED = "used";
     public static final String MEM_USAGE_COMMITTED = "committed";

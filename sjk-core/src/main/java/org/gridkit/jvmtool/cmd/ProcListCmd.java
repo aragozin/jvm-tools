@@ -29,62 +29,62 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Java process list command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class ProcListCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "jps";
-	}
+    @Override
+    public String getCommandName() {
+        return "jps";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new JPS(host);
-	}
-	
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new JPS(host);
+    }
+
     @Parameters(commandDescription = "[JPS] Enhanced version of JDK's jps tool")
-	public static class JPS implements Runnable {
+    public static class JPS implements Runnable {
 
-		@ParametersDelegate
-		private final CommandLauncher host;
+        @ParametersDelegate
+        private final CommandLauncher host;
 
-		@ParametersDelegate
-		private JvmProcessFilter filter = new JvmProcessFilter();
-		
-		@ParametersDelegate
-		private JvmProcessPrinter printer = new JvmProcessPrinter();
-		
-		public JPS(CommandLauncher host) {
-			this.host = host;
-		}
+        @ParametersDelegate
+        private JvmProcessFilter filter = new JvmProcessFilter();
 
-		@Override
-		public void run() {
-			
-			List<JavaProcessId> procList; 
-			
-			filter.prepare();
-			
-			if (filter.isDefined() || printer.isDefined()) {
-				procList = AttachManager.listJavaProcesses(filter);
-			}
-			else {
-				procList = AttachManager.listJavaProcesses();
-			}
-			
-			for(JavaProcessId jpid: procList) {
-				if (printer.isDefined()) {
-					System.out.println(printer.describe(jpid));
-				}
-				else {
-					StringBuilder sb = new StringBuilder();
-					sb.append(jpid.getPID()).append('\t');
-					sb.append(jpid.getDescription());
-					System.out.println(sb);
-				}
-			}
-		}
-	}
+        @ParametersDelegate
+        private JvmProcessPrinter printer = new JvmProcessPrinter();
+
+        public JPS(CommandLauncher host) {
+            this.host = host;
+        }
+
+        @Override
+        public void run() {
+
+            List<JavaProcessId> procList;
+
+            filter.prepare();
+
+            if (filter.isDefined() || printer.isDefined()) {
+                procList = AttachManager.listJavaProcesses(filter);
+            }
+            else {
+                procList = AttachManager.listJavaProcesses();
+            }
+
+            for(JavaProcessId jpid: procList) {
+                if (printer.isDefined()) {
+                    System.out.println(printer.describe(jpid));
+                }
+                else {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(jpid.getPID()).append('\t');
+                    sb.append(jpid.getDescription());
+                    System.out.println(sb);
+                }
+            }
+        }
+    }
 }

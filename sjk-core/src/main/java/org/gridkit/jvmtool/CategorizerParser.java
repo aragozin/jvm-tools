@@ -29,9 +29,9 @@ import org.gridkit.jvmtool.stacktrace.analytics.TraceFilterPredicateParser;
 public class CategorizerParser {
 
     public static void loadCategories(Reader source, SimpleCategorizer categorizer, boolean shortNames, final BasicFilterFactory factory) throws IOException {
-        
+
         final Map<String, ThreadSnapshotFilter> filters = new LinkedHashMap<String, ThreadSnapshotFilter>();
-        
+
         @SuppressWarnings("serial")
         Properties props = new Properties() {
 
@@ -42,13 +42,13 @@ public class CategorizerParser {
                 if (!skey.endsWith("._")) {
                     ThreadSnapshotFilter filter = TraceFilterPredicateParser.parseFilter(svalue, factory);
                     filters.put(skey, filter);
-                }      
+                }
                 return super.put(key, value);
-            }            
+            }
         };
-        
-        props.load(source);    
-        
+
+        props.load(source);
+
         for(String cat: filters.keySet()) {
             String name = cat;
             if (!shortNames) {
@@ -59,5 +59,5 @@ public class CategorizerParser {
             }
             categorizer.addCategory(name, filters.get(cat));
         }
-    }    
+    }
 }

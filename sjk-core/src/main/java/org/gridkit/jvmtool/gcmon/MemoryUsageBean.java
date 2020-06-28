@@ -23,7 +23,7 @@ public class MemoryUsageBean {
     private final long used;
     private final long committed;
     private final long max;
-    
+
     public MemoryUsageBean(long init, long used, long committed, long max) {
         this.init = init;
         this.used = used;
@@ -41,19 +41,19 @@ public class MemoryUsageBean {
     public long init() {
         return init;
     }
-    
+
     public long used() {
         return used;
     }
-    
+
     public long committed() {
         return committed;
     }
-    
+
     public long max() {
         return max;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

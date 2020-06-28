@@ -46,44 +46,44 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Stack capture command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class StackCaptureCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "stcap";
-	}
+    @Override
+    public String getCommandName() {
+        return "stcap";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new StCap(host);
-	}
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new StCap(host);
+    }
 
-	@Parameters(commandDescription = "[Stack Capture] Dumps stack traces to file for further processing")
-	public static class StCap implements Runnable {
+    @Parameters(commandDescription = "[Stack Capture] Dumps stack traces to file for further processing")
+    public static class StCap implements Runnable {
 
-		@ParametersDelegate
-		private CommandLauncher host;
-		
-		@Parameter(names = {"-i", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
-		private long samplerIntervalMS = 0;
-		
-		@Parameter(names = {"-f", "--filter"}, description = "Filter threads by name (Java RegEx syntax)")
-		private String threadFilter = ".*";
+        @ParametersDelegate
+        private CommandLauncher host;
 
-		@Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
-		private boolean retainEmptyTraces = false;
+        @Parameter(names = {"-i", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
+        private long samplerIntervalMS = 0;
 
-		@Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
-		private List<String> frameFilter;
+        @Parameter(names = {"-f", "--filter"}, description = "Filter threads by name (Java RegEx syntax)")
+        private String threadFilter = ".*";
 
-	    @Parameter(names = {"-o", "--output"}, required = true, description = "Name of file to write thread dump to")
-	    private String outputFile;
+        @Parameter(names = {"-e", "--empty"}, description = "Retain threads without stack trace in dump (ignored by default)")
+        private boolean retainEmptyTraces = false;
 
-	    @Parameter(names = {"-l", "--limit"}, description = "Target number of traces to collect, once reached command will terminate (0 - unlimited)")
-	    private long limit = 0;
+        @Parameter(names = {"-m", "--match-frame"}, variableArity = true, description = "Frame filter, only traces conatining this string will be included to dump")
+        private List<String> frameFilter;
+
+        @Parameter(names = {"-o", "--output"}, required = true, description = "Name of file to write thread dump to")
+        private String outputFile;
+
+        @Parameter(names = {"-l", "--limit"}, description = "Target number of traces to collect, once reached command will terminate (0 - unlimited)")
+        private long limit = 0;
 
         @Parameter(names = {"-t", "--timeout"}, converter = TimeIntervalConverter.class, description = "Time until command terminate even without enough traces collected")
         private long timeoutMS = TimeUnit.SECONDS.toMillis(30);
@@ -91,68 +91,68 @@ public class StackCaptureCmd implements CmdRef {
         @Parameter(names = {"-r", "--rotate"}, description = "If specified output file would be rotated every N traces (0 - do not rotate)")
         private long fileLimit = 0;
 
-		@ParametersDelegate
-		private JmxConnectionInfo connInfo;
+        @ParametersDelegate
+        private JmxConnectionInfo connInfo;
 
-		private ThreadDumpSampler sampler;
-		private long traceCounter = 0;
-		private long lastRotate = 0;
-		private int rotSeg = 0;
+        private ThreadDumpSampler sampler;
+        private long traceCounter = 0;
+        private long lastRotate = 0;
+        private int rotSeg = 0;
 
         private StackTraceWriter writer;
-		
-		public StCap(CommandLauncher host) {
-			this.host = host;
-			this.connInfo = new JmxConnectionInfo(host);
-		}
-		
-		@Override
-		public void run() {
-			
-			try {
-				MBeanServerConnection mserver = connInfo.getMServer();
-				ThreadMXBean bean = ThreadMXBeanEx.BeanHelper.connectThreadMXBean(mserver);
 
-				sampler = new ThreadDumpSampler();
-				sampler.setThreadFilter(threadFilter);
-				
-				sampler.connect(bean);
+        public StCap(CommandLauncher host) {
+            this.host = host;
+            this.connInfo = new JmxConnectionInfo(host);
+        }
 
-				if (limit == 0) {
-				    limit = Long.MAX_VALUE;
-				}
-				
-				StackTraceWriter proxy = new StackWriterProxy();
-				
-				openWriter();
-				long deadline = System.currentTimeMillis() + timeoutMS;
-				long nextReport = 500;
-				while(System.currentTimeMillis() < deadline && traceCounter < limit) {
-				    long nextsample = System.currentTimeMillis() + samplerIntervalMS;
-				    sampler.collect(proxy);
-				    if (traceCounter >= nextReport) {
-				        System.out.println("Collected " +traceCounter);
-				        while(traceCounter >= nextReport) {
-				            nextReport += 500;
-				        }
-				        checkRotate();
-				    }				    
-				    // delay
-				    while(nextsample > System.currentTimeMillis()) {
-				        long st = nextsample - System.currentTimeMillis();
-				        if (st > 0) {
-				            Thread.sleep(st);
-				        }
-				    }
-				}
+        @Override
+        public void run() {
 
-				writer.close();
-				System.out.println("Trace dumped: " + traceCounter);
-				
-			} catch (Exception e) {
-				host.fail("Unexpected error: " + e.toString(), e);
-			}			
-		}
+            try {
+                MBeanServerConnection mserver = connInfo.getMServer();
+                ThreadMXBean bean = ThreadMXBeanEx.BeanHelper.connectThreadMXBean(mserver);
+
+                sampler = new ThreadDumpSampler();
+                sampler.setThreadFilter(threadFilter);
+
+                sampler.connect(bean);
+
+                if (limit == 0) {
+                    limit = Long.MAX_VALUE;
+                }
+
+                StackTraceWriter proxy = new StackWriterProxy();
+
+                openWriter();
+                long deadline = System.currentTimeMillis() + timeoutMS;
+                long nextReport = 500;
+                while(System.currentTimeMillis() < deadline && traceCounter < limit) {
+                    long nextsample = System.currentTimeMillis() + samplerIntervalMS;
+                    sampler.collect(proxy);
+                    if (traceCounter >= nextReport) {
+                        System.out.println("Collected " +traceCounter);
+                        while(traceCounter >= nextReport) {
+                            nextReport += 500;
+                        }
+                        checkRotate();
+                    }
+                    // delay
+                    while(nextsample > System.currentTimeMillis()) {
+                        long st = nextsample - System.currentTimeMillis();
+                        if (st > 0) {
+                            Thread.sleep(st);
+                        }
+                    }
+                }
+
+                writer.close();
+                System.out.println("Trace dumped: " + traceCounter);
+
+            } catch (Exception e) {
+                host.fail("Unexpected error: " + e.toString(), e);
+            }
+        }
 
         private void checkRotate() throws FileNotFoundException, IOException {
             if (fileLimit > 0) {
@@ -250,5 +250,5 @@ public class StackCaptureCmd implements CmdRef {
                 System.out.println("Writing to " + file.getAbsolutePath());
             }
         }
-	}
+    }
 }

@@ -32,13 +32,13 @@ import org.gridkit.util.formating.TextTree;
 
 /**
  * Stack tree analyzis helper.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class StackTreeAnalyzer {
 
-    private final static StackTraceElement STUB = new StackTraceElement("", "", null, -1); 
-    
+    private final static StackTraceElement STUB = new StackTraceElement("", "", null, -1);
+
     private Node root = new Node();
 
     private int maxDepth = Integer.MAX_VALUE;
@@ -59,20 +59,20 @@ public class StackTreeAnalyzer {
 
     private StringBuilder tipBuilder;
     private Pattern tipPattern;
-    
-    
+
+
     public void setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
     }
-    
+
     public void setTrimLineNumbers(boolean trim) {
         this.trimLineNumbers = trim;
     }
-    
+
     public void setCompressedTree(boolean compress) {
         this.compressedTree = compress;
     }
-    
+
     public void setRelativeVisibilityThreshold(double threshold) {
         this.branchVisibilityRelativeThreshold = threshold;
     }
@@ -84,7 +84,7 @@ public class StackTreeAnalyzer {
     public void setShowSkeletonTails(boolean show) {
         this.showSkeletonTails = show;
     }
-    
+
     public void mask(String pattern) {
         Pattern p = GlobHelper.translate(pattern, ".");
         maskPattern = null;
@@ -132,7 +132,7 @@ public class StackTreeAnalyzer {
         }
         tipBuilder.append("(").append(p.pattern()).append(")");
     }
-    
+
     public void feed(StackTraceElement[] trace) {
         ensureConfigured();
         StackTraceElement[] rtrace = trace;
@@ -141,10 +141,10 @@ public class StackTreeAnalyzer {
         }
         if (classLumpPattern != null) {
             rtrace = lumpClasses(rtrace);
-        }   
+        }
         if (skeletonPattern != null) {
             rtrace = strip(rtrace);
-        }        
+        }
         if (maskPattern != null) {
             rtrace = mask(rtrace);
         }
@@ -154,20 +154,20 @@ public class StackTreeAnalyzer {
         rtrace = trim(rtrace, maxDepth);
         append(root, rtrace, rtrace.length);
     }
-    
+
     private void ensureConfigured() {
         if (maskBuilder != null && maskPattern == null) {
             maskPattern = Pattern.compile(maskBuilder.toString());
-        }        
+        }
         if (skeletonBuilder != null && skeletonPattern == null) {
             skeletonPattern = Pattern.compile(skeletonBuilder.toString());
-        }        
+        }
         if (tipBuilder != null && tipPattern == null) {
             tipPattern = Pattern.compile(tipBuilder.toString());
-        }        
+        }
         if (classLumpBuilder != null && classLumpPattern == null) {
             classLumpPattern = Pattern.compile(classLumpBuilder.toString());
-        }        
+        }
     }
 
     private StackTraceElement[] trim(StackTraceElement[] rtrace, int maxDepth) {
@@ -198,7 +198,7 @@ public class StackTreeAnalyzer {
                 ftrace.add(e);
                 masked = false;
             }
-        }        
+        }
         return ftrace.toArray(new StackTraceElement[ftrace.size()]);
     }
 
@@ -214,10 +214,10 @@ public class StackTreeAnalyzer {
                 }
             }
             ftrace.add(e);
-        }        
+        }
         return ftrace.toArray(new StackTraceElement[ftrace.size()]);
     }
-    
+
     private StackTraceElement[] strip(StackTraceElement[] rtrace) {
         List<StackTraceElement> ftrace = new ArrayList<StackTraceElement>();
         boolean matched = false;
@@ -233,7 +233,7 @@ public class StackTreeAnalyzer {
                     ftrace.add(e);
                 }
             }
-        }        
+        }
         return ftrace.toArray(new StackTraceElement[ftrace.size()]);
     }
 
@@ -251,18 +251,18 @@ public class StackTreeAnalyzer {
             else {
                 ftrace.add(e);
             }
-        }        
+        }
         return ftrace.toArray(new StackTraceElement[ftrace.size()]);
     }
 
     private StackTraceElement[] trimNumbers(StackTraceElement[] rtrace) {
         return rtrace;
     }
-    
+
     public TextTree getTree() {
         return asTree(root);
     }
-    
+
     private TextTree asTree(Node node) {
         if (compressedTree && node.children.size() == 1) {
             Node nnode = node;
@@ -285,7 +285,7 @@ public class StackTreeAnalyzer {
             }
             c[0] = t("skip " + n + (n == 1 ? " frame" : "frames"));
             c[1] = t("[" + nnode.hitCount + "] " + toString(nnode.element));
-            return t("", c);            
+            return t("", c);
         }
         else {
             List<Node> children = new ArrayList<Node>();
@@ -294,11 +294,11 @@ public class StackTreeAnalyzer {
                 @Override
                 public int compare(Node o1, Node o2) {
                     return o2.hitCount - o1.hitCount;
-                }            
+                }
             });
-            
+
             List<TextTree> tt = new ArrayList<TextTree>();
-            
+
             for(Node n: children) {
                 double p = (1d * n.hitCount) / node.hitCount;
                 double pa = (1d * n.hitCount) / root.hitCount;
@@ -317,7 +317,7 @@ public class StackTreeAnalyzer {
                 ttt[0] = t(rate, t("[" + n.hitCount + "] " + toString(n.element)));
                 tt.add(TextTree.t("", ttt));
             }
-            
+
             return new TextTree("", tt.toArray(new TextTree[tt.size()]));
         }
     }
@@ -331,7 +331,7 @@ public class StackTreeAnalyzer {
                 c = new Node();
                 c.element = e;
                 c.parent = node;
-                node.children.put(e, c);                
+                node.children.put(e, c);
             }
             append(c, trace, pos - 1);
         }
@@ -354,12 +354,12 @@ public class StackTreeAnalyzer {
     }
 
     private static class Node {
-        
+
         @SuppressWarnings("unused")
         Node parent;
         StackTraceElement element;
         int hitCount;
         Map<StackTraceElement, Node> children = new HashMap<StackTraceElement, StackTreeAnalyzer.Node>();
-        
-    }    
+
+    }
 }

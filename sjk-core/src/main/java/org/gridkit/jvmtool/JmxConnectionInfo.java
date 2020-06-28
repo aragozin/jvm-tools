@@ -39,183 +39,183 @@ import com.beust.jcommander.Parameter;
 
 /**
  * Configurable connection for JMX based commands.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class JmxConnectionInfo {
 
     private CommandLauncher commandHost;
-    
-	@Parameter(names = {"-p", "--pid"}, description = "JVM process PID")
-	private Long pid;
-	
-	@Parameter(names = {"-s", "--socket"}, description = "Socket address for JMX port (host:port)")
-	private String sockAddr; 
-	
-	@Parameter(names = {"--user"}, description="User for JMX authentication (only for socket connection)")
-	private String user = null;
 
-	@Parameter(names = {"--password"}, description="Password for JMX authentication (only for socket connection)")
-	private String password = null;
+    @Parameter(names = {"-p", "--pid"}, description = "JVM process PID")
+    private Long pid;
 
-	private boolean diagMode = false;
-	
-	public JmxConnectionInfo(CommandLauncher host) {
+    @Parameter(names = {"-s", "--socket"}, description = "Socket address for JMX port (host:port)")
+    private String sockAddr;
+
+    @Parameter(names = {"--user"}, description="User for JMX authentication (only for socket connection)")
+    private String user = null;
+
+    @Parameter(names = {"--password"}, description="Password for JMX authentication (only for socket connection)")
+    private String password = null;
+
+    private boolean diagMode = false;
+
+    public JmxConnectionInfo(CommandLauncher host) {
         this.commandHost = host;
     }
-	
-	public void setDiagMode(boolean diagMode) {
-		this.diagMode = diagMode;
-	}
-	
-	public Long getPID() {
-	    return pid;
-	}
-	
-	private String formatFailedMsg(Object vm) {
-		return "Failed to access MBean server: " + String.valueOf(pid) + "\nFor information about troubleshooting visit\nhttps://github.com/aragozin/jvm-tools/blob/master/sjk-core/docs/TROUBLESHOOTING.md";
-	}
 
-	public MBeanServerConnection getMServer() {
-		if (pid == null && sockAddr == null) {
-			commandHost.failAndPrintUsage("JVM process is not specified");
-		}
-		
-		if (pid != null && sockAddr != null) {
-		    commandHost.failAndPrintUsage("You can specify eigther PID or JMX socket connection");
-		}
+    public void setDiagMode(boolean diagMode) {
+        this.diagMode = diagMode;
+    }
 
-		if (pid != null) {
-			if (diagMode) {
-				System.out.println("Attaching to process " + pid);
-			}
-			JavaProcessDetails jpd = AttachManager.getDetails(pid);
-			if (diagMode) {
-				try {
-					jpd.getVmFlag("MaxHeapSize");
-				}
-				catch(Exception e) {
-					commandHost.fail("Failed to send command via JVM attach channel", e);
-				}
-			}
-			MBeanServerConnection mserver = jpd.getMBeans();
-			if (mserver == null) {
-				if (diagMode) {
-					try {
-						String uri = (String)jpd.getAgentProperties().get("com.sun.management.jmxremote.localConnectorAddress");
-						if (uri == null || uri.trim().length() == 0) {
-							System.out.println("Failed to start local MBean server on remote VM");
-						}
-						else {
-							System.out.println("Local MBean server URI: " + uri);
-						}
-					} catch (Exception e) {
-						System.out.println("Faield to read agent properties on remote VM");
-						e.printStackTrace(System.out);
-					}
-				}
-				commandHost.fail(formatFailedMsg(pid));
-			}
+    public Long getPID() {
+        return pid;
+    }
+
+    private String formatFailedMsg(Object vm) {
+        return "Failed to access MBean server: " + String.valueOf(pid) + "\nFor information about troubleshooting visit\nhttps://github.com/aragozin/jvm-tools/blob/master/sjk-core/docs/TROUBLESHOOTING.md";
+    }
+
+    public MBeanServerConnection getMServer() {
+        if (pid == null && sockAddr == null) {
+            commandHost.failAndPrintUsage("JVM process is not specified");
+        }
+
+        if (pid != null && sockAddr != null) {
+            commandHost.failAndPrintUsage("You can specify eigther PID or JMX socket connection");
+        }
+
+        if (pid != null) {
+            if (diagMode) {
+                System.out.println("Attaching to process " + pid);
+            }
+            JavaProcessDetails jpd = AttachManager.getDetails(pid);
+            if (diagMode) {
+                try {
+                    jpd.getVmFlag("MaxHeapSize");
+                }
+                catch(Exception e) {
+                    commandHost.fail("Failed to send command via JVM attach channel", e);
+                }
+            }
+            MBeanServerConnection mserver = jpd.getMBeans();
+            if (mserver == null) {
+                if (diagMode) {
+                    try {
+                        String uri = (String)jpd.getAgentProperties().get("com.sun.management.jmxremote.localConnectorAddress");
+                        if (uri == null || uri.trim().length() == 0) {
+                            System.out.println("Failed to start local MBean server on remote VM");
+                        }
+                        else {
+                            System.out.println("Local MBean server URI: " + uri);
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Faield to read agent properties on remote VM");
+                        e.printStackTrace(System.out);
+                    }
+                }
+                commandHost.fail(formatFailedMsg(pid));
+            }
             return mserver;
-		}
-		else if (sockAddr != null) {
-			String host = host(sockAddr);
-			int port = port(sockAddr);
-			Map<String, Object> env = null;
-			if (user != null || password != null) {
-				if (user == null || password == null) {
-				    commandHost.failAndPrintUsage("Both user and password required for authentication");
-				}
-				env = Collections.singletonMap(JMXConnector.CREDENTIALS, (Object)new String[]{user, password});
-			}
-			MBeanServerConnection mserver = connectJmx(host, port, env);
+        }
+        else if (sockAddr != null) {
+            String host = host(sockAddr);
+            int port = port(sockAddr);
+            Map<String, Object> env = null;
+            if (user != null || password != null) {
+                if (user == null || password == null) {
+                    commandHost.failAndPrintUsage("Both user and password required for authentication");
+                }
+                env = Collections.singletonMap(JMXConnector.CREDENTIALS, (Object)new String[]{user, password});
+            }
+            MBeanServerConnection mserver = connectJmx(host, port, env);
             if (mserver == null) {
                 commandHost.fail(formatFailedMsg(host + ":" + port));
             }
             return mserver;
-		}
-		else {
-			throw new UnsupportedOperationException();
-		}		
-	}
+        }
+        else {
+            throw new UnsupportedOperationException();
+        }
+    }
 
-	@SuppressWarnings("resource")
-	private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
-		try {
-			RMIServer rmiServer = null;
-			try {
-				if (diagMode) {
-					System.out.println("Try to connect via TLS");
-				}
-				Registry registry = LocateRegistry.getRegistry(host, port, new SslRMIClientSocketFactory());
-				try {
-					rmiServer = (RMIServer) registry.lookup("jmxrmi");
-				} catch (NotBoundException nbe) {
-					throw (IOException)
-							new IOException(nbe.getMessage()).initCause(nbe);
-				}
-			} catch (IOException e) {
-				if (diagMode) {
-					System.out.println("Failed to connect using TLS: " + e.toString());
-					System.out.println("Try to use plain socket");
-				}
-				Registry registry = LocateRegistry.getRegistry(host, port);
-				try {
-					rmiServer = (RMIServer) registry.lookup("jmxrmi");
-				} catch (NotBoundException nbe) {
-					if (diagMode) {
-						System.out.println("Failed using LocateRegistry. Fallback to JMXConnectorFactory");
-					}
-				}
-			}
-			if(rmiServer != null) {
-				RMIConnector rmiConnector = new RMIConnector(rmiServer, props);
-				rmiConnector.connect();
-				return rmiConnector.getMBeanServerConnection();
-			}
+    @SuppressWarnings("resource")
+    private MBeanServerConnection connectJmx(String host, int port, Map<String, Object> props) {
+        try {
+            RMIServer rmiServer = null;
+            try {
+                if (diagMode) {
+                    System.out.println("Try to connect via TLS");
+                }
+                Registry registry = LocateRegistry.getRegistry(host, port, new SslRMIClientSocketFactory());
+                try {
+                    rmiServer = (RMIServer) registry.lookup("jmxrmi");
+                } catch (NotBoundException nbe) {
+                    throw (IOException)
+                            new IOException(nbe.getMessage()).initCause(nbe);
+                }
+            } catch (IOException e) {
+                if (diagMode) {
+                    System.out.println("Failed to connect using TLS: " + e.toString());
+                    System.out.println("Try to use plain socket");
+                }
+                Registry registry = LocateRegistry.getRegistry(host, port);
+                try {
+                    rmiServer = (RMIServer) registry.lookup("jmxrmi");
+                } catch (NotBoundException nbe) {
+                    if (diagMode) {
+                        System.out.println("Failed using LocateRegistry. Fallback to JMXConnectorFactory");
+                    }
+                }
+            }
+            if(rmiServer != null) {
+                RMIConnector rmiConnector = new RMIConnector(rmiServer, props);
+                rmiConnector.connect();
+                return rmiConnector.getMBeanServerConnection();
+            }
 
-			String proto = System.getProperty("jmx.service.protocol", "rmi");
+            String proto = System.getProperty("jmx.service.protocol", "rmi");
 
-			final String uri = "rmi".equals(proto) ?
-					"service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi" :
-					"service:jmx:" + proto + "://" + host + ":" + port;
+            final String uri = "rmi".equals(proto) ?
+                    "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi" :
+                    "service:jmx:" + proto + "://" + host + ":" + port;
 
-			if (diagMode) {
-				System.out.println("Using JMX URI: " + uri);
-			}
-			
-			JMXServiceURL jmxurl = new JMXServiceURL(uri);
+            if (diagMode) {
+                System.out.println("Using JMX URI: " + uri);
+            }
 
-			JMXConnector conn = props == null ? JMXConnectorFactory.connect(jmxurl) : JMXConnectorFactory.connect(jmxurl, props);
-			MBeanServerConnection mserver = conn.getMBeanServerConnection();
-			return mserver;
+            JMXServiceURL jmxurl = new JMXServiceURL(uri);
 
-		} catch (MalformedURLException e) {
-		    commandHost.fail("JMX Connection failed: " + e.toString(), e);
-		} catch (IOException e) {
-		    commandHost.fail("JMX Connection failed: " + e.toString(), e);
-		}
-		return null;
-	}
+            JMXConnector conn = props == null ? JMXConnectorFactory.connect(jmxurl) : JMXConnectorFactory.connect(jmxurl, props);
+            MBeanServerConnection mserver = conn.getMBeanServerConnection();
+            return mserver;
 
-	private String host(String sockAddr) {
-		int c = sockAddr.indexOf(':');
-		if (c <= 0) {
-		    commandHost.fail("Invalid socket address: " + sockAddr);
-		}
-		return sockAddr.substring(0, c);
-	}
+        } catch (MalformedURLException e) {
+            commandHost.fail("JMX Connection failed: " + e.toString(), e);
+        } catch (IOException e) {
+            commandHost.fail("JMX Connection failed: " + e.toString(), e);
+        }
+        return null;
+    }
 
-	private int port(String sockAddr) {
-		int c = sockAddr.indexOf(':');
-		if (c <= 0) {
-		    commandHost.fail("Invalid socket address: " + sockAddr);
-		}
-		try {
-			return Integer.valueOf(sockAddr.substring(c + 1));
-		} catch (NumberFormatException e) {
-		    commandHost.fail("Invalid socket address: " + sockAddr);
-			return 0;
-		}
-	}
+    private String host(String sockAddr) {
+        int c = sockAddr.indexOf(':');
+        if (c <= 0) {
+            commandHost.fail("Invalid socket address: " + sockAddr);
+        }
+        return sockAddr.substring(0, c);
+    }
+
+    private int port(String sockAddr) {
+        int c = sockAddr.indexOf(':');
+        if (c <= 0) {
+            commandHost.fail("Invalid socket address: " + sockAddr);
+        }
+        try {
+            return Integer.valueOf(sockAddr.substring(c + 1));
+        } catch (NumberFormatException e) {
+            commandHost.fail("Invalid socket address: " + sockAddr);
+            return 0;
+        }
+    }
 }

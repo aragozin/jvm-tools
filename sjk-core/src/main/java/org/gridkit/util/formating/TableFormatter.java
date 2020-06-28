@@ -20,34 +20,34 @@ import java.io.IOException;
 /**
  * Common API for exporting data in text oriented tables.
  * Two common cases are CSV and ASCII table output.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  *
  */
 public interface TableFormatter extends TabularDataSink {
 
-	int colByName(String name);
+    int colByName(String name);
 
-	/**
-	 * Add column to table using default formating.
-	 */
-	void addCol(String name);
+    /**
+     * Add column to table using default formating.
+     */
+    void addCol(String name);
 
-	/**
-	 * Add column to table using default formating.
-	 */
-	void addCol(String name, String displayName);
+    /**
+     * Add column to table using default formating.
+     */
+    void addCol(String name, String displayName);
 
-	/**
-	 * Add column to table using specific formating.
-	 * <p>
-	 * See {@link SimpleNumberFormatter} for details.
-	 */
-	void addCol(String name, String displayName, String format);
+    /**
+     * Add column to table using specific formating.
+     * <p>
+     * See {@link SimpleNumberFormatter} for details.
+     */
+    void addCol(String name, String displayName, String format);
 
-	void sortNumeric(String colId, boolean desc);
+    void sortNumeric(String colId, boolean desc);
 
-	void sort(String colId, boolean desc);
-	
-	void format(Appendable out) throws IOException;
+    void sort(String colId, boolean desc);
+
+    void format(Appendable out) throws IOException;
 }

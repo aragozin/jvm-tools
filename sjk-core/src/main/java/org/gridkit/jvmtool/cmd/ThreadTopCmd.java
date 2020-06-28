@@ -38,131 +38,131 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Thread top command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class ThreadTopCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "ttop";
-	}
+    @Override
+    public String getCommandName() {
+        return "ttop";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new TTop(host);
-	}
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new TTop(host);
+    }
 
-	@Parameters(commandDescription = "[Thread Top] Displays threads from JVM process")
-	public static class TTop implements Runnable {
+    @Parameters(commandDescription = "[Thread Top] Displays threads from JVM process")
+    public static class TTop implements Runnable {
 
-		@ParametersDelegate
-		private CommandLauncher host;
-		
-		@Parameter(names = {"-ri", "--report-interval"}, converter = TimeIntervalConverter.class, description = "Interval between CPU usage reports")
-		private long reportIntervalMS = TimeUnit.SECONDS.toMillis(10);
+        @ParametersDelegate
+        private CommandLauncher host;
 
-		@Parameter(names = {"-si", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
-		private long samplerIntervalMS = 500;
-		
-		@Parameter(names = {"-n", "--top-number"}, description = "Number of threads to show")
-		private int topNumber = 20;
-		
-		@Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, ALLOC, NAME")
-		private List<String> sortOrder = new ArrayList<String>(Arrays.asList("CPU"));
-		
-		@Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter threads by name")
-		private String threadFilter;
-		
-		@Parameter(names = {"-c", "--contention"}, description = "Enable contention monitoring")
-		private boolean contentionMon = false;
-		
-		@ParametersDelegate
-		private JmxConnectionInfo connInfo;
-		
-		public TTop(CommandLauncher host) {
-			this.host = host;
-			this.connInfo = new JmxConnectionInfo(host);
-		}
+        @Parameter(names = {"-ri", "--report-interval"}, converter = TimeIntervalConverter.class, description = "Interval between CPU usage reports")
+        private long reportIntervalMS = TimeUnit.SECONDS.toMillis(10);
 
-		@Override
-		public void run() {
-			
-			try {
-				MBeanServerConnection mserver = connInfo.getMServer();
-				
-				final MBeanCpuUsageReporter tmon = new MBeanCpuUsageReporter(mserver);
-				if (connInfo.getPID() != null) {
-				    try {
-    				    long pid = connInfo.getPID();
-    				    PerfCounterGcCpuUsageMonitor pm = new PerfCounterGcCpuUsageMonitor(pid);
-    				    if (pm.isAvailable()) {
-    				        tmon.setGcCpuUsageMonitor(pm);
-    				    }
-    				    PerfCounterSafePointMonitor sm = new PerfCounterSafePointMonitor(pid);
-    				    if (sm.isAvailable()) {
-    				        tmon.setSafePointMonitor(sm);
-    				    }
+        @Parameter(names = {"-si", "--sampler-interval"}, converter = TimeIntervalConverter.class, description = "Interval between polling MBeans")
+        private long samplerIntervalMS = 500;
+
+        @Parameter(names = {"-n", "--top-number"}, description = "Number of threads to show")
+        private int topNumber = 20;
+
+        @Parameter(names = {"-o", "--order"}, variableArity = true, description = "Sort order. Value tags: CPU, USER, SYS, ALLOC, NAME")
+        private List<String> sortOrder = new ArrayList<String>(Arrays.asList("CPU"));
+
+        @Parameter(names = {"-f", "--filter"}, description = "Wild card expression to filter threads by name")
+        private String threadFilter;
+
+        @Parameter(names = {"-c", "--contention"}, description = "Enable contention monitoring")
+        private boolean contentionMon = false;
+
+        @ParametersDelegate
+        private JmxConnectionInfo connInfo;
+
+        public TTop(CommandLauncher host) {
+            this.host = host;
+            this.connInfo = new JmxConnectionInfo(host);
+        }
+
+        @Override
+        public void run() {
+
+            try {
+                MBeanServerConnection mserver = connInfo.getMServer();
+
+                final MBeanCpuUsageReporter tmon = new MBeanCpuUsageReporter(mserver);
+                if (connInfo.getPID() != null) {
+                    try {
+                        long pid = connInfo.getPID();
+                        PerfCounterGcCpuUsageMonitor pm = new PerfCounterGcCpuUsageMonitor(pid);
+                        if (pm.isAvailable()) {
+                            tmon.setGcCpuUsageMonitor(pm);
+                        }
+                        PerfCounterSafePointMonitor sm = new PerfCounterSafePointMonitor(pid);
+                        if (sm.isAvailable()) {
+                            tmon.setSafePointMonitor(sm);
+                        }
 //    				    NativeThreadMonitor tm = PlatformProcessInfoProvider.createMonitor(pid);
 //    				    if (tm != null) {
 //    				        tmon.setNativeThreadMonitor(tm);
 //    				    }
-				    }
-				    catch(Exception e) {
-				        // ignore
-				    }
-				}
-				
-				tmon.setTopLimit(topNumber);
-				tmon.setContentionMonitoringEnabled(contentionMon);
-				
-				if (threadFilter != null) {
-					tmon.setThreadFilter(GlobHelper.translate(threadFilter, "\0"));
-				}
-				
-				if (sortOrder != null) {
-					Collections.reverse(sortOrder);
-					for(String tag: sortOrder) {
-						if ("SYS".equals(tag)) {
-							tmon.sortBySysCpu();
-						}
-						else if ("USER".equals(tag)){
-							tmon.sortByUserCpu();
-						}
-						else if ("CPU".equals(tag)){
-							tmon.sortByTotalCpu();
-						}
-						else if ("ALLOC".equals(tag)){
-							tmon.sortByAllocRate();
-						}
-						else if ("NAME".equals(tag)){
-							tmon.sortByThreadName();
-						}
-						else {
-							host.failAndPrintUsage("Invalid order option '" + tag + "'");
-						}
-					}
-				}
-				
-				long deadline = System.currentTimeMillis() + Math.min(reportIntervalMS, 10 * samplerIntervalMS);
-				tmon.report();
-				System.out.println("Monitoring threads ...");
-				while(true) {
-					while(System.currentTimeMillis() < deadline) {
-						Thread.sleep(samplerIntervalMS);
-						tmon.probe();
-					}
-					deadline += reportIntervalMS;
-					System.out.println();
-					System.out.println(tmon.report());
-					System.out.println();
-					if (System.in.available() > 0) {
-						return;
-					}
-				}
-			} catch (Exception e) {
-				host.fail("Unexpected error: " + e.toString(), e);
-			}			
-		}
-	}
+                    }
+                    catch(Exception e) {
+                        // ignore
+                    }
+                }
+
+                tmon.setTopLimit(topNumber);
+                tmon.setContentionMonitoringEnabled(contentionMon);
+
+                if (threadFilter != null) {
+                    tmon.setThreadFilter(GlobHelper.translate(threadFilter, "\0"));
+                }
+
+                if (sortOrder != null) {
+                    Collections.reverse(sortOrder);
+                    for(String tag: sortOrder) {
+                        if ("SYS".equals(tag)) {
+                            tmon.sortBySysCpu();
+                        }
+                        else if ("USER".equals(tag)){
+                            tmon.sortByUserCpu();
+                        }
+                        else if ("CPU".equals(tag)){
+                            tmon.sortByTotalCpu();
+                        }
+                        else if ("ALLOC".equals(tag)){
+                            tmon.sortByAllocRate();
+                        }
+                        else if ("NAME".equals(tag)){
+                            tmon.sortByThreadName();
+                        }
+                        else {
+                            host.failAndPrintUsage("Invalid order option '" + tag + "'");
+                        }
+                    }
+                }
+
+                long deadline = System.currentTimeMillis() + Math.min(reportIntervalMS, 10 * samplerIntervalMS);
+                tmon.report();
+                System.out.println("Monitoring threads ...");
+                while(true) {
+                    while(System.currentTimeMillis() < deadline) {
+                        Thread.sleep(samplerIntervalMS);
+                        tmon.probe();
+                    }
+                    deadline += reportIntervalMS;
+                    System.out.println();
+                    System.out.println(tmon.report());
+                    System.out.println();
+                    if (System.in.available() > 0) {
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                host.fail("Unexpected error: " + e.toString(), e);
+            }
+        }
+    }
 }

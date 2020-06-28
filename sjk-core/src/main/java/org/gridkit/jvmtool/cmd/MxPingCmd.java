@@ -32,65 +32,65 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Dump certain details via attach API
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class MxPingCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "mxping";
-	}
+    @Override
+    public String getCommandName() {
+        return "mxping";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new MxPingInfo(host);
-	}
-	
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new MxPingInfo(host);
+    }
+
     @Parameters(commandDescription = "[MXPING] Verify JMX connection to target JVM")
-	public static class MxPingInfo implements Runnable {
+    public static class MxPingInfo implements Runnable {
 
-		@ParametersDelegate
-		private final CommandLauncher host;
+        @ParametersDelegate
+        private final CommandLauncher host;
 
-		@ParametersDelegate
-		private JmxConnectionInfo connInfo;
-		
-		public MxPingInfo(CommandLauncher host) {
-			this.host = host;
-			connInfo = new JmxConnectionInfo(host);
-		}
+        @ParametersDelegate
+        private JmxConnectionInfo connInfo;
 
-		@Override
-		public void run() {
-			
-			SysLogger.DEBUG.setTarget(System.out);
-			SysLogger.INFO.setTarget(System.out);
-			
-			connInfo.setDiagMode(true);
-			
-			RuntimeMXBean rtinfo = ManagementFactory.getRuntimeMXBean();
-			System.out.println("SJK is running on: " + rtinfo.getVmName() + " " + rtinfo.getVmVersion() + " (" + rtinfo.getVmVendor() + ")");
-			System.out.println("Java home: " + System.getProperty("java.home"));
+        public MxPingInfo(CommandLauncher host) {
+            this.host = host;
+            connInfo = new JmxConnectionInfo(host);
+        }
 
-			MBeanServerConnection mserver = connInfo.getMServer();
-			ObjectName on;
-			try {
-				on = new ObjectName(ManagementFactory.RUNTIME_MXBEAN_NAME);
-			}
-			catch(Exception e) {
-				host.fail("", e);
-				return;
-			}
-			RuntimeMXBean rtbean;
-			try {
-				rtbean = JMX.newMBeanProxy(mserver, on, RuntimeMXBean.class);
-			}
-			catch(Exception e) {
-				host.fail("Faield to access remote Runtime MBean", e);
-				return;
-			}
-			System.out.println("Remote VM: " + rtbean.getVmName() + " " + rtbean.getVmVersion() + " (" + rtbean.getVmVendor() + ")");
-		}
-	}
+        @Override
+        public void run() {
+
+            SysLogger.DEBUG.setTarget(System.out);
+            SysLogger.INFO.setTarget(System.out);
+
+            connInfo.setDiagMode(true);
+
+            RuntimeMXBean rtinfo = ManagementFactory.getRuntimeMXBean();
+            System.out.println("SJK is running on: " + rtinfo.getVmName() + " " + rtinfo.getVmVersion() + " (" + rtinfo.getVmVendor() + ")");
+            System.out.println("Java home: " + System.getProperty("java.home"));
+
+            MBeanServerConnection mserver = connInfo.getMServer();
+            ObjectName on;
+            try {
+                on = new ObjectName(ManagementFactory.RUNTIME_MXBEAN_NAME);
+            }
+            catch(Exception e) {
+                host.fail("", e);
+                return;
+            }
+            RuntimeMXBean rtbean;
+            try {
+                rtbean = JMX.newMBeanProxy(mserver, on, RuntimeMXBean.class);
+            }
+            catch(Exception e) {
+                host.fail("Faield to access remote Runtime MBean", e);
+                return;
+            }
+            System.out.println("Remote VM: " + rtbean.getVmName() + " " + rtbean.getVmVersion() + " (" + rtbean.getVmVendor() + ")");
+        }
+    }
 }

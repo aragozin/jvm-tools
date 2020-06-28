@@ -29,20 +29,20 @@ import java.util.TimeZone;
  * <li> {@link String#format(String, Object...)} - prefix D </li>
  * <p>
  * Formatter always using neutral locale.
- * 
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class SimpleNumberFormatter implements NumberFormat {
 
     public static final SimpleNumberFormatter DEFAULT = new SimpleNumberFormatter("");
-    
+
     private final LongFormatter lf;
     private final DoubleFormatter df;
-    
+
     public SimpleNumberFormatter(String format) {
-    	this(format, TimeZone.getDefault());
+        this(format, TimeZone.getDefault());
     }
-    
+
     public SimpleNumberFormatter(String format, TimeZone tz) {
         if (format.length() == 0) {
             // default
@@ -68,43 +68,43 @@ public class SimpleNumberFormatter implements NumberFormat {
             throw new IllegalArgumentException("Format spec should start with D, T or F");
         }
     }
-    
+
     public String formatLong(long v) {
         return lf.formatLong(v);
     }
-    
+
     public String formatDouble(double v) {
         return df.formatDouble(v);
-    }    
-    
+    }
+
     private static abstract class LongFormatter {
-        
+
         public abstract String formatLong(long v);
-        
+
     }
 
     private static abstract class DoubleFormatter {
-        
+
         public abstract String formatDouble(double v);
-        
+
     }
-    
+
     private static class DefaultLongFormatter extends LongFormatter {
-        
+
         public String formatLong(long v) {
             return String.valueOf(v);
         }
     }
-    
+
     private static class DefaultDoubleFormatter extends DoubleFormatter {
-        
+
         public String formatDouble(double v) {
             return String.valueOf(v);
         }
     }
-    
+
     private static class SDFFormatter extends LongFormatter {
-        
+
         private final SimpleDateFormat sdf;
 
         public SDFFormatter(SimpleDateFormat sdf) {
@@ -118,7 +118,7 @@ public class SimpleNumberFormatter implements NumberFormat {
     }
 
     private static class DecimalFormatLong extends LongFormatter {
-        
+
         private final java.text.DecimalFormat fmt;
 
         public DecimalFormatLong(DecimalFormat fmt) {
@@ -132,23 +132,23 @@ public class SimpleNumberFormatter implements NumberFormat {
     }
 
     private static class DecimalFormatDouble extends DoubleFormatter {
-        
+
         private final java.text.DecimalFormat fmt;
-        
+
         public DecimalFormatDouble(DecimalFormat fmt) {
             this.fmt = fmt;
         }
-        
+
         @Override
         public String formatDouble(double v) {
             return fmt.format(v);
         }
     }
-    
+
     private static class JavaFormatterLong extends LongFormatter {
 
         private final String fmt;
-        
+
         public JavaFormatterLong(String fmt) {
             this.fmt = fmt;
         }
@@ -160,9 +160,9 @@ public class SimpleNumberFormatter implements NumberFormat {
     }
 
     private static class JavaFormatterDouble extends DoubleFormatter {
-        
+
         private final String fmt;
-        
+
         public JavaFormatterDouble(String fmt) {
             this.fmt = fmt;
         }
@@ -170,11 +170,11 @@ public class SimpleNumberFormatter implements NumberFormat {
         @Override
         public String formatDouble(double v) {
             return String.format(Locale.ROOT, fmt, v);
-        }        
+        }
     }
-    
+
     private static class D2L extends DoubleFormatter {
-        
+
         private final LongFormatter lf;
 
         public D2L(LongFormatter lf) {

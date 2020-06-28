@@ -28,36 +28,36 @@ public class CsvTableFormatter implements TableFormatter, TabularDataSink {
     protected List<String> displayHeader = new ArrayList<String>();
     protected List<NumberFormat> numberFormat = new ArrayList<NumberFormat>();
     protected TimeZone timeZone;
-    
+
     public CsvTableFormatter() {
-    	this(TimeZone.getDefault());
+        this(TimeZone.getDefault());
     }
 
     public CsvTableFormatter(TimeZone timeZone) {
-		this.timeZone = timeZone;
-	}
-    
+        this.timeZone = timeZone;
+    }
+
     @Override
-	public void addCol(String name) {
+    public void addCol(String name) {
         header.add(name);
         displayHeader.add(name);
         numberFormat.add(SimpleNumberFormatter.DEFAULT);
     }
-    
+
     @Override
-	public void addCol(String name, String displayName) {
+    public void addCol(String name, String displayName) {
         header.add(name);
         displayHeader.add(displayName);
         numberFormat.add(SimpleNumberFormatter.DEFAULT);
     }
 
     @Override
-	public void addCol(String name, String displayName, String format) {
+    public void addCol(String name, String displayName, String format) {
         header.add(name);
         displayHeader.add(displayName);
         numberFormat.add(new SimpleNumberFormatter(format, timeZone));
     }
-    
+
     protected String formatDouble(String name, double v) {
         return numberFormat.get(header.indexOf(name)).formatDouble(v);
     }
@@ -71,25 +71,25 @@ public class CsvTableFormatter implements TableFormatter, TabularDataSink {
         return header.indexOf(name);
     }
 
-    public String format() {        
+    public String format() {
         return TextTable.formatCsv(textTable);
     }
-    
-    @Override
-	public void format(Appendable out) throws IOException {
-    	out.append(format());
-	}
 
-	@Override
-	public void sort(String colId, boolean desc) {
+    @Override
+    public void format(Appendable out) throws IOException {
+        out.append(format());
+    }
+
+    @Override
+    public void sort(String colId, boolean desc) {
         textTable.sort(colByName(colId), true, desc, null);
     }
 
     @Override
-	public void sortNumeric(String colId, boolean desc) {
+    public void sortNumeric(String colId, boolean desc) {
         textTable.sort(colByName(colId), true, desc, TextTable.NUM_CMP);
     }
-    
+
     @Override
     public void close() {
         // do nothing
@@ -101,57 +101,57 @@ public class CsvTableFormatter implements TableFormatter, TabularDataSink {
         }
         textTable.addRow(row);
     }
-    
+
     @Override
     public Cursor newCursor() {
         return new Cursor() {
-            
+
             final String[] row = new String[header.size()];
             {
                 clear();
             }
-            
+
             @Override
             public void submit() {
                 addRow(row);
                 clear();
             }
-            
+
             private void clear() {
-                Arrays.fill(row, "");                
+                Arrays.fill(row, "");
             }
 
             @Override
             public void setCell(int colNo, double value) {
                 if (colNo >= 0) {
                     row[colNo] = formatDouble(header.get(colNo), value);
-                }                   
+                }
             }
-            
+
             @Override
             public void setCell(int colNo, long value) {
                 if (colNo >= 0) {
                     row[colNo] = formatLong(header.get(colNo), value);
-                }                   
+                }
             }
-            
+
             @Override
             public void setCell(int colNo, String value) {
                 if (colNo >= 0) {
                     row[colNo] = value;
-                }                   
+                }
             }
-            
+
             @Override
             public void setCell(String name, double value) {
                 setCell(colByName(name), value);
             }
-            
+
             @Override
             public void setCell(String name, long value) {
                 setCell(colByName(name), value);
             }
-            
+
             @Override
             public void setCell(String name, String value) {
                 setCell(colByName(name), value);

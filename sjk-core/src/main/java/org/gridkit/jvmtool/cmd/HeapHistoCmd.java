@@ -30,93 +30,93 @@ import com.beust.jcommander.ParametersDelegate;
 
 /**
  * Heap histogram command.
- *  
+ *
  * @author Alexey Ragozin (alexey.ragozin@gmail.com)
  */
 public class HeapHistoCmd implements CmdRef {
 
-	@Override
-	public String getCommandName() {
-		return "hh";
-	}
+    @Override
+    public String getCommandName() {
+        return "hh";
+    }
 
-	@Override
-	public Runnable newCommand(CommandLauncher host) {
-		return new Histo(host);
-	}
-	
-	@Parameters(commandDescription = "[Heap Histo] Prints class histogram, similar to jmap -histo")
-	public static class Histo implements Runnable {
+    @Override
+    public Runnable newCommand(CommandLauncher host) {
+        return new Histo(host);
+    }
 
-		@ParametersDelegate
-		private CommandLauncher host;
-		
-		@Parameter(names = {"-p", "--pid"}, description = "Process ID", required = true)
-		private int pid;
-		
-		@Parameter(names = "--live", description = "Live objects histogram")
-		private boolean live = false;
+    @Parameters(commandDescription = "[Heap Histo] Prints class histogram, similar to jmap -histo")
+    public static class Histo implements Runnable {
 
-		@Parameter(names = "--dead", description = "Dead objects histogram")
-		private boolean dead = false;
+        @ParametersDelegate
+        private CommandLauncher host;
 
-		@Parameter(names = "--dead-young", description = "Histogram for sample of dead young objects")
-		private boolean deadYoung = false;
+        @Parameter(names = {"-p", "--pid"}, description = "Process ID", required = true)
+        private int pid;
 
-		@Parameter(names = "--young", description = "Histogram for sample of new objects")
-		private boolean young = false;
+        @Parameter(names = "--live", description = "Live objects histogram")
+        private boolean live = false;
+
+        @Parameter(names = "--dead", description = "Dead objects histogram")
+        private boolean dead = false;
+
+        @Parameter(names = "--dead-young", description = "Histogram for sample of dead young objects")
+        private boolean deadYoung = false;
+
+        @Parameter(names = "--young", description = "Histogram for sample of new objects")
+        private boolean young = false;
 
         @Parameter(names = {"-d", "--sample-depth"}, converter = TimeIntervalConverter.class, description = "Used with --dead-young and --young options. Specific time duration to collect young population.")
-		private long youngSampleDepth = 10000;
-		
-		@Parameter(names = {"-n", "--top-number"}, description = "Show only N top buckets")
-		private int n = Integer.MAX_VALUE;
+        private long youngSampleDepth = 10000;
 
-		public Histo(CommandLauncher host) {
-			this.host = host;
-		}
+        @Parameter(names = {"-n", "--top-number"}, description = "Show only N top buckets")
+        private int n = Integer.MAX_VALUE;
 
-		@Override
-		public void run() {
-			try {
-			    int x = 0;
-			    x += live ? 1 : 0;
-			    x += dead ? 1 : 0;
-			    x += deadYoung ? 1 : 0;
-			    x += young ? 1 : 0;
-				if (x > 1) {
-					host.failAndPrintUsage("--live, --dead, --young and --deadYoung are mutually exclusive");
-				}
+        public Histo(CommandLauncher host) {
+            this.host = host;
+        }
+
+        @Override
+        public void run() {
+            try {
+                int x = 0;
+                x += live ? 1 : 0;
+                x += dead ? 1 : 0;
+                x += deadYoung ? 1 : 0;
+                x += young ? 1 : 0;
+                if (x > 1) {
+                    host.failAndPrintUsage("--live, --dead, --young and --deadYoung are mutually exclusive");
+                }
 //				else if (x < 1) {
 //				    host.failAndPrintUsage("--live, --dead, --young, --deadYoung - one of options is required");
 //				}
-				
-				HeapHisto histo;
-				
-				if (live) {
-					histo = HeapHisto.getHistoLive(pid, 300000);
-				}
-				else if (dead) {
-					histo = HeapHisto.getHistoDead(pid, 300000);
-				}
-				else if (deadYoung) {
-				    histo = collectDeadYoung();				    
-				}
-				else if (young) {
-				    histo = collectYoung();				    
-				}
-				else {
-				    // all histo - default behavior
-					histo = HeapHisto.getHistoAll(pid, 300000);
-				}
-				
-				System.out.println(String.format("%4s %14s%15s  %s", "#", "Instances", "Bytes", "Type"));
-				System.out.println(histo.print(n));
 
-			} catch (Exception e) {
-				host.fail(e.toString(), e);
-			}
-		}
+                HeapHisto histo;
+
+                if (live) {
+                    histo = HeapHisto.getHistoLive(pid, 300000);
+                }
+                else if (dead) {
+                    histo = HeapHisto.getHistoDead(pid, 300000);
+                }
+                else if (deadYoung) {
+                    histo = collectDeadYoung();
+                }
+                else if (young) {
+                    histo = collectYoung();
+                }
+                else {
+                    // all histo - default behavior
+                    histo = HeapHisto.getHistoAll(pid, 300000);
+                }
+
+                System.out.println(String.format("%4s %14s%15s  %s", "#", "Instances", "Bytes", "Type"));
+                System.out.println(histo.print(n));
+
+            } catch (Exception e) {
+                host.fail(e.toString(), e);
+            }
+        }
 
         private HeapHisto collectDeadYoung() throws InterruptedException {
             // Force full GC
@@ -146,7 +146,7 @@ public class HeapHistoCmd implements CmdRef {
             if (youngGcCnt != null) {
                 if (ygc != youngGcCnt.getLong()) {
                     System.out.println("Warning: one or more young collections have occured during sampling.");
-                    System.out.println("Use --sample-depth option to reduce time to sample if needed.");                    
+                    System.out.println("Use --sample-depth option to reduce time to sample if needed.");
                 }
             }
             if (youngSampleDepth % 1000 == 0) {
@@ -186,7 +186,7 @@ public class HeapHistoCmd implements CmdRef {
             if (youngGcCnt != null) {
                 if (ygc != youngGcCnt.getLong()) {
                     System.out.println("Warning: one or more young collections have occured during sampling.");
-                    System.out.println("Use --sample-depth option to reduce time to sample if needed.");                    
+                    System.out.println("Use --sample-depth option to reduce time to sample if needed.");
                 }
             }
             if (youngSampleDepth % 1000 == 0) {
@@ -197,5 +197,5 @@ public class HeapHistoCmd implements CmdRef {
             }
             return HeapHisto.subtract(histo, retained);
         }
-	}
+    }
 }

@@ -45,7 +45,7 @@ public class GcEventSubscriber extends GcEventPoller {
         }
         return ok;
     }
-    
+
     public void unsubscribe() {
         for(GcTracker tracker: trackers) {
             try {
@@ -53,7 +53,7 @@ public class GcEventSubscriber extends GcEventPoller {
             }
             catch(Exception e) {
             }
-        }      
+        }
     }
 
     protected void subscribeTracker(GcTracker tracker) throws IOException, JMException {

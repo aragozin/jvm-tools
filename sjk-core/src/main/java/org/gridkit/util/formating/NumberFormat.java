@@ -18,7 +18,7 @@ package org.gridkit.util.formating;
 public interface NumberFormat {
 
     public String formatLong(long v);
-    
+
     public String formatDouble(double v);
-    
+
 }

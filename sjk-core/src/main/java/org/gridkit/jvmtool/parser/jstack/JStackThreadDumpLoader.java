@@ -31,86 +31,86 @@ import org.gridkit.jvmtool.event.MorphingEventReader;
 
 public class JStackThreadDumpLoader implements EventDumpParser {
 
-	@Override
-	public boolean isFunctional() {
-		return true;
-	}
+    @Override
+    public boolean isFunctional() {
+        return true;
+    }
 
-	@Override
-	public EventReader<Event> open(InputStreamSource source) throws IOException {
-		InputStream is = source.open();
-		Reader reader = new InputStreamReader(is);
-		JStackDumpParser parser = new JStackDumpParser(reader);
-		try {
-			is.close();
-		}
-		catch(IOException e) {			
-		}
-		if (parser.isValid()) {
-			List<ThreadSnapshotEvent> list = parser.getThreads();
-			final Iterator<Event> it = iterator(list);
-			return new DumpReader(it).morph(new EventMorpher<Event, Event>() {
-				@Override
-				public Event morph(Event event) {
-					return event;
-				}
-			});
-		}
-		else {
-			return null;
-		}
-	}
+    @Override
+    public EventReader<Event> open(InputStreamSource source) throws IOException {
+        InputStream is = source.open();
+        Reader reader = new InputStreamReader(is);
+        JStackDumpParser parser = new JStackDumpParser(reader);
+        try {
+            is.close();
+        }
+        catch(IOException e) {
+        }
+        if (parser.isValid()) {
+            List<ThreadSnapshotEvent> list = parser.getThreads();
+            final Iterator<Event> it = iterator(list);
+            return new DumpReader(it).morph(new EventMorpher<Event, Event>() {
+                @Override
+                public Event morph(Event event) {
+                    return event;
+                }
+            });
+        }
+        else {
+            return null;
+        }
+    }
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Iterator<Event> iterator(List<ThreadSnapshotEvent> list) {
-		return (Iterator)list.iterator();
-	}
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Iterator<Event> iterator(List<ThreadSnapshotEvent> list) {
+        return (Iterator)list.iterator();
+    }
 
-	@Override
-	public String toString() {		
-		return "JStack dump parser";
-	}
-	
-	private static final class DumpReader implements EventReader<Event> {
-		
-		private final Iterator<Event> it;
+    @Override
+    public String toString() {
+        return "JStack dump parser";
+    }
 
-		private DumpReader(Iterator<Event> it) {
-			this.it = it;
-		}
+    private static final class DumpReader implements EventReader<Event> {
 
-		@Override
-		public Iterator<Event> iterator() {
-			return it;
-		}
+        private final Iterator<Event> it;
 
-		@Override
-		public boolean hasNext() {
-			return it.hasNext();
-		}
+        private DumpReader(Iterator<Event> it) {
+            this.it = it;
+        }
 
-		@Override
-		public Event next() {
-			return it.next();
-		}
+        @Override
+        public Iterator<Event> iterator() {
+            return it;
+        }
 
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
 
-		@Override
-		public <M extends Event> EventReader<M> morph(EventMorpher<Event, M> morpher) {
-			return MorphingEventReader.morph(this, morpher);
-		}
+        @Override
+        public Event next() {
+            return it.next();
+        }
 
-		@Override
-		public Event peekNext() {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public void dispose() {
-		}
-	}	
+        @Override
+        public <M extends Event> EventReader<M> morph(EventMorpher<Event, M> morpher) {
+            return MorphingEventReader.morph(this, morpher);
+        }
+
+        @Override
+        public Event peekNext() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void dispose() {
+        }
+    }
 }

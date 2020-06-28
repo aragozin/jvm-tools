@@ -25,75 +25,75 @@ import java.util.Arrays;
  */
 public class TextTree {
 
-	public static TextTree t(String text, TextTree... children) {
-		return new TextTree(text, children);
-	}
-	
-	private String text;
-	private TextTree[] children;
-	
-	public TextTree(String text, TextTree... children) {
-		this.text = text;
-		this.children = children;
-	}
-	
-	public String printAsTree() {
-		try {
+    public static TextTree t(String text, TextTree... children) {
+        return new TextTree(text, children);
+    }
+
+    private String text;
+    private TextTree[] children;
+
+    public TextTree(String text, TextTree... children) {
+        this.text = text;
+        this.children = children;
+    }
+
+    public String printAsTree() {
+        try {
             StringWriter sw = new StringWriter();
             printTreeNode(sw, "", this, false);
             return sw.toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-	}
+    }
 
-	public void printAsTree(Appendable stream) throws IOException {
+    public void printAsTree(Appendable stream) throws IOException {
         printTreeNode(stream, "", this, false);
-	}
+    }
 
-	public void printAsTree(Appendable stream, boolean compact) throws IOException {
-	    printTreeNode(stream, "", this, compact);
-	}
+    public void printAsTree(Appendable stream, boolean compact) throws IOException {
+        printTreeNode(stream, "", this, compact);
+    }
 
-	private static void printTreeNode(Appendable sb, String prefix, TextTree node, boolean compact) throws IOException {
-		String t = String.valueOf(node.text);
-		sb.append(t);
-		if (node.children.length == 0) {
-			sb.append('\n');
-		}
-		else {			
-			String npref = prefix + blank(t.length()) + (!compact ? "| ": "|");				
-			String cpref = prefix + blank(t.length());
-			if (node.children.length == 1) {
-				sb.append(!compact ? "--" : "-");
-				npref = cpref + (!compact ? "  " : " ");
-			}
-			else {
-				sb.append(!compact ? "+-" : "+");
-			}
-			printTreeNode(sb, npref , node.children[0], compact);
-			for(int i = 1; i < node.children.length; ++i) {
-				sb.append(cpref);
-				if (i < node.children.length - 1) {
-					sb.append(!compact ? "+-" : "+");
-					printTreeNode(sb, npref , node.children[i], compact);
-				}
-				else {
-					sb.append(!compact ? "\\-" : "\\");
-					printTreeNode(sb, cpref + (!compact ? "  " : " ") , node.children[i], compact);
-				}
-			}
-		}
-	}
-	
-	private static String blank(int n) {
-		char[] ch = new char[n];
-		Arrays.fill(ch, ' ');
-		return new String(ch);
-	}
+    private static void printTreeNode(Appendable sb, String prefix, TextTree node, boolean compact) throws IOException {
+        String t = String.valueOf(node.text);
+        sb.append(t);
+        if (node.children.length == 0) {
+            sb.append('\n');
+        }
+        else {
+            String npref = prefix + blank(t.length()) + (!compact ? "| ": "|");
+            String cpref = prefix + blank(t.length());
+            if (node.children.length == 1) {
+                sb.append(!compact ? "--" : "-");
+                npref = cpref + (!compact ? "  " : " ");
+            }
+            else {
+                sb.append(!compact ? "+-" : "+");
+            }
+            printTreeNode(sb, npref , node.children[0], compact);
+            for(int i = 1; i < node.children.length; ++i) {
+                sb.append(cpref);
+                if (i < node.children.length - 1) {
+                    sb.append(!compact ? "+-" : "+");
+                    printTreeNode(sb, npref , node.children[i], compact);
+                }
+                else {
+                    sb.append(!compact ? "\\-" : "\\");
+                    printTreeNode(sb, cpref + (!compact ? "  " : " ") , node.children[i], compact);
+                }
+            }
+        }
+    }
 
-	@Override
-	public String toString() {
-		return text + (children.length == 0 ? "" : Arrays.toString(children));
-	}
+    private static String blank(int n) {
+        char[] ch = new char[n];
+        Arrays.fill(ch, ' ');
+        return new String(ch);
+    }
+
+    @Override
+    public String toString() {
+        return text + (children.length == 0 ? "" : Arrays.toString(children));
+    }
 }

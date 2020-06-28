@@ -18,15 +18,15 @@ package org.gridkit.util.formating;
 public interface TabularDataSink {
 
     public int colByName(String name);
-    
-    public Cursor newCursor();  
-    
+
+    public Cursor newCursor();
+
     public void close();
-    
+
     public interface Cursor {
-        
+
         public void setCell(String name, String value);
-        
+
         public void setCell(String name, long value);
 
         public void setCell(String name, double value);
@@ -36,7 +36,7 @@ public interface TabularDataSink {
         public void setCell(int colNo, long value);
 
         public void setCell(int colNo, double value);
-        
+
         public void submit();
     }
 }

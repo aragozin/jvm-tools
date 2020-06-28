@@ -22,5 +22,5 @@ public interface MemoryPoolEventConsumer {
     public void consumePeakEvent(MemoryPoolInfoEvent event);
 
     public void consumeCollectionUsageEvent(MemoryPoolInfoEvent event);
-    
+
 }
