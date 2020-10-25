@@ -28,7 +28,7 @@
 
   <groupId>org.gridkit.jvmtool</groupId>
   <artifactId>jvmtool-umbrella-pom</artifactId>
-  <version>0.17-SNAPSHOT</version>
+  <version>0.17</version>
   <name>${project.groupId}::${project.artifactId}</name>
   <description>JVM tools, parent project</description>
   <packaging>pom</packaging>
@@ -68,7 +68,7 @@
     <connection>scm:git:https://github.com/aragozin/jvm-tools.git</connection>
     <developerConnection>scm:git:https://github.com/aragozin/jvm-tools.git</developerConnection>
     <url>https://github.com/aragozin/jvm-tools</url>
-    <tag>HEAD</tag>
+    <tag>jvmtool-umbrella-pom-0.17</tag>
   </scm>
 
   <dependencyManagement>
@@ -273,26 +273,26 @@
                 <includes>
                   <include>src/**/java/**/*.java</include>
                 </includes>
-                <endWithNewline/>
+                <endWithNewline />
                 <indent>
                   <spaces>true</spaces>
                   <tabs>false</tabs>
                   <spacesPerTab>4</spacesPerTab>
                 </indent>
-                <trimTrailingWhitespace/>
+                <trimTrailingWhitespace />
               </format>
               <format>
                 <!-- Java whitespace formatting -->
                 <includes>
                   <include>**/pom.xml</include>
                 </includes>
-                <endWithNewline/>
+                <endWithNewline />
                 <indent>
                   <spaces>true</spaces>
                   <tabs>false</tabs>
                   <spacesPerTab>2</spacesPerTab>
                 </indent>
-                <trimTrailingWhitespace/>
+                <trimTrailingWhitespace />
               </format>
             </formats>
           </configuration>
