@@ -1,6 +1,11 @@
 Next version
 ----
 
+0.17 - 2020 Oct 25
+----
+- Clean up whitespaces in `ssa --thread-info` command
+- Add `--numeric` option for `ssa --thread-info`
+
 0.16 - 2020 Jun 28
 ----
 - Added `hs` command
