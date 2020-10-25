@@ -118,6 +118,28 @@ public class ConsoleRule extends TestWatcher {
         return this;
     }
 
+    public ConsoleRule lineStarts(String starts) {
+        return lineStartsEx(Pattern.quote(starts), new String[0]);
+    }
+
+    public ConsoleRule lineStartsEx(String starts, String... vars) {
+        String pattern = starts + "[^\\n]*";
+        Pattern.compile(pattern);
+        matchers.add(new LineMatcher(pattern, vars));
+        return this;
+    }
+
+    public ConsoleRule lineContains(String substring) {
+        return lineContainsEx(Pattern.quote(substring), new String[0]);
+    }
+
+    public ConsoleRule lineContainsEx(String substring, String... vars) {
+        String pattern = "[^\\n]*" + substring + "[^\\n]*";
+        Pattern.compile(pattern);
+        matchers.add(new LineMatcher(pattern, vars));
+        return this;
+    }
+
     public ConsoleRule lineEx(String pattern, String... vars) {
         Pattern.compile(pattern);
         matchers.add(new LineMatcher(pattern, vars));
@@ -136,7 +158,7 @@ public class ConsoleRule extends TestWatcher {
 
         @Override
         public String getLineMatcher() {
-            return "(.*\n)*";
+            return "([^\\n]*\\n)*";
         }
 
         @Override
@@ -176,7 +198,7 @@ public class ConsoleRule extends TestWatcher {
             if (placeholders != null) {
                 List<String> missmatches = new ArrayList<String>();
                 for (int i = 0; i != placeholders.length; ++i) {
-                    if (placeholders[i] != null || !placeholders[i].equals(m.group(i + 1))) {
+                    if (placeholders[i] != null && !placeholders[i].equals(m.group(i + 1))) {
                         missmatches.add(placeholders[i] + " <> " + m.group(i + 1));
                     }
                 }

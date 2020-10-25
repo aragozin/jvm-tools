@@ -198,6 +198,14 @@ public class TextTable {
         }
     }
 
+    public void trim() {
+        for (String[] row: rows) {
+            for (int i = 0; i != row.length; ++i) {
+                row[i] = row[i].trim();
+            }
+        }
+    }
+
     public void formatCsv(Appendable out) throws IOException {
         for(String[] row: rows) {
             for(int i = 0; i != row.length; ++i) {
