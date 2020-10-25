@@ -48,7 +48,17 @@ public class StackSampleAnalyzerCmdTest {
 
   @Test
   public void testDecimalFormaterToStringNumericParam() {
-    Assert.assertEquals("\t4.000000000", new DecimalFormater(9).toString(4));
+    Assert.assertEquals("\t4", new DecimalFormater(9).toString(4));
+  }
+
+  @Test
+  public void testDecimalFormaterToStringNumericParam2() {
+    Assert.assertEquals("\t4.0000001", new DecimalFormater(9).toString(4.0000001));
+  }
+
+  @Test
+  public void testDecimalFormaterToStringNumericParam3() {
+    Assert.assertEquals("\t4", new DecimalFormater(2).toString(4.0000001));
   }
 
   @Test
