@@ -4,8 +4,8 @@ Swiss Java Knife (SJK)
 
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
-SJK exploits standard diagnostic interfaces of JVM (such as JMX, JVM attach and perf counters) and add some more logic on top 
-to be useful for common troubleshooting case. SJK is also can be used as library for building application specific diagnostic tools
+SJK exploits standard diagnostic interfaces of JVM (such as JMX, JVM attach and perf counters) and adds some more logic on top 
+useful for common troubleshooting cases. SJK can also be used as a library for building application specific diagnostic tools
 or to enhance your code with self monitoring features.
 
 What you can do with SJK?
@@ -37,11 +37,11 @@ Below a few command from SJK ([full command reference](sjk-core/COMMANDS.md)).
 [ttop]
 ----
 
-Pools thread CPU usage of target JVM and periodically report to console.
+Pools thread CPU usage of the target JVM and periodically reports to the console.
 
  - can attach via PID or open JMX port
- - display thread memory allocation rate and cumulative process allocation rate
- - display safe point time consumption (only if attache via PID)
+ - displays thread memory allocation rate and cumulative process allocation rate
+ - displays safe point time consumption (only if attache via PID)
 
 [More details][ttop]
 
@@ -50,7 +50,7 @@ Pools thread CPU usage of target JVM and periodically report to console.
 
 Similar to `jmap -histo`.
 
- - plus can show histogram of dead objects (histograms of all and live requested, then difference is calculated)
+ - plus can show a histogram of dead objects (histograms of all and live requested, then difference is calculated)
  - plus can show N top buckets in histogram
 
 [More details][hh]
@@ -62,7 +62,7 @@ These commands provide basic sample profiler capabilities. `stcap` produces hype
 (about 1000 compression rate compared to text format) and `ssa` provides few reports over dump files.
 `stcpy` can copy data in archives produced by `stcap` (e.g. merging dumps or filtering selected threads).
 
-So far following reports are available
+So far following reports are available:
 
  - [sophisticated filtering] (time, stack trace, thread name)
  - stack frame histogram with advanced filtering options
@@ -77,14 +77,14 @@ Dump file can be also processed programatically.
 [mx]
 -----
 
-This command allow you to do basic operations with MBean from command line.
+This command allows you to do basic operations with MBean from command line.
 
-It can
+It can:
 
  - read MBean attributes
  - update MBean writeable attributes
  - invoke MBean operations (arguments are supported)
- - displays composite and tabular data in human readable format
+ - display composite and tabular data in a human readable format
  - use wild cards to shorten MBean names (e.g. `*:*,name=CodeCacheManager` instead of `java.lang:type=MemoryManager,name=CodeCacheManager`)
  - connect to local JVM processes by PID (e.i. any Java process, you do not need to enable JMX server)
  - connect to JMX using host:port (password authentication is supported)
@@ -96,9 +96,9 @@ It can
 
 Similar to `jps` from JDK. 
 
-- plus could display specific system properties of process in output
-- plus could display values of specific -XX for HotSpot JVM processes 
-- plus could filter process java processes by their system properties
+- plus can display specific system properties of process in output
+- plus can display values of specific -XX for HotSpot JVM processes 
+- plus can filter process java processes by their system properties
  
 [More details][jps]
 
