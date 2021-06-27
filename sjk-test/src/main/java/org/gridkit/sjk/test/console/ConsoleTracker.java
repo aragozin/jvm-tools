@@ -1,4 +1,4 @@
-package org.gridkit.jvmtool;
+package org.gridkit.sjk.test.console;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,37 +9,34 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.gridkit.sjk.test.console.PatternMatcher.*;
 import org.junit.Assert;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
-public class ConsoleRule extends TestWatcher {
+public class ConsoleTracker {
 
-    public static ConsoleRule out() {
-        return new ConsoleRule(false);
+    public static ConsoleTracker out() {
+        return new ConsoleTracker(false);
     }
 
-    public static ConsoleRule err() {
-        return new ConsoleRule(true);
+    public static ConsoleTracker err() {
+        return new ConsoleTracker(true);
     }
 
     final boolean err;
 
-    ByteArrayOutputStream std = new ByteArrayOutputStream();
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
     PrintStream orig;
 
     List<ConsoleMatcher> matchers = new ArrayList<ConsoleMatcher>();
 
-    ConsoleRule(boolean err) {
+    ConsoleTracker(boolean err) {
         this.err = err;
     }
 
-    @Override
-    protected void starting(Description description) {
-        super.starting(description);
+    public void init() {
         orig = err ? System.err : System.out;
-        PrintStream tee = new PrintStream(new TeeOutputStream(orig, std));
+        PrintStream tee = new PrintStream(new TeeOutputStream(orig, buffer));
         if (err) {
             System.setErr(tee);
         } else {
@@ -47,9 +44,7 @@ public class ConsoleRule extends TestWatcher {
         }
     }
 
-    @Override
-    protected void finished(Description description) {
-        super.finished(description);
+    public void complete() {
         verify();
         if (err) {
             System.setErr(orig);
@@ -70,77 +65,98 @@ public class ConsoleRule extends TestWatcher {
         ConsoleMatcher[] cms = matchers.toArray(new ConsoleMatcher[0]);
         matchers.clear();
 
-        StringBuilder sb = new StringBuilder();
-        for (ConsoleMatcher cm: cms) {
-            sb.append("(" + RegExHelper.uncapture(cm.getLineMatcher() + ")"));
-        }
-        Pattern pp = Pattern.compile(sb.toString());
+        String text = getText();
+        buffer.reset();
 
-        String text = new String(std.toByteArray());
-        text = text.replace((CharSequence)"\r\n", "\n");
-        std.reset();
+        PatternNode node = compile(cms);
 
-        Matcher mm = pp.matcher(text);
-        if (!mm.lookingAt()) {
+        PatternMatcher matcher = new PatternMatcher(node);
+
+        int ln = matcher.matchStart(text);
+        if (ln < 0) {
             Assert.fail("Console content does not match");
         }
-        else {
-            for (int i = 0; i != cms.length; ++i) {
-                String match = mm.group(i + 1);
-                cms[i].verifyMatch(match);
-            }
-        }
-        text = text.substring(mm.end());
-        if (text.length() > 0) {
+
+        List<String> lines = matcher.lines();
+
+        // push unmatched lines back to buffer
+        for (int i = ln; i < lines.size(); ++i) {
             try {
-                std.write(text.getBytes());
+                buffer.write((lines.get(i) + "\n").getBytes());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    public ConsoleRule skip() {
+    private PatternNode compile(ConsoleMatcher[] cms) {
+        PatternNode nodes[] = new PatternNode[cms.length];
+        for (int i = 0; i != cms.length; ++i) {
+            nodes[i] = cms[i].getMatcherNode();
+        }
+        return new SequenceNode(nodes);
+    }
+
+    private String getText() {
+        String text = new String(buffer.toByteArray());
+        text = text.replace((CharSequence)"\r\n", "\n");
+        return text;
+    }
+
+    public ConsoleTracker skip() {
         matchers.add(new SkipMatcher());
         return this;
     }
 
-    public ConsoleRule skip(int lines) {
+    public ConsoleTracker skip(int lines) {
         for (int i = 0; i != lines; ++i) {
-            lineEx("[^\\n]*");
+            lineEx(".*");
         }
         return this;
     }
 
 
-    public ConsoleRule line(String exact) {
+    public ConsoleTracker line(String exact) {
         matchers.add(new LineMatcher(Pattern.quote(exact), new String[0]));
         return this;
     }
 
-    public ConsoleRule lineStarts(String starts) {
+    public ConsoleTracker lineStarts(String starts) {
         return lineStartsEx(Pattern.quote(starts), new String[0]);
     }
 
-    public ConsoleRule lineStartsEx(String starts, String... vars) {
-        String pattern = starts + "[^\\n]*";
+    public ConsoleTracker lineStartsEx(String starts, String... vars) {
+        String pattern = starts + ".*";
         Pattern.compile(pattern);
         matchers.add(new LineMatcher(pattern, vars));
         return this;
     }
 
-    public ConsoleRule lineContains(String substring) {
-        return lineContainsEx(Pattern.quote(substring), new String[0]);
+    public ConsoleTracker lineContains(String... substrings) {
+        if (substrings.length == 0) {
+            throw new IllegalArgumentException("At least one string is required");
+        } else if (substrings.length == 1) {
+            return lineContainsEx(".*" + Pattern.quote(substrings[0]) + ".*");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("(?:.*(?:");
+            for (String ss: substrings) {
+                sb.append(Pattern.quote(ss)).append("|");
+            }
+            sb.setLength(sb.length() - 1);
+            sb.append(").*){" + substrings.length + "}");
+            return lineContainsEx(sb.toString());
+        }
     }
 
-    public ConsoleRule lineContainsEx(String substring, String... vars) {
-        String pattern = "[^\\n]*" + substring + "[^\\n]*";
+    public ConsoleTracker lineContainsEx(String substring, String... vars) {
+        String pattern = substring;
         Pattern.compile(pattern);
         matchers.add(new LineMatcher(pattern, vars));
         return this;
     }
 
-    public ConsoleRule lineEx(String pattern, String... vars) {
+    public ConsoleTracker lineEx(String pattern, String... vars) {
         Pattern.compile(pattern);
         matchers.add(new LineMatcher(pattern, vars));
         return this;
@@ -149,6 +165,8 @@ public class ConsoleRule extends TestWatcher {
     private abstract class ConsoleMatcher {
 
         public abstract String getLineMatcher();
+
+        public abstract PatternNode getMatcherNode();
 
         public abstract void verifyMatch(String match);
 
@@ -159,6 +177,11 @@ public class ConsoleRule extends TestWatcher {
         @Override
         public String getLineMatcher() {
             return "([^\\n]*\\n)*";
+        }
+
+        @Override
+        public PatternNode getMatcherNode() {
+            return new AnyLinesNode();
         }
 
         @Override
@@ -180,6 +203,38 @@ public class ConsoleRule extends TestWatcher {
         @Override
         public String getLineMatcher() {
             return pattern + "\\n";
+        }
+
+        @Override
+        public PatternNode getMatcherNode() {
+            return new LineMatcherNode() {
+
+                @Override
+                public boolean match(String line) {
+                    Matcher m = Pattern.compile(pattern).matcher(line);
+                    if (!m.matches()) {
+                        return false;
+                    }
+
+                    if (placeholders != null) {
+                        List<String> missmatches = new ArrayList<String>();
+                        for (int i = 0; i != placeholders.length; ++i) {
+                            if (placeholders[i] != null && !placeholders[i].equals(m.group(i + 1))) {
+                                missmatches.add(placeholders[i] + " <> " + m.group(i + 1));
+                            }
+                        }
+                        if (!missmatches.isEmpty()) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                public String toString() {
+                    return "\"" + pattern + "\"";
+                }
+            };
         }
 
         @Override
@@ -212,6 +267,11 @@ public class ConsoleRule extends TestWatcher {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return getText();
     }
 
     private static class TeeOutputStream extends OutputStream {

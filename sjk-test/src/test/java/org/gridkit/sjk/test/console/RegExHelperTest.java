@@ -1,4 +1,4 @@
-package org.gridkit.jvmtool;
+package org.gridkit.sjk.test.console;
 
 import org.junit.Assert;
 import org.junit.Test;

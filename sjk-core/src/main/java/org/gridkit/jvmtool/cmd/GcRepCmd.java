@@ -98,6 +98,8 @@ public class GcRepCmd implements CmdRef {
                         return;
                     }
                 }
+            } catch (InterruptedException e) {
+                // silent exit by interruption
             } catch (Exception e) {
                 host.fail(e.toString());
             }

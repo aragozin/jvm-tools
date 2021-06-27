@@ -3,8 +3,6 @@ package org.gridkit.util.formating;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Locale;
 import java.util.TimeZone;
 
 import org.junit.Test;

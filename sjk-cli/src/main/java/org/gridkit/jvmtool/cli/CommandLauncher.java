@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -62,7 +62,7 @@ public class CommandLauncher {
 
     private boolean suppressSystemExit;
 
-    private Map<String, Runnable> commands = new HashMap<String, Runnable>();
+    private Map<String, Runnable> commands = new TreeMap<String, Runnable>();
 
     public boolean isVerbose() {
         return verbose;

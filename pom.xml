@@ -41,6 +41,7 @@
     <module>sjk-core</module>
     <module>sjk-agent</module>
     <module>sjk-json</module>
+    <module>sjk-test</module>
     <module>mxdump</module>
     <module>gcflow</module>
     <module>sjk</module>
@@ -108,6 +109,11 @@
       <dependency>
         <groupId>org.gridkit.jvmtool</groupId>
         <artifactId>sjk-agent</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gridkit.jvmtool</groupId>
+        <artifactId>sjk-test</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -211,7 +217,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.14</version>
+          <version>2.22.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

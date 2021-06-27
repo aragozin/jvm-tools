@@ -20,6 +20,9 @@ import java.lang.management.ManagementFactory;
 import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * JUnit command runner.
@@ -28,10 +31,22 @@ import org.junit.Assert;
  */
 public class CliCheck {
 
+    private static final boolean JAVA_6 = System.getProperty("java.version").startsWith("1.6");
+
+    private static final boolean JAVA_7 = System.getProperty("java.version").startsWith("1.7");
+
     private static String PID;
     static {
         PID = ManagementFactory.getRuntimeMXBean().getName();
         PID = PID.substring(0, PID.indexOf('@'));
+    }
+
+    @BeforeClass
+    public static void checkJavaVersion() {
+        Assume.assumeFalse(JAVA_6);
+        Assume.assumeFalse(JAVA_7);
+
+        TomcatHelper.startTomcat();
     }
 
     @Test

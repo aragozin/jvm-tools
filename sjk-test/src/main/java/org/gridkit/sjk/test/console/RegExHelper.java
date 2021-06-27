@@ -1,9 +1,9 @@
-package org.gridkit.jvmtool;
+package org.gridkit.sjk.test.console;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RegExHelper {
+class RegExHelper {
 
     private static final Pattern TOKENIZER = Pattern.compile(
             "\\\\[(]"
