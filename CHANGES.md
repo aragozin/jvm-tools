@@ -1,6 +1,11 @@
 Next version
 ----
 
+
+0.18 - 2021 Jul 5
+----
+- Separate module for test tools
+
 0.17 - 2020 Oct 25
 ----
 - Clean up whitespaces in `ssa --thread-info` command
