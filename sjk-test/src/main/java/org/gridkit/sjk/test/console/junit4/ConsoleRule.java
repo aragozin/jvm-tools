@@ -77,7 +77,7 @@ public class ConsoleRule extends TestWatcher {
     }
 
     @Override
-	public String toString() {
+    public String toString() {
         return tracker.toString();
     }
 }
