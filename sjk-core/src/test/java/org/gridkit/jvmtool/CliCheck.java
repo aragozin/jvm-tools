@@ -402,9 +402,27 @@ public class CliCheck {
 
     public void ensureTestStp() {
         if (!new File("target/test.stp").isFile()) {
+            Thread testThread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    while(true) {
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }
+            });
+            testThread.setName("TestThread");
+            testThread.start();
             exec("stcap", "-p", PID, "-o", "target/test.stp");
+            testThread.interrupt();
             stdOut.verify();
+            stdOut.clean();
             stdErr.verify();
+            stdErr.clean();
         }
     }
 
@@ -413,6 +431,8 @@ public class CliCheck {
             exec("stcap", "-p", PID, "-l", "500", "-o", "target/test500.stp");
             stdOut.verify();
             stdErr.verify();
+            stdOut.clean();
+            stdErr.clean();
         }
     }
 

@@ -1,5 +1,8 @@
 package org.gridkit.sjk.test.console.junit4;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gridkit.sjk.test.console.ConsoleTracker;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -15,6 +18,7 @@ public class ConsoleRule extends TestWatcher {
     }
 
     private final ConsoleTracker tracker;
+    private final List<Runnable> postInitHooks = new ArrayList<Runnable>();
 
     public ConsoleRule(ConsoleTracker tracker) {
         this.tracker = tracker;
@@ -24,6 +28,9 @@ public class ConsoleRule extends TestWatcher {
     protected void starting(Description description) {
         super.starting(description);
         tracker.init();
+        for (Runnable r: postInitHooks) {
+            r.run();
+        }
     }
 
     @Override
@@ -32,8 +39,21 @@ public class ConsoleRule extends TestWatcher {
         tracker.complete();
     }
 
+
+    /**
+     * Some loggers may need reconfiguration to start logging to overriden our/err streams.
+     */
+    public ConsoleRule postInit(Runnable r) {
+        this.postInitHooks.add(r);
+        return this;
+    }
+
     public void verify() {
         tracker.verify();
+    }
+
+    public void clean() {
+        tracker.clean();
     }
 
     public ConsoleRule skip() {

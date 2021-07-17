@@ -16,6 +16,16 @@ public class ConsoleExtensionTest {
     }
 
     @Test
+    public void console_test_multi_line_positive() {
+        System.out.println("You cannot");
+        System.out.println("Match me");
+        System.out.println("Ever");
+        console
+            .skip()
+            .line("Match me");
+    }
+
+    @Test
     public void console_test_negative() {
         System.out.println("Do not match me");
         console.line("Match me");

@@ -18,7 +18,6 @@ package org.gridkit.jvmtool;
 import java.lang.management.ManagementFactory;
 
 import org.gridkit.jvmtool.cli.CommandLauncher;
-import org.junit.Test;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;

@@ -52,4 +52,34 @@ public class ConsoleRuleTest {
         }
         Assert.fail("Verification should fail");
     }
+
+    @Test
+    public void console_test_containes_negative_first_line() {
+        System.out.println("Term1 Term2 Term4");
+        System.out.println("Term3 Term2");
+        console.lineContains("Term3", "Term2", "Term1");
+        console.lineContains("Term3", "Term2");
+        try {
+            console.verify();
+        } catch (AssertionError e) {
+            // expected
+            return;
+        }
+        Assert.fail("Verification should fail");
+    }
+
+    @Test
+    public void console_test_containes_negative_second_line() {
+        System.out.println("Term1 Term2 Term4");
+        System.out.println("Term3 Term2");
+        console.lineContains("Term4", "Term2", "Term1");
+        console.lineContains("Term1", "Term2");
+        try {
+            console.verify();
+        } catch (AssertionError e) {
+            // expected
+            return;
+        }
+        Assert.fail("Verification should fail");
+    }
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,6 +54,10 @@ public class ConsoleTracker {
         }
     }
 
+    public void clean() {
+        buffer.reset();
+    }
+
     public void verify() {
         if (err) {
             System.err.flush();
@@ -74,6 +79,7 @@ public class ConsoleTracker {
 
         int ln = matcher.matchStart(text);
         if (ln < 0) {
+            System.err.println(matcher.reportMatchProblems());
             Assert.fail("Console content does not match");
         }
 
@@ -104,17 +110,19 @@ public class ConsoleTracker {
     }
 
     public ConsoleTracker skip() {
-        matchers.add(new SkipMatcher());
+        matchers.add(new SkipMatcher(0, -1));
         return this;
     }
 
     public ConsoleTracker skip(int lines) {
-        for (int i = 0; i != lines; ++i) {
-            lineEx(".*");
-        }
+        matchers.add(new SkipMatcher(lines, lines));
         return this;
     }
 
+    public ConsoleTracker skipMax(int lines) {
+        matchers.add(new SkipMatcher(0, lines));
+        return this;
+    }
 
     public ConsoleTracker line(String exact) {
         matchers.add(new LineMatcher(Pattern.quote(exact), new String[0]));
@@ -138,14 +146,8 @@ public class ConsoleTracker {
         } else if (substrings.length == 1) {
             return lineContainsEx(".*" + Pattern.quote(substrings[0]) + ".*");
         } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("(?:.*(?:");
-            for (String ss: substrings) {
-                sb.append(Pattern.quote(ss)).append("|");
-            }
-            sb.setLength(sb.length() - 1);
-            sb.append(").*){" + substrings.length + "}");
-            return lineContainsEx(sb.toString());
+            matchers.add(new MultiContainsMatcher(substrings));
+            return this;
         }
     }
 
@@ -164,8 +166,6 @@ public class ConsoleTracker {
 
     private abstract class ConsoleMatcher {
 
-        public abstract String getLineMatcher();
-
         public abstract PatternNode getMatcherNode();
 
         public abstract void verifyMatch(String match);
@@ -174,19 +174,61 @@ public class ConsoleTracker {
 
     private class SkipMatcher extends ConsoleMatcher {
 
-        @Override
-        public String getLineMatcher() {
-            return "([^\\n]*\\n)*";
+        private int minMatches;
+        private int maxMatches;
+
+        public SkipMatcher(int minMatches, int maxMatches) {
+            this.minMatches = minMatches;
+            this.maxMatches = maxMatches;
         }
 
         @Override
         public PatternNode getMatcherNode() {
-            return new AnyLinesNode();
+            return new AnyLinesNode(minMatches, maxMatches);
         }
 
         @Override
         public void verifyMatch(String match) {
             // do nothing
+        }
+    }
+
+    private class MultiContainsMatcher extends ConsoleMatcher {
+
+        private final String[] substrings;
+
+        public MultiContainsMatcher(String[] substrings) {
+            this.substrings = substrings;
+        }
+
+        @Override
+        public PatternNode getMatcherNode() {
+            return new MatcherNode(new PatternMatcher.LineMatcher() {
+
+                @Override
+                public boolean match(String line) {
+                    for (String s: substrings) {
+                        if (!line.contains(s)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                public String toString() {
+                    return MultiContainsMatcher.this.toString();
+                }
+            });
+        }
+
+        @Override
+        public void verifyMatch(String match) {
+        }
+
+        @Override
+        public String toString() {
+            return "AllSubstrings" + Arrays.toString(substrings);
         }
     }
 
@@ -198,11 +240,6 @@ public class ConsoleTracker {
         public LineMatcher(String pattern, String[] placeholders) {
             this.pattern = pattern;
             this.placeholders = placeholders;
-        }
-
-        @Override
-        public String getLineMatcher() {
-            return pattern + "\\n";
         }
 
         @Override
@@ -232,7 +269,7 @@ public class ConsoleTracker {
 
                 @Override
                 public String toString() {
-                    return "\"" + pattern + "\"";
+                    return "RegEx[" + pattern + "]";
                 }
             };
         }

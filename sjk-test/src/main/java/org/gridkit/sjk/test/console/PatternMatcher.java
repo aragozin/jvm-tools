@@ -50,6 +50,51 @@ public class PatternMatcher {
         return matches.length > 0 ? min(matches) : -1;
     }
 
+    public String reportMatchProblems() {
+        StringBuilder sb = new StringBuilder();
+        for (LineMatcherNode node: matchCache.keySet()) {
+            boolean[] cached = matchCache.get(node);
+            boolean matched = false;
+            for (int n = 0; n < cached.length; n += 2) {
+                if (cached[n] && cached[n + 1]) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append("Matcher is never matched: " + node);
+            }
+        }
+        int lastMatched = -1;
+        for (int n = 0; n < lines.size(); ++n) {
+            if (hasAnyMatches(n)) {
+                lastMatched = n;
+            }
+        }
+        if (lastMatched + 1 < lines.size()) {
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append("Next unmatched line: " + lines.get(lastMatched + 1));
+        }
+        return sb.toString();
+    }
+
+    private boolean hasAnyMatches(int n) {
+        for(boolean[] cached: matchCache.values()) {
+            if (cached != null) {
+                if (cached[2 * n] && cached[2 * n + 1]) {
+                    return true;
+                };
+            }
+        }
+        return false;
+    }
+
+
     private int min(int[] matches) {
         int min = matches[0];
         for (int i = 1; i < matches.length; ++i) {
@@ -63,9 +108,20 @@ public class PatternMatcher {
             return matchLineMatcher(offset, (LineMatcherNode) pattern);
 
         } else if (pattern instanceof AnyLinesNode) {
+            AnyLinesNode any = (AnyLinesNode)pattern;
+            int maxMatches = lines.size() - offset + 1;
+            if (any.maxMatches > 0) {
+                maxMatches = Math.min(maxMatches, any.maxMatches);
+            }
+            if (any.minMatches > 0) {
+                maxMatches -= any.minMatches;
+            }
+            if (maxMatches < 1) {
+                return new int[0];
+            }
             int[] matches = new int[lines.size() - offset + 1];
             for (int n = 0; n != matches.length; ++n) {
-                matches[n] = lines.size() - n;
+                matches[n] = lines.size() - n + any.minMatches;
             }
             return matches;
 
@@ -190,24 +246,27 @@ public class PatternMatcher {
         }
     }
 
-    public static class AnyLineNode extends LineMatcherNode {
-
-        @Override
-        public boolean match(String line) {
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "**";
-        }
-    }
-
     public static class AnyLinesNode extends PatternNode {
 
+        private int minMatches;
+        private int maxMatches;
+
+        public AnyLinesNode() {
+            minMatches = 0;
+            maxMatches = -1;
+        }
+
+        public AnyLinesNode(int minMatches, int maxMatches) {
+            this.minMatches = minMatches;
+            this.maxMatches = maxMatches;
+        }
+
         @Override
         public String toString() {
-            return "**";
+            return (minMatches == 0 && maxMatches == -1)
+                    ? "ANY"
+                    : "ANY[" + ((minMatches > 0) ? ("min=" + maxMatches) : maxMatches > 0 ? "," : "")
+                        + ((maxMatches > 0) ? ("max=" + maxMatches) : "") + "]";
         }
     }
 
@@ -266,7 +325,7 @@ public class PatternMatcher {
 
         @Override
         public String toString() {
-            return "Q\"" + line + "\"";
+            return "Exact[" + line + "]";
         }
     }
 }

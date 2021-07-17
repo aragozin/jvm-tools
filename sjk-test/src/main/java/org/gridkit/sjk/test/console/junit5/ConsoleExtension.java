@@ -1,11 +1,14 @@
 package org.gridkit.sjk.test.console.junit5;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gridkit.sjk.test.console.ConsoleTracker;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class ConsoleExtension implements BeforeAllCallback, AfterAllCallback {
+public class ConsoleExtension implements BeforeEachCallback, AfterEachCallback {
 
     public static ConsoleExtension out() {
         return new ConsoleExtension(ConsoleTracker.out());
@@ -16,23 +19,49 @@ public class ConsoleExtension implements BeforeAllCallback, AfterAllCallback {
     }
 
     private final ConsoleTracker tracker;
+    private final List<Runnable> postInitHooks = new ArrayList<Runnable>();
 
     ConsoleExtension(ConsoleTracker consoleTracker) {
         this.tracker = consoleTracker;
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) throws Exception {
         tracker.init();
+        for (Runnable r: postInitHooks) {
+            r.run();
+        }
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) throws Exception {
         tracker.complete();
+        tracker.clean();
     }
 
     public void verify() {
         tracker.verify();
+    }
+
+    public void complete() {
+        tracker.complete();
+    }
+
+    public void clean() {
+        tracker.clean();
+    }
+
+    public ConsoleExtension skipMax(int lines) {
+        tracker.skipMax(lines);
+        return this;
+    }
+
+    /**
+     * Some loggers may need reconfiguration to start logging to overriden our/err streams.
+     */
+    public ConsoleExtension postInit(Runnable r) {
+        this.postInitHooks.add(r);
+        return this;
     }
 
     public ConsoleExtension skip() {
