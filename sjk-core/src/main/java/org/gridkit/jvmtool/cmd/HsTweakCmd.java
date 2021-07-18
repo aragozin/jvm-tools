@@ -42,6 +42,9 @@ public class HsTweakCmd implements CmdRef {
         @Override
         public void run() {
             try {
+                if (host.isVerbose()) {
+                    SjkAgentHelper.enableTrace(true);
+                }
 
                 if (!enableHotspotMBean) {
                     host.fail("No option provided. At least one of following options is required:"

@@ -54,6 +54,20 @@
           <target>1.6</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+               <Main-Class>org.gridkit.jvmtool.SJK</Main-Class>
+               <Premain-Class>org.gridkit.jvmtool.agent.SjkAgent</Premain-Class>
+               <Agent-Class>org.gridkit.jvmtool.agent.SjkAgent</Agent-Class>
+               <Can-Redefine-Classes>false</Can-Redefine-Classes>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

@@ -147,15 +147,17 @@ public class CliCheck {
         exec("jps", "-fp", "my.*=" + KEY);
 
         // some PID something expected
-        stdOut.lineEx("[0-9]+\\s.*junit.*");
+        stdOut.skip();
+        stdOut.lineEx("[0-9]+\\s.*(junit|surefire).*");
     }
 
     @Test
     public void jps_filter2_by_desc() {
-        exec("jps", "-fd", "*junit*");
+        exec("jps", "-fd", "*");
 
         // some PID something expected
-        stdOut.lineEx("[0-9]+\\s.*junit.*");
+        stdOut.skip();
+        stdOut.lineEx("[0-9]+\\s.*(junit|surefire).*");
     }
 
     @Test
@@ -172,6 +174,7 @@ public class CliCheck {
     public void ttop_self() {
 
         exec("ttop", "-p", PID, "-X");
+        stdOut.skip();
         stdOut.line("Monitoring threads ...");
         stdOut.skip(1);
         stdOut.lineContains("Process summary");
@@ -417,6 +420,11 @@ public class CliCheck {
             });
             testThread.setName("TestThread");
             testThread.start();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             exec("stcap", "-p", PID, "-o", "target/test.stp");
             testThread.interrupt();
             stdOut.verify();
@@ -438,7 +446,7 @@ public class CliCheck {
 
     @Test
     public void stcap() {
-        exec("stcap", "-p", PID, "-o", "target/test.stp");
+        exec("stcap", "-p", PID, "-o", "target/test-stcap.stp");
     }
 
     @Test
@@ -448,12 +456,12 @@ public class CliCheck {
 
     @Test
     public void stcap_rotate() {
-        exec("stcap", "-p", PID, "-r", "5000", "-o", "target/test.stp");
+        exec("stcap", "-p", PID, "-r", "5000", "-o", "target/test-stcap.stp");
     }
 
     @Test
     public void stcap_rotate_limit() {
-        exec("stcap", "-p", PID, "-l", "50000", "-r", "5000", "-o", "target/test.stp");
+        exec("stcap", "-p", PID, "-l", "50000", "-r", "5000", "-o", "target/test-stcap.stp");
     }
 
     @Test

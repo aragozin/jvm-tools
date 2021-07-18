@@ -2,6 +2,7 @@ package org.gridkit.jvmtool.cmd;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.gridkit.jvmtool.agent.SjkAgent;
@@ -18,6 +19,12 @@ public class SjkAgentHelper {
     private static final int ATTACH_ERROR_NOTONCP       = 101;
     private static final int ATTACH_ERROR_STARTFAIL     = 102;
 
+    private static boolean TRACE = false;
+
+    public static void enableTrace(boolean trace) {
+        TRACE = trace;
+    }
+
 
     public static Properties agentCommand(long pid, Class<?> cmdClass, String args, long timeoutMS) throws IOException {
 
@@ -27,6 +34,10 @@ public class SjkAgentHelper {
 
         String path = SjkAgentLocator.getJarPath();
 
+        if (TRACE) {
+            System.out.println("Use agent JAR: " + path);
+        }
+
         // sending command to load Java agent
         String[] agentArgs = {
             "instrument", // build in to load agent jar
@@ -34,8 +45,15 @@ public class SjkAgentHelper {
             path + "=" + cmdClass.getName() + ":" + args
         };
 
+        if (TRACE) {
+            System.out.println("Attach command: " + Arrays.toString(agentArgs));
+        }
+
         pd.sendAttachCommand("load", agentArgs, bos, timeoutMS);
 
+        if (TRACE) {
+            System.out.println("Attach command result: " + new String(bos.toByteArray()));
+        }
         String out = new String(bos.toByteArray());
         if (out.startsWith("return code: ")) {
             out = out.substring("return code: ".length());
