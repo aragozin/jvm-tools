@@ -1,6 +1,9 @@
 Next version
 ----
 
+0.19 - 2021 Jul 18
+----
+- Improvements for console output checker
 
 0.18 - 2021 Jul 5
 ----
