@@ -10,8 +10,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gridkit.sjk.test.console.PatternMatcher.*;
-import org.junit.Assert;
+import org.apache.logging.log4j.util.Supplier;
+import org.gridkit.sjk.test.console.PatternMatcher.AnyLinesNode;
+import org.gridkit.sjk.test.console.PatternMatcher.LineMatcherNode;
+import org.gridkit.sjk.test.console.PatternMatcher.MatcherNode;
+import org.gridkit.sjk.test.console.PatternMatcher.PatternNode;
+import org.gridkit.sjk.test.console.PatternMatcher.SequenceNode;
 
 public class ConsoleTracker {
 
@@ -56,6 +60,67 @@ public class ConsoleTracker {
 
     public void clean() {
         buffer.reset();
+    }
+
+    /**
+     * Repeat console matching retries while <code>until</code> return false.
+     * @throws InterruptedException
+     */
+    public void waitForMatch(Supplier<Boolean> until) throws InterruptedException {
+        while(true) {
+            if (tryMatch()) {
+                return;
+            } else {
+                if (until.get()) {
+                    break;
+                } else {
+                    Thread.sleep(100);
+                }
+            }
+        }
+        verify();
+    }
+
+    /**
+     * Verify console pattern match without raising {@link AssertionError}.
+     */
+    public boolean tryMatch() {
+        if (err) {
+            System.err.flush();
+        } else {
+            System.out.flush();
+        }
+        if (matchers.isEmpty()) {
+            return true;
+        }
+        ConsoleMatcher[] cms = matchers.toArray(new ConsoleMatcher[0]);
+        matchers.clear();
+
+        String text = getText();
+        buffer.reset();
+
+        PatternNode node = compile(cms);
+
+        PatternMatcher matcher = new PatternMatcher(node);
+
+        int ln = matcher.matchStart(text);
+        boolean matched = false;
+        if (ln < 0) {
+            matched = true;
+        }
+
+        List<String> lines = matcher.lines();
+
+        // push unmatched lines back to buffer
+        for (int i = 0; i < lines.size(); ++i) {
+            try {
+                buffer.write((lines.get(i) + "\n").getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return matched;
     }
 
     public void verify() {

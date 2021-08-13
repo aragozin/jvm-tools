@@ -3,6 +3,7 @@ package org.gridkit.sjk.test.console.junit5;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.util.Supplier;
 import org.gridkit.sjk.test.console.ConsoleTracker;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -41,6 +42,14 @@ public class ConsoleExtension implements BeforeEachCallback, AfterEachCallback {
 
     public void verify() {
         tracker.verify();
+    }
+
+    public boolean tryMatch() {
+        return tracker.tryMatch();
+    }
+
+    public void waitForMatch(Supplier<Boolean> until) throws InterruptedException {
+        tracker.waitForMatch(until);
     }
 
     public void complete() {
