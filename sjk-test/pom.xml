@@ -77,41 +77,44 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-      <!-- Java 8 is required for JUnit5 runtime -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-toolchains-plugin</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <toolchains>
-            <jdk>
-              <version>8</version>
-              <vendor>OpenJDK</vendor>
-            </jdk>
-          </toolchains>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
+
+    <profile>
+      <id>enable-toolchain</id>
+
+      <activation>
+        <property>
+          <name>!disableToolchain</name>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <!-- Java 8 is required for JUnit5 runtime -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-toolchains-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>toolchain</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>8</version>
+                  <vendor>OpenJDK</vendor>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
 
     <profile>
       <id>junit4</id>

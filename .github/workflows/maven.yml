@@ -1,7 +1,4 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Java 11 build
+name: CI build
 
 on:
   push:
@@ -10,7 +7,22 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+
+  build8:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v2
+      with:
+        java-version: '8'
+        distribution: 'adopt'
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml -DdisableToolchain
+
+  build11:
 
     runs-on: ubuntu-latest
 
@@ -22,4 +34,18 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B package --file pom.xml -DdisableToolchain
+
+  build15:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 15
+      uses: actions/setup-java@v2
+      with:
+        java-version: '15'
+        distribution: 'adopt'
+    - name: Build with Maven
+      run: mvn -B help:active-profiles && mvn -B package --file pom.xml -DdisableToolchain
