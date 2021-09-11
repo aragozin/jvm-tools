@@ -249,6 +249,7 @@
           <configuration>
             <excludes>
               <exclude>java/**</exclude>
+              <exclude>jdk/**</exclude>
             </excludes>
           </configuration>
         </plugin>

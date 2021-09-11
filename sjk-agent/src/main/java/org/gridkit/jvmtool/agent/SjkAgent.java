@@ -33,6 +33,7 @@ public class SjkAgent {
                 m.setAccessible(true);
                 props = (Properties)m.invoke(null);
             } catch (Exception e) {
+                e.printStackTrace();
                 // ignore
             }
         }
@@ -52,6 +53,12 @@ public class SjkAgent {
     }
 
     public static void agentmain(String agentArgs, Instrumentation inst) {
+        try {
+            ModuleHack.extendAccess(inst);
+        } catch (Throwable e) {
+            // this is expected to fail on Java 8 and below
+        }
+
         Properties agentProps = getAgentProperties();
 
         agentProps.remove(SJK_AGENT_LAST_ERROR);
