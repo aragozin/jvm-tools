@@ -306,7 +306,7 @@
 
       <activation>
         <property>
-          <name>!disableToolchain</name>
+          <name>!disableSpotless</name>
         </property>
       </activation>
 
