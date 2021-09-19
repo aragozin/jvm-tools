@@ -724,6 +724,48 @@ public class CliCheck {
         exec("hs", "-p", PID, "--enable-hotspot-mbean", "-X");
     }
 
+    @Test
+    public void jcmd_help() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "help");
+    }
+
+    @Test
+    public void jcmd_help_gc_run() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "help", "GC.run");
+    }
+
+    @Test
+    public void jcmd_gc_run() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "GC.run");
+    }
+
+    @Test
+    public void jcmd_vm_uptime() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "VM.uptime", "-date");
+    }
+
+    @Test
+    public void jcmd_vm_command_line() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "VM.command_line");
+    }
+
+    @Test
+    public void jcmd_jfr_check() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "JFR.check", "verbose=true");
+    }
+
+    @Test
+    public void jcmd_thread_print() {
+        Assume.assumeTrue(!JAVA_6 && !JAVA_7);
+        exec("jcmd", "-p", PID, "-X", "-c", "Thread.print", "-l");
+    }
+
     private void exec(String... cmd) {
         cli.exec(cmd);
     }
