@@ -1,6 +1,9 @@
 Next version
 ----
 
+- Introduce `jcmd` command over JMX connection
+- Fix agent access to agent properties in post 8 Java
+
 0.19 - 2021 Jul 18
 ----
 - Improvements for console output checker
