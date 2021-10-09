@@ -17,8 +17,10 @@ package org.gridkit.jvmtool;
 
 import java.util.List;
 
+import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.lab.jvm.attach.AttachManager;
 import org.gridkit.lab.jvm.attach.JavaProcessId;
+import org.gridkit.util.formating.GridSink;
 
 import com.beust.jcommander.Parameter;
 
@@ -29,49 +31,76 @@ import com.beust.jcommander.Parameter;
  */
 public class JvmProcessPrinter {
 
-    @Parameter(names = {"-pd", "--process-details"}, variableArity = true, description = "Print custom information related to a process. Following tags can be used: PID, MAIN, FDQN_MAIN, ARGS, D<sys-prop>, d<sys-prop>, X<jvm-flag>")
+    @SuppressWarnings("unused")
+    private final CommandLauncher host;
+
+    @Parameter(names = {"-pd", "--process-details"}, variableArity = true, description = "Print custom information related to a process. Following tags can be used: PID, MAIN, FDQN_MAIN, ARGS, D<sys-prop>, d<sys-prop>, X<jvm-flag>, x<jvm-flag>")
     private List<String> displayFields;
+
+    public JvmProcessPrinter(CommandLauncher host) {
+        this.host = host;
+    }
 
     public boolean isDefined() {
         return displayFields != null && !displayFields.isEmpty();
     }
 
-    public String describe(JavaProcessId jpid) {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
+    public void describeHeader(GridSink sink) {
         for(String tag: displayFields) {
-            if (!first) {
-                sb.append('\t');
-            }
-            first = false;
-            if ("PID".equals(tag)) {
-                sb.append(getPid(jpid));
-            }
-            else if ("MAIN".equals(tag)) {
-                sb.append(getShortMain(jpid));
-            }
-            else if ("FDQN_MAIN".equals(tag)) {
-                sb.append(getMain(jpid));
-            }
-            else if ("ARGS".equals(tag)) {
-                sb.append(getArgs(jpid));
-            }
-            else if (tag.startsWith("d")) {
-                sb.append(getProp(jpid, tag.substring(1)));
-            }
-            else if (tag.startsWith("D")) {
-                sb.append(tag.substring(1)).append("=");
-                sb.append(getProp(jpid, tag.substring(1)));
-            }
-            else if (tag.startsWith("X")) {
-                sb.append(getFlag(jpid, tag.substring(1)));
+            if (tag.startsWith("d") || tag.startsWith("x") || tag.startsWith("D") || tag.startsWith("X")) {
+                sink.append(tag.substring(1));
             }
             else {
-                sb.append("Unknown(" + tag + ")");
+                sink.append(tag);
             }
         }
+        sink.endOfRow();
 
-        return sb.toString();
+    }
+
+    public void describe(JavaProcessId jpid, GridSink sink) {
+        for(String tag: displayFields) {
+            if ("PID".equals(tag)) {
+                sink.append(getPid(jpid));
+            }
+            else if ("MAIN".equals(tag)) {
+                sink.append(getShortMain(jpid));
+            }
+            else if ("FDQN_MAIN".equals(tag)) {
+                sink.append(getMain(jpid));
+            }
+            else if ("ARGS".equals(tag)) {
+                sink.append(getArgs(jpid));
+            }
+            else if (tag.startsWith("d")) {
+                sink.append(getProp(jpid, tag.substring(1)));
+            }
+            else if (tag.startsWith("D")) {
+                sink.append(tag.substring(1) + "=" + getProp(jpid, tag.substring(1)));
+            }
+            else if (tag.startsWith("x")) {
+                sink.append(getFlagValue(jpid, tag.substring(1)));
+            }
+            else if (tag.startsWith("X")) {
+                sink.append(getFlag(jpid, tag.substring(1)));
+            }
+            else {
+                sink.append("Unknown(" + tag + ")");
+            }
+        }
+        sink.endOfRow();
+    }
+
+    private String getFlagValue(JavaProcessId jpid, String flagName) {
+        String val = getFlag(jpid, flagName);
+        if (val.startsWith("-XX:+")) {
+            return "true";
+        } else if (val.startsWith("-XX:-")) {
+            return "false";
+        } else {
+            int ch = val.indexOf("=");
+            return ch <= 0 ? val : val.substring(ch + 1);
+        }
     }
 
     private String getProp(JavaProcessId jpid, String propName) {

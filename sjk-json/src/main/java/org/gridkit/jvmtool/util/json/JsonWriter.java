@@ -9,6 +9,7 @@ import org.gridkit.jvmtool.jackson.DefaultPrettyPrinter;
 import org.gridkit.jvmtool.jackson.JsonGenerationException;
 import org.gridkit.jvmtool.jackson.JsonGenerator;
 import org.gridkit.jvmtool.jackson.JsonMiniFactory;
+import org.gridkit.jvmtool.jackson.PrettyPrinter;
 
 public class JsonWriter implements JsonStreamWriter {
 
@@ -18,6 +19,11 @@ public class JsonWriter implements JsonStreamWriter {
     public JsonWriter(Writer writer) {
         gen = JsonMiniFactory.createJsonGenerator(writer);
         gen.setPrettyPrinter(new DefaultPrettyPrinter());
+    }
+
+    public JsonWriter(Writer writer, PrettyPrinter printer) {
+        gen = JsonMiniFactory.createJsonGenerator(writer);
+        gen.setPrettyPrinter(printer);
     }
 
     public void flush() {

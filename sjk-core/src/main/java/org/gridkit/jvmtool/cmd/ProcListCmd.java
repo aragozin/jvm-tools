@@ -15,6 +15,9 @@
  */
 package org.gridkit.jvmtool.cmd;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.List;
 
 import org.gridkit.jvmtool.JvmProcessFilter;
@@ -23,7 +26,11 @@ import org.gridkit.jvmtool.cli.CommandLauncher;
 import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
 import org.gridkit.lab.jvm.attach.AttachManager;
 import org.gridkit.lab.jvm.attach.JavaProcessId;
+import org.gridkit.util.formating.GridExportHelper;
+import org.gridkit.util.formating.GridSink;
+import org.gridkit.util.formating.PrintStreamGridSink;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
@@ -54,16 +61,53 @@ public class ProcListCmd implements CmdRef {
         private JvmProcessFilter filter = new JvmProcessFilter();
 
         @ParametersDelegate
-        private JvmProcessPrinter printer = new JvmProcessPrinter();
+        private JvmProcessPrinter printer;
+
+        @Parameter(names = {"--csv"}, description = "Output in csv format")
+        private boolean csv = false;
+
+        @Parameter(names = {"--json"}, description = "Output in JSON format")
+        private boolean json = false;
+
+        @Parameter(names = {"--output"}, description = "Output file, use std out if not specified")
+        private String outFile = null;
 
         public JPS(CommandLauncher host) {
             this.host = host;
+            this.printer = new JvmProcessPrinter(host);
         }
 
         @Override
         public void run() {
 
             List<JavaProcessId> procList;
+
+            PrintStream out = System.out;
+            if (outFile != null) {
+                File f = new File(outFile);
+                if (f.getParentFile() != null) {
+                    f.getParentFile().mkdirs();
+                }
+                try {
+                    out = new PrintStream(f);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            GridExportHelper exportHelper = null;
+            GridSink sink = null;
+
+            if (csv || json) {
+                if (printer.isDefined()) {
+                    sink = exportHelper = new GridExportHelper();
+                    printer.describeHeader(sink);
+                } else {
+                    host.fail("--process-details option is required for cvs/json export");
+                }
+            } else {
+                sink = new PrintStreamGridSink(out);
+            }
 
             filter.prepare();
 
@@ -76,13 +120,21 @@ public class ProcListCmd implements CmdRef {
 
             for(JavaProcessId jpid: procList) {
                 if (printer.isDefined()) {
-                    System.out.println(printer.describe(jpid));
+                    printer.describe(jpid, sink);
                 }
                 else {
                     StringBuilder sb = new StringBuilder();
                     sb.append(jpid.getPID()).append('\t');
                     sb.append(jpid.getDescription());
                     System.out.println(sb);
+                }
+            }
+
+            if (exportHelper != null) {
+                if (csv) {
+                    exportHelper.exportAsCsv(out);
+                } else if (json) {
+                    exportHelper.exportAsJson(out);
                 }
             }
         }

@@ -163,11 +163,32 @@ public class CliCheck {
     @Test
     public void jps_print() {
         exec("jps", "-pd", "PID", "MAIN", "Duser.dir");
+        stdOut.lineEx("[0-9]+.*user[.]dir=.*");
     }
 
     @Test
     public void jps_print_flags() {
-        exec("jps", "-pd", "PID", "MAIN", "XMaxHeapSize", "XBackgroundCompilation");
+        exec("jps", "-pd", "PID", "MAIN", "XMaxHeapSize", "XBackgroundCompilation", "XUseHeavyMonitors");
+        stdOut.lineEx("[0-9]+.*MaxHeapSize.*");
+    }
+
+    @Test
+    public void jps_print_flags_as_csv() {
+        exec("jps", "-pd", "PID", "MAIN", "xMaxHeapSize", "xBackgroundCompilation", "xUseHeavyMonitors", "--csv");
+        stdOut.line("PID,MAIN,MaxHeapSize,BackgroundCompilation,UseHeavyMonitors");
+        stdOut.lineEx("[0-9]+,.*,[0-9]+,(true|false),(true|false)");
+    }
+
+    @Test
+    public void jps_print_flags_as_json() {
+        exec("jps", "-pd", "PID", "MAIN", "xMaxHeapSize", "xBackgroundCompilation", "xUseHeavyMonitors", "--json");
+        stdOut.line("[");
+        stdOut.lineContains("\"PID\":", "\"MAIN\":", "\"MaxHeapSize\":", "\"BackgroundCompilation\":", "\"UseHeavyMonitors\":");
+    }
+
+    @Test
+    public void jps_print_flags_as_csv_to_file() {
+        exec("jps", "-pd", "PID", "MAIN", "xMaxHeapSize", "xBackgroundCompilation", "xUseHeavyMonitors", "--csv", "--output", "target/jps_out/" + System.currentTimeMillis() + ".txt");
     }
 
     @Test @StopCommandAfter(10)
