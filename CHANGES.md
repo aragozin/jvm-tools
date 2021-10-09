@@ -1,6 +1,11 @@
 Next version
 ----
 
+- Add `--csv` and `--json` options to `jps` command
+
+0.20 - 2021 Oct 5
+----
+
 - Introduce `jcmd` command over JMX connection
 - Fix agent access to agent properties in post 8 Java
 
@@ -23,7 +28,6 @@ Next version
 - Ability to active HostpotInternal MBeans via JVM agent `hs --enable-hotspot-mbean`
 - Support multiple attributes in `mx --get`
 - Options to control header in `mx --get` CSV output mode
-
 
 0.15 - 2020 Jan 8
 ----
