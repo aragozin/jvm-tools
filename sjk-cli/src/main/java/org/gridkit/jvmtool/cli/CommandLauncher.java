@@ -124,7 +124,7 @@ public class CommandLauncher {
                 }
             }
             else {
-    
+
                 String parsedCommand = parser.getParsedCommand();
                 if (parsedCommand == null) {
                     parsedCommand = "-h";
