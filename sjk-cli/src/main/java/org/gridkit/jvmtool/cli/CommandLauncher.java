@@ -118,18 +118,14 @@ public class CommandLauncher {
                     parser.usage(cmd);
                 }
             }
-            else if (listCommands) {
+            else if (listCommands || parser.getParsedCommand() == null) {
                 for(String cmd: commands.keySet()) {
                     System.out.println(String.format("%8s - %s", cmd, parser.getCommandDescription(cmd)));
                 }
             }
             else {
 
-                String parsedCommand = parser.getParsedCommand();
-                if (parsedCommand == null) {
-                    parsedCommand = "--commands";
-                }
-                Runnable cmd = commands.get(parsedCommand);
+                Runnable cmd = commands.get(parser.getParsedCommand());
 
                 if (cmd == null) {
                     failAndPrintUsage();
