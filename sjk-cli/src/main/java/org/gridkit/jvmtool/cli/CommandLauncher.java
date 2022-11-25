@@ -127,7 +127,7 @@ public class CommandLauncher {
 
                 String parsedCommand = parser.getParsedCommand();
                 if (parsedCommand == null) {
-                    parsedCommand = "-h";
+                    parsedCommand = "--commands";
                 }
                 Runnable cmd = commands.get(parsedCommand);
 
