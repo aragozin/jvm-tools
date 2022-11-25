@@ -124,8 +124,12 @@ public class CommandLauncher {
                 }
             }
             else {
-
-                Runnable cmd = commands.get(parser.getParsedCommand());
+    
+                String parsedCommand = parser.getParsedCommand();
+                if (parsedCommand == null) {
+                    parsedCommand = "-h";
+                }
+                Runnable cmd = commands.get(parsedCommand);
 
                 if (cmd == null) {
                     failAndPrintUsage();
