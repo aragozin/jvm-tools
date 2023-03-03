@@ -39,13 +39,14 @@ public class CliTestRule implements TestRule {
     public Statement apply(Statement base, Description description) {
         StopCommandAfter duration = description.getAnnotation(StopCommandAfter.class);
 
+        if (duration != null) {
+            base = new Autoshutdown(base, TimeUnit.SECONDS.toMillis(duration.value()));
+        }
+
         base = out.apply(base, description);
         base = err.apply(base, description);
 
-        if (duration == null) {
-            return base;
-        }
-        return new Autoshutdown(base, TimeUnit.SECONDS.toMillis(duration.value()));
+        return base;
     };
 
     static class Autoshutdown extends Statement {
@@ -128,6 +129,7 @@ public class CliTestRule implements TestRule {
         }
 
         private static class StatementThread extends Thread {
+
             private final Statement fStatement;
 
             private boolean fFinished = false;

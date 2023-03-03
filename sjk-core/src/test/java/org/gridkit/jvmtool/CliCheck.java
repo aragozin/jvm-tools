@@ -712,11 +712,18 @@ public class CliCheck {
 
     @Test @StopCommandAfter(5)
     public void mprx() {
-        exec("mprx", "-p", PID,  "-b", "34000");
 
-        stdOut.line("Connected to target JMX endpoint");
-        stdOut.line("Open proxy JMX end point on URI - service:jmx:rmi://0.0.0.0:34000/jmxrmi");
-        stdOut.line("JMX proxy is running - 0.0.0.0:34000");
+        try {
+
+            exec("mprx", "-p", PID,  "-b", "34000");
+
+        } finally {
+
+            stdOut.line("Connected to target JMX endpoint");
+            stdOut.line("Open proxy JMX end point on URI - service:jmx:rmi://0.0.0.0:34000/jmxrmi");
+            stdOut.line("JMX proxy is running - 0.0.0.0:34000");
+
+        }
     }
 
     @Test

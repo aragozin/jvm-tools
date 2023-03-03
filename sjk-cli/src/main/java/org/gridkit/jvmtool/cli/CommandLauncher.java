@@ -125,7 +125,8 @@ public class CommandLauncher {
             }
             else {
 
-                Runnable cmd = commands.get(parser.getParsedCommand());
+                String cmdRef = parser.getParsedCommand();
+                Runnable cmd = cmdRef == null ? null : commands.get(cmdRef);
 
                 if (cmd == null) {
                     failAndPrintUsage();
