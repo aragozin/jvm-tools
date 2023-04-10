@@ -116,11 +116,13 @@ public class CliCheck {
         stdOut.lineContains("gc");
         stdOut.lineContains("hh");
         stdOut.lineContains("hs");
+        stdOut.lineContains("jcmd");
         stdOut.lineContains("jfr2json");
         stdOut.lineContains("jps");
         stdOut.lineContains("mprx");
         stdOut.lineContains("mx");
         stdOut.lineContains("mxping");
+        stdOut.lineContains("prfi");
         stdOut.lineContains("ssa");
         stdOut.lineContains("stcap");
         stdOut.lineContains("stcpy");
@@ -792,6 +794,11 @@ public class CliCheck {
     public void jcmd_thread_print() {
         Assume.assumeTrue(!JAVA_6 && !JAVA_7);
         exec("jcmd", "-p", PID, "-X", "-c", "Thread.print", "-l");
+    }
+
+    @Test
+    public void prfi_check() {
+        exec("prfi", "-X", "-i", "../sjk-stacktrace/src/test/resources/perf3.txt", "-o", "target/perf3.stp");
     }
 
     private void exec(String... cmd) {
