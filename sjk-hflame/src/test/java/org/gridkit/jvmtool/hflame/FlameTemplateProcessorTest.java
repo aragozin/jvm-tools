@@ -46,7 +46,7 @@ public class FlameTemplateProcessorTest {
         StringWriter sw = new StringWriter();
         ftp.generate(sw);
 
-        System.out.println(sw);
+        //System.out.println(sw);
 
         OutputStreamWriter fw  = new OutputStreamWriter(new FileOutputStream("target/test.html"), "UTF8");
         fw.append(sw.toString());
