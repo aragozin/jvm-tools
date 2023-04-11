@@ -16,14 +16,21 @@
 package org.gridkit.jvmtool;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
+import java.rmi.Remote;
+import java.util.ArrayList;
+import java.util.Map;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
+import javax.management.remote.rmi.RMIConnectorServer;
 
+import org.gridkit.jvmtool.mxproxy.JmxServer;
 import org.gridkit.sjk.test.console.StopCommandAfter;
 import org.gridkit.sjk.test.console.junit4.CliTestRule;
 import org.gridkit.sjk.test.console.junit4.ConsoleRule;
@@ -729,6 +736,57 @@ public class CliCheck {
     }
 
     @Test
+    public void mxping_pid() {
+        exec("mxping", "-p", PID);
+    }
+
+    @Test
+    public void mxping_socket() throws IOException {
+        unexportRMI();
+        RMIConnectorServer server = null;
+        try {
+            JmxServer mserver = new JmxServer(ManagementFactory.getPlatformMBeanServer());
+            mserver.setBindHost("0.0.0.0");
+            mserver.setPort(34000);
+
+            server = mserver.start();
+            System.out.println("Open proxy JMX end point on URI - " + mserver.getJmxUri());
+            cli.out.clean();
+
+
+            exec("mxping", "-s", "127.0.0.1:34000");
+        } finally {
+            if (server != null) {
+                server.stop();
+                unexportRMI();
+            }
+        }
+    }
+
+    @Test
+    public void mxping_socket_enforce() throws IOException {
+        RMIConnectorServer server = null;
+        try {
+            JmxServer mserver = new JmxServer(ManagementFactory.getPlatformMBeanServer());
+            mserver.setBindHost("0.0.0.0");
+            mserver.setPort(34000);
+
+            server = mserver.start();
+            System.out.println("Open proxy JMX end point on URI - " + mserver.getJmxUri());
+            cli.out.clean();
+
+
+            exec("mxping", "-s", "127.0.0.1:34000", "--force-hostname");
+        } finally {
+            if (server != null) {
+                server.stop();
+                System.gc();
+                System.gc();
+            }
+        }
+    }
+
+    @Test
     public void vminfo_sysprops() {
         exec("vminfo", "-p", PID, "--sysprops");
     }
@@ -807,5 +865,26 @@ public class CliCheck {
 
     private void fail(String... cmd) {
         cli.fail(cmd);
+    }
+
+    @SuppressWarnings({ "restriction", "unchecked" })
+    private void unexportRMI() {
+
+        try {
+            Field table = sun.rmi.transport.ObjectTable.class.getDeclaredField("implTable");
+            table.setAccessible(true);
+            Map<Object, Object> map = (Map<Object, Object>) table.get(null);
+            for (Object wref: new ArrayList<Object>(map.keySet())) {
+                Field ref = wref.getClass().getDeclaredField("strongRef");
+                ref.setAccessible(true);
+                Object obj = ref.get(wref);
+                if (obj instanceof Remote) {
+                    sun.rmi.transport.ObjectTable.unexportObject((Remote)obj, true);
+                }
+
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

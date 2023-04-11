@@ -17,9 +17,14 @@ package org.gridkit.jvmtool;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.rmi.NotBoundException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.ObjID;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.RemoteRef;
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,6 +34,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnector;
 import javax.management.remote.rmi.RMIServer;
+import javax.management.remote.rmi.RMIServerImpl_Stub;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import org.gridkit.jvmtool.cli.CommandLauncher;
@@ -57,6 +63,9 @@ public class JmxConnectionInfo {
 
     @Parameter(names = {"--password"}, description="Password for JMX authentication (only for socket connection)")
     private String password = null;
+
+    @Parameter(names = {"--force-hostname"}, description="Override hostname for JMX RMI stub, default false")
+    private boolean forceHostAddress = false;
 
     private boolean diagMode = false;
 
@@ -147,9 +156,10 @@ public class JmxConnectionInfo {
                 if (diagMode) {
                     System.out.println("Try to connect via TLS");
                 }
-                Registry registry = LocateRegistry.getRegistry(host, port, new SslRMIClientSocketFactory());
+                Registry registry = LocateRegistry.getRegistry(host, port, new EnforcedSocketFactory(host, new SslRMIClientSocketFactory()));
                 try {
                     rmiServer = (RMIServer) registry.lookup("jmxrmi");
+                    rmiServer = overrideClientSocketFactory(host, rmiServer);
                 } catch (NotBoundException nbe) {
                     throw (IOException)
                             new IOException(nbe.getMessage()).initCause(nbe);
@@ -159,9 +169,10 @@ public class JmxConnectionInfo {
                     System.out.println("Failed to connect using TLS: " + e.toString());
                     System.out.println("Try to use plain socket");
                 }
-                Registry registry = LocateRegistry.getRegistry(host, port);
+                Registry registry = LocateRegistry.getRegistry(host, port, new EnforcedSocketFactory(host, new DirectSocketFactory()));
                 try {
                     rmiServer = (RMIServer) registry.lookup("jmxrmi");
+                    rmiServer = overrideClientSocketFactory(host, rmiServer);
                 } catch (NotBoundException nbe) {
                     if (diagMode) {
                         System.out.println("Failed using LocateRegistry. Fallback to JMXConnectorFactory");
@@ -198,6 +209,29 @@ public class JmxConnectionInfo {
         return null;
     }
 
+    @SuppressWarnings("restriction")
+    private RMIServer overrideClientSocketFactory(String hostname, RMIServer rmiServer) {
+        try {
+            if (rmiServer instanceof RemoteObject) {
+                RemoteRef ref = ((RemoteObject)rmiServer).getRef();
+                sun.rmi.transport.LiveRef lref = ((sun.rmi.server.UnicastRef)ref).getLiveRef();
+                ObjID oid = lref.getObjID();
+                sun.rmi.transport.tcp.TCPEndpoint ep = (sun.rmi.transport.tcp.TCPEndpoint)(lref.getChannel().getEndpoint());
+
+                sun.rmi.transport.LiveRef nlref = new sun.rmi.transport.LiveRef(oid,
+                            new sun.rmi.transport.tcp.TCPEndpoint(ep.getHost(), ep.getPort(), new EnforcedSocketFactory(hostname, ep.getClientSocketFactory()), null),
+                            false);
+
+                return new RMIServerImpl_Stub(new sun.rmi.server.UnicastRef2(nlref));
+            }
+        } catch (Exception e) {
+            if (diagMode) {
+                System.out.println("Failed to inject socket factory into RMIServer stub: " + e.toString());
+            }
+        }
+        return rmiServer;
+    }
+
     private String host(String sockAddr) {
         int c = sockAddr.indexOf(':');
         if (c <= 0) {
@@ -216,6 +250,47 @@ public class JmxConnectionInfo {
         } catch (NumberFormatException e) {
             commandHost.fail("Invalid socket address: " + sockAddr);
             return 0;
+        }
+    }
+
+    private class EnforcedSocketFactory implements RMIClientSocketFactory {
+
+        private final RMIClientSocketFactory delegate;
+        private final String hostname;
+
+        public EnforcedSocketFactory(String hostname, RMIClientSocketFactory delegate) {
+            this.delegate = delegate != null ? delegate : new DirectSocketFactory();
+            this.hostname = hostname;
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            if (diagMode) {
+                if (forceHostAddress && !host.equals(hostname)) {
+                    System.out.println("Establishing connection to " + hostname + ":" + port + " (overriden from " + host + ")");
+                } else {
+                    System.out.println("Establishing connection to " + host + ":" + port);
+                }
+            }
+            return delegate.createSocket(forceHostAddress ? hostname : host, port);
+        }
+
+        @Override
+        public String toString() {
+            return delegate.toString();
+        }
+    }
+
+    private class DirectSocketFactory implements RMIClientSocketFactory {
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            return new Socket(host, port);
+        }
+
+        @Override
+        public String toString() {
+            return "DirectSocketFactory";
         }
     }
 }
