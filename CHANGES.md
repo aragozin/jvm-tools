@@ -1,6 +1,8 @@
 Next version
 ----
 
+- Added `--force-hostname` option to overriden endpoint hostname on RMI stub with JMX connection hostname (useful for NAT and containers)
+- Added `prfi` command for importing sampling data from Linux perf
 - Add `--csv` and `--json` options to `jps` command
 
 0.20 - 2021 Oct 5
