@@ -1,4 +1,7 @@
-Next version
+next version
+----
+
+0.21 - 2023 Apr 19
 ----
 
 - Added `--force-hostname` option to overriden endpoint hostname on RMI stub with JMX connection hostname (useful for NAT and containers)
