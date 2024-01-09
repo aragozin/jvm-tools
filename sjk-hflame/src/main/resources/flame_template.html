@@ -9,7 +9,7 @@
 }
         </script>
         <link rel="stylesheet" type="text/css" href="css/flame.css"/>
-        <script src="js/jquery-3.1.1.min.js"></script>
+        <script src="js/jquery-3.7.1.min.js"></script>
         <script id="debug_out">
             function debug(text) {
                 $("<p></p>").text(text).prependTo("#debug_console");
@@ -25,11 +25,11 @@
         <script src="../../test/resources/js/dummy_data_tiny.js"></script>
         <script>
             $(document).ready(function() {createFlameChart("fg1", data).initFlameChart()});
-        </script>        
+        </script>
     </head>
     <body>
         <div id="fg1" class="flameFrame">
-            <div class="flameHover" style="display: none">This is flame hover</div>            
+            <div class="flameHover" style="display: none">This is flame hover</div>
             <div style="display: flex; flex-direction: row; justify-content: space-between">
                 <div class='credit'>Created with <a href="https://github.com/aragozin/jvm-tools">SJK</a></div>
                 <div class="flameStateFilter" style="position: relative">
@@ -51,9 +51,9 @@
                     <div style="min-height: 15em"></div>
                 </div>
             </div>
-        </div>        
+        </div>
         <script id="importflame_fg1">/* template placeholder*/</script>
-        <div id="debug_console">            
+        <div id="debug_console">
         </div>
     </body>
 </html>

@@ -1,6 +1,5 @@
-"use strict"
-
 function wrapFlameModel(data) {
+    "use strict"
 
     function forEachArrayElement(array, func) {
         var len = array.length;
@@ -8,7 +7,7 @@ function wrapFlameModel(data) {
             func(array[i]);
         }
     }
-    
+
     function isEmpty(filters) {
         return !(filters && (filters.threads || filters.states || filters.zoom));
     }
@@ -62,7 +61,7 @@ function wrapFlameModel(data) {
             return nthread;
         }
         else {
-            return thread;   
+            return thread;
         }
     }
 
@@ -79,7 +78,7 @@ function wrapFlameModel(data) {
                         return null;
                     }
                     else {
-                         ntrace = ntrace.slice(n);    
+                         ntrace = ntrace.slice(n);
                     }
                 }
                 return ntrace;
@@ -95,20 +94,20 @@ function wrapFlameModel(data) {
                         return null;
                     }
                 }
-                return trace.slice(len - 1);            
+                return trace.slice(len - 1);
             }
         }
         else {
             return trace;
-        }    
+        }
     }
-    
+
     function forEachTrace(data, func) {
         forEachArrayElement(data.threads, function(thread) {
-           forEachArrayElement(thread.traces, func); 
+           forEachArrayElement(thread.traces, func);
         });
     }
-    
+
     function getStateHistogram(data, proto) {
         var result = {};
         for(var x in proto) {
@@ -126,58 +125,58 @@ function wrapFlameModel(data) {
                 result[stc] = {state: st, name: stName, count: trace.samples};
             }
         });
-        
+
         return result;
     }
-    
+
     function getThreadHistogram(data) {
         var result = {};
         forEachArrayElement(data.threads, function(thread) {
             var count = 0;
             forEachArrayElement(thread.traces, function(trace) {
-                count += trace.samples;                    
+                count += trace.samples;
             });
-            
+
             result[thread.name] = {name: thread.name, count: count};
         });
-        
+
         return result;
     }
 
     // Method boy
-    
+
     var flameModel = {};
     flameModel.data = data;
     flameModel.filters = {};
-    
+
     flameModel.onModelUpdated = {};
-    
+
     var fullStateHistogram = null;
     var stateHistogram = null;
     var threadHistogram = null;
-    
+
     flameModel.update = function() {
-        
+
         debug("updating flame model ...");
-        
+
         var filters = flameModel.filters;
         var nozoom  = {
             threads: filters.threads,
             states: filters.states
         }
-        
+
         flameModel.filteredData = applyFilter(flameModel.data, nozoom);
-        
+
         flameModel.zoomedData = applyFilter(flameModel.filteredData, filters);
-        
+
         stateHistogram = null;
         threadHistogram = null;
-        
+
         for(var x in flameModel.onModelUpdated) {
             flameModel.onModelUpdated[x]();
         }
-    };  
-    
+    };
+
     flameModel.getStateHistogram = function() {
         if (!stateHistogram) {
             debug("calculate state histo");
@@ -198,7 +197,7 @@ function wrapFlameModel(data) {
         }
         return threadHistogram;
     }
-    
+
     return flameModel;
 }
 
@@ -224,6 +223,6 @@ var flameModel = {
         zoom: [-1, 1],
     },
     zoomPath: [1, 2, 3]
-}            
+}
 */
 

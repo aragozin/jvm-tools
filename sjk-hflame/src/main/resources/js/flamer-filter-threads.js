@@ -1,22 +1,23 @@
-(function($, doc, wnd) {    
-    
+(function($, doc, wnd) {
+"use strict"
+
     function text(t) {
         return doc.createTextNode(t);
     }
-    
+
     function createThreadFilterHandler(flameModel) {
 
         var suppressUpdate = false;
         var updater = function(){};
         var panel$ = null;
 
-        function updateFilter() {            
+        function updateFilter() {
             var nfilter = [];
             panel$.find("p input").each(function() {
                 var info = $(this).data("thread");
                 if ($(this).prop("checked")) {
                     nfilter.push(info.name);
-                }                
+                }
             });
             debug("update thread filter: " + nfilter);
             if ("" + nfilter != "" + flameModel.filters.threads) {
@@ -24,10 +25,10 @@
                 if (flameModel.update) {
                     flameModel.update();
                 }
-            }          
-            updater(); // notify visuals            
+            }
+            updater(); // notify visuals
         }
-        
+
         function makePanel(histo) {
             function up() {
                 updateFilter(panel$);
@@ -37,30 +38,30 @@
                 if (histo[x].count > 0) {
                     box.append(                    createStateItem(histo[x], up));
                 }
-            }   
+            }
             box.appendTo(panel$);
             makeToolbar();
         }
-        
+
         function updateVisibility() {
             var filter = panel$.find(".search input").prop("value");
             debug("filter threads: " + filter);
-            
+
             var vcnt = 0;
             panel$.find("p").each(function() {
                 var p = $(this);
                 p.find("input").each(function() {
-                    var info = $(this).data("thread");    
+                    var info = $(this).data("thread");
                     if (filter.length == 0 || info.name.indexOf(filter) >= 0) {
                         vcnt++;
                         p.show();
-                    }            
+                    }
                     else {
                         p.hide();
                     }
                 });
-            });            
-            
+            });
+
             if (vcnt == 0) {
                 panel$.find("p.empty").show();
             }
@@ -68,7 +69,7 @@
                 panel$.find("p.empty").hide();
             }
         }
-        
+
         function all() {
             suppressUpdate = true;
             panel$.find("p>input").each(function() {
@@ -79,7 +80,7 @@
             suppressUpdate = false;
             updateFilter();
         }
-        
+
         function none() {
             suppressUpdate = true;
             panel$.find("p>input").each(function() {
@@ -87,10 +88,10 @@
                     this.checked = false;
                 }
             });
-            suppressUpdate = false;            
+            suppressUpdate = false;
             updateFilter();
         }
-        
+
         function only() {
             suppressUpdate = true;
             panel$.find("p>input").each(function() {
@@ -99,7 +100,7 @@
             suppressUpdate = false;
             updateFilter();
         }
-        
+
         function makeToolbar() {
             var div = $("<div class='search'/>");
             $("<input type='text''/>").keyup(updateVisibility).appendTo(div);
@@ -107,10 +108,10 @@
             $("<a class='only'/>").text("only").click(only).appendTo(div);
             $("<a class='none'/>").text("none").click(none).appendTo(div);
             panel$.prepend(div);
-            
+
             $("<p class='empty''/>").text("no threads matching").hide().appendTo(panel$);
         }
-        
+
         function createStateItem(stateInfo, updateFilter) {
             var p = $("<p></p>");
             var check = $("<input type='checkbox'></input>");
@@ -122,21 +123,21 @@
             p.append(caption);
             check.change(function() {
                 if (!suppressUpdate) {
-                    updateFilter(); 
+                    updateFilter();
                 }
             });
             check.data("thread", stateInfo);
             return p;
         }
-        
+
         var handler = {
-            
+
             histo: null,
-            
+
             setUpdater: function(callback) {
                 updater = callback;
             },
-            
+
             isEnabled: function() {
                 return flameModel.data.threads.length > 1;
             },
@@ -152,14 +153,14 @@
                     if (flameModel.filters.threads) {
                         var ft = flameModel.filters.threads;
                         if (ft.length == tcount) {
-                            btn$.text(tcount + " threads");    
+                            btn$.text(tcount + " threads");
                         }
                         else {
-                            btn$.text(ft.length + " of " + tcount + " threads");    
-                        }                        
+                            btn$.text(ft.length + " of " + tcount + " threads");
+                        }
                     }
                     else {
-                        btn$.text(tcount + " threads");    
+                        btn$.text(tcount + " threads");
                     }
                 }
                 else {
@@ -172,11 +173,11 @@
                 panel$.empty();
                 makePanel(flameModel.getThreadHistogram());
             }
-        };   
-        
+        };
+
         return handler;
     }
-    
+
     wnd.createThreadFilterHandler = createThreadFilterHandler;
-    
+
 }(jQuery, document, window));

@@ -1,7 +1,6 @@
+(function($, doc, wnd) {
 "use strict";
 
-(function($, doc, wnd) {    
-    
     function isInsideElement(mousee, node) {
         if (node.is(":visible")) {
             var x = mousee.pageX;
@@ -13,15 +12,15 @@
             if (x >= l && x < l +w && y >= t && y < t + h) {
                 return true;
             }
-        }    
+        }
         return false;
-    }     
-    
+    }
+
     function initFilterPanel(div$, filterHandler) {
-        
+
         var btn$ = div$.find(".btn");
         var panel$ = div$.find(".panel");
-        
+
         btn$.click(function() {
             if (panel$.is(":visible")) {
                 debug("panel visible");
@@ -32,17 +31,17 @@
                 showPanel();
             }
         });
-        
+
         filterHandler.setUpdater(function() {
-            filterHandler.updateCaption(btn$); 
+            filterHandler.updateCaption(btn$);
         });
         filterHandler.updateCaption(btn$);
-    
+
         $(wnd).click(function(e) {
             debug("popup click handle");
-            checkOutOfThreadFilterClick(e);             
+            checkOutOfThreadFilterClick(e);
         });
-    
+
         function checkOutOfThreadFilterClick(e) {
             if (!isInsideElement(e, btn$)) {
                 if (panel$.is(":visible")) {
@@ -59,36 +58,36 @@
                 debug("click on button");
             }
         }
-        
+
         function showPanel() {
             debug("showPanle");
             if (filterHandler.isEnabled()) {
                 panel$.empty();
                 filterHandler.initContent(panel$);
                 panel$.show();
-            }            
+            }
         }
-        
+
         function hidePanel() {
             debug("hidePanel");
             panel$.hide();
         }
     }
-    
+
     wnd.initFilterPanel = initFilterPanel;
-    
+
 }(jQuery, document, window));
 
 /* !!THROW AWAY BELOW!! */
 
 var dummy_handler = {
-    
+
     counter: 1,
-    
+
     setUpdater: function(updater) {
         // do nothing
     },
-    
+
     isEnabled: function() {
         return true;
     },

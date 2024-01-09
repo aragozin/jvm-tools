@@ -1,16 +1,16 @@
-(function($, doc, wnd) {    
-    
+(function($, doc, wnd) {
+
     function text(t) {
         return doc.createTextNode(t);
     }
-    
+
     function forEachArrayElement(array, func) {
         var len = array.length;
         for(var i = 0; i < len; ++i) {
             func(array[i]);
         }
-    }    
-    
+    }
+
     function createStateFilterHandler(flameModel) {
 
         var suppressUpdate = false;
@@ -27,13 +27,13 @@
             return cnt;
         }
 
-        function updateFilter() {            
+        function updateFilter() {
             var nfilter = [];
             panel$.find("input").each(function() {
                 var info = $(this).data("state");
                 if ($(this).prop("checked")) {
                     nfilter.push(info.state);
-                }                
+                }
             });
             debug("updating state filter: "  + nfilter);
             if ("" + nfilter != "" + flameModel.filters.states) {
@@ -41,10 +41,10 @@
                 if (flameModel.update) {
                     flameModel.update();
                 }
-            }          
-            updater(); // notify visuals            
+            }
+            updater(); // notify visuals
         }
-        
+
         function makePanel(histo) {
             function up() {
                 updateFilter(panel$);
@@ -54,10 +54,10 @@
                 if (histo[x].count > -1) {
                     box.append(                    createStateItem(histo[x], up));
                 }
-            }   
+            }
             box.appendTo(panel$);
         }
-        
+
         function createStateItem(stateInfo, updateFilter) {
             var p = $("<p></p>");
             var check = $("<input type='checkbox'></input>");
@@ -69,13 +69,13 @@
             p.append(lable);
             check.change(function() {
                 if (!suppressUpdate) {
-                    updateFilter();                     
+                    updateFilter();
                 }
             });
             check.data("state", stateInfo);
             return p;
         }
-        
+
         function stateName(name) {
             if (name == "(???)") {
                 return terminal;
@@ -84,15 +84,15 @@
                 return name.slice(1, name.length - 1);
             }
         }
-        
+
         var handler = {
-            
+
             histo: null,
-            
+
             setUpdater: function(callback) {
                 updater = callback;
             },
-            
+
             isEnabled: function() {
                 histo = flameModel.getStateHistogram();
                 var enabled = stateCount(histo) > 1;
@@ -100,7 +100,7 @@
                 return enabled;
             },
 
-            updateCaption: function (btn$) {               
+            updateCaption: function (btn$) {
                 if (handler.isEnabled()) {
                     btn$.show();
                     if (flameModel.filters.states) {
@@ -111,14 +111,14 @@
                         }
                         var stcount = stateCount(histo);
                         if (fs.length == 1) {
-                            btn$.text(fs[0]);    
+                            btn$.text(fs[0]);
                         }
                         else if (fs.length == stcount) {
                             btn$.text("all states");
                         }
                         else {
-                            btn$.text(fs.length + " of " + stcount + " states");    
-                        }                        
+                            btn$.text(fs.length + " of " + stcount + " states");
+                        }
                     }
                     else {
                         btn$.text("all states");
@@ -134,11 +134,11 @@
                 panel$.empty();
                 makePanel(flameModel.getStateHistogram());
             }
-        };   
-        
+        };
+
         return handler;
     }
-    
+
     wnd.createStateFilterHandler = createStateFilterHandler;
-    
+
 }(jQuery, document, window));

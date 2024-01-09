@@ -94,15 +94,29 @@ public class MBeanHelper {
         return attrInfos;
     }
 
+    public List<String> getAttibuteList(ObjectName bean) throws InstanceNotFoundException, IntrospectionException, ReflectionException, IOException {
+
+        MBeanInfo mbinfo = mserver.getMBeanInfo(bean);
+        List<String> result = new ArrayList<String>();
+
+        for(MBeanAttributeInfo attrInfo: mbinfo.getAttributes()) {
+            if (attrInfo.isReadable()) {
+                result.add(attrInfo.getName());
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Get MBean attributes metadata
      * @param bean MBean attributes
      * @param attrs Required attributes
      * @return Map attribut name - attribute value
      */
-    private Map<String, Object> getAttributes(ObjectName bean, Collection<String> attrs) throws InstanceNotFoundException, ReflectionException, IOException {
+    public Map<String, Object> getAttributes(ObjectName bean, Collection<String> attrs) throws InstanceNotFoundException, ReflectionException, IOException {
         Map<String, Object> attrValues = new HashMap<String, Object>(attrs.size());
-        for(Attribute attr:mserver.getAttributes(bean, attrs.toArray(new String[0])).asList()) {
+        for(Attribute attr: mserver.getAttributes(bean, attrs.toArray(new String[0])).asList()) {
             attrValues.put(attr.getName(), attr.getValue());
         }
         return attrValues;

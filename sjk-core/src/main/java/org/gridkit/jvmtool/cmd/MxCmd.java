@@ -15,23 +15,26 @@
  */
 package org.gridkit.jvmtool.cmd;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.beust.jcommander.ParametersDelegate;
-import org.gridkit.jvmtool.JmxConnectionInfo;
-import org.gridkit.jvmtool.MBeanHelper;
-import org.gridkit.jvmtool.MTable;
-import org.gridkit.jvmtool.cli.CommandLauncher;
-import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
-import org.gridkit.util.formating.TextTable;
-
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+
+import org.gridkit.jvmtool.JmxConnectionInfo;
+import org.gridkit.jvmtool.MBeanHelper;
+import org.gridkit.jvmtool.MTable;
+import org.gridkit.jvmtool.cli.CommandLauncher;
+import org.gridkit.jvmtool.cli.CommandLauncher.CmdRef;
+import org.gridkit.util.formating.JsonExporter;
+import org.gridkit.util.formating.TextTable;
+
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.beust.jcommander.ParametersDelegate;
 
 public class MxCmd implements CmdRef {
 
@@ -168,6 +171,12 @@ public class MxCmd implements CmdRef {
             @Parameter(names={"--csv"}, description="Used with --get command, result would be formatted as CSV")
             boolean csv;
 
+            @Parameter(names={"--json"}, description="Used with --get command, result would be formatted as JSON")
+            boolean json;
+
+            @Parameter(names={"--json-array"}, description="Used with --get command, result would be formatted as JSON and wrapped as array")
+            boolean jsonArray;
+
             @Parameter(names={"--add-mbean-name"}, description="Used with --get command in --cvs mode, if enabled MBean name and attribute name would be added as columns.")
             boolean addMBeanName;
 
@@ -178,13 +187,17 @@ public class MxCmd implements CmdRef {
             @Override
             public void run() {
                 try {
-                    if (attribs == null || attribs.isEmpty()) {
-                        host.failAndPrintUsage("MBean attribute is missing");
+                    if ((csv && json) || (csv && jsonArray) || (json && jsonArray)) {
+                        host.fail("--csv, --json, --json-array are mutually exclusive, please choose one");
                     }
                     MBeanServerConnection conn = connInfo.getMServer();
                     Set<ObjectName> names = resolveSingleBean(conn);
                     MBeanHelper helper = new MBeanHelper(conn);
                     if (csv) {
+                        if (attribs == null || attribs.isEmpty()) {
+                            host.failAndPrintUsage("MBean attribute list is required for --csv export");
+                        }
+
                         MTable table = new MTable();
                         for (ObjectName name : names) {
                             helper.getAsTable(name, attribs, table);
@@ -198,6 +211,31 @@ public class MxCmd implements CmdRef {
                             tt = applyProjection(tt);
                             System.out.println(TextTable.formatCsv(tt));
                         }
+                    } else if (json || jsonArray) {
+                        boolean first = true;
+                        if (jsonArray) {
+                            System.out.println("[");
+                        }
+                        for (ObjectName name : names) {
+                            if (jsonArray) {
+                                if (!first) {
+                                    System.out.println(",");
+                                }
+                                first = false;
+                            }
+                            List<String> alist = attribs;
+                            if (attribs == null || attribs.isEmpty()) {
+                                alist = helper.getAttibuteList(name);
+                            }
+                            System.out.print(JsonExporter.mbean2json(helper.getAttributes(name, alist)));
+                            if (!jsonArray) {
+                                System.out.println();
+                            }
+                        }
+                        if (jsonArray) {
+                            System.out.println();
+                            System.out.println("]");
+                        }
                     }
                     else {
                         helper.setFormatingOption(MBeanHelper.FORMAT_TABLE_COLUMN_WIDTH_THRESHOLD, maxWidth);
@@ -205,7 +243,13 @@ public class MxCmd implements CmdRef {
                             if (!quiet) {
                                 System.out.println(name);
                             }
-                            Map<String, String> attrValues = helper.get(name, attribs);
+
+                            List<String> alist = attribs;
+                            if (attribs == null || attribs.isEmpty()) {
+                                alist = helper.getAttibuteList(name);
+                            }
+
+                            Map<String, String> attrValues = helper.get(name, alist);
                             for(String attrib:attribs) {
                                 String attribValue = attrValues.get(attrib);
                                 if (quiet) {

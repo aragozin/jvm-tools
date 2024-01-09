@@ -314,6 +314,11 @@ public class CliCheck {
     }
 
     @Test
+    public void mx_get_diagnostic_ops_json() {
+        exec("mx", "-p", PID, "--get", "--json", "--bean", "*:type=HotSpotDiagnostic", "-f", "DiagnosticOptions");
+    }
+
+    @Test
     public void mx_get_system_properties_csv() {
         exec("mx", "-p", PID, "--get", "--csv", "--bean", "*:type=Runtime", "-f", "SystemProperties");
     }
@@ -326,6 +331,26 @@ public class CliCheck {
     @Test
     public void mx_get_memory_pool_usage_csv() {
         exec("mx", "-p", PID, "--get", "--csv", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_json() {
+        exec("mx", "-p", PID, "--get", "--json", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage");
+    }
+
+    @Test
+    public void mx_get_memory_pool_usage_json_array() {
+        exec("mx", "-p", PID, "--get", "--json-array", "-all", "--bean", "*:type=MemoryPool,name=PS*", "-f", "Usage");
+    }
+
+    @Test
+    public void mx_get_memory_pool_all() {
+        exec("mx", "-p", PID, "--get", "-all", "--bean", "*:type=MemoryPool,name=PS*");
+    }
+
+    @Test
+    public void mx_get_memory_pool_all_json() {
+        exec("mx", "-p", PID, "--get", "--json", "-all", "--bean", "*:type=MemoryPool,name=PS*");
     }
 
     @Test
@@ -736,6 +761,30 @@ public class CliCheck {
     }
 
     @Test
+    public void mprx_help() {
+
+        try {
+
+            exec("mprx", "--help");
+
+        } finally {
+
+        }
+    }
+
+    @Test
+    public void mxping_help() {
+
+        try {
+
+            exec("mxping", "--help");
+
+        } finally {
+
+        }
+    }
+
+    @Test
     public void mxping_pid() {
         exec("mxping", "-p", PID);
     }
@@ -765,6 +814,7 @@ public class CliCheck {
 
     @Test
     public void mxping_socket_enforce() throws IOException {
+        unexportRMI();
         RMIConnectorServer server = null;
         try {
             JmxServer mserver = new JmxServer(ManagementFactory.getPlatformMBeanServer());
@@ -780,8 +830,7 @@ public class CliCheck {
         } finally {
             if (server != null) {
                 server.stop();
-                System.gc();
-                System.gc();
+                unexportRMI();
             }
         }
     }
