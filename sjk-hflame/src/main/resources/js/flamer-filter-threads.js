@@ -36,7 +36,7 @@
             var box = $("<div></div>");
             for(var x in histo) {
                 if (histo[x].count > 0) {
-                    box.append(                    createStateItem(histo[x], up));
+                    box.append(createStateItem(histo[x], up));
                 }
             }
             box.appendTo(panel$);

@@ -96,14 +96,18 @@
                 for(k = 0; k < t.length; ++k) {
                     var f = "f" +  t[k];
                     if (node[f] === undefined) {
-                        node[f] = {};
+
+                        var pref = t.slice(0, k + 1);
+                        node[f] = {
+                            path: toPath(pref),
+                            frame: dataSet.frames[t[k]],
+                            frameNo: t[k],
+                            samples: 0,
+                        };
                     }
                     node = node[f];
-                    var pref = t.slice(0, k + 1);
-                    node.path = toPath(pref);
-                    node.frame = dataSet.frames[t[k]];
-                    node.frameNo = t[k];
-                    node.samples = sampleCount(dataSet, pref);
+
+                    node.samples += td.traces[j].samples;
                 }
             }
         }
@@ -121,32 +125,32 @@
             return stub;
         }
         else if (treeNode.frame == "(WAITING)") {
-            var wnode = $("<div class='waitSmoke flameNode'/>");
+            var wnode = $("<div class='smokeBar waitSmoke flameNode'/>");
             wnode.attr("id", ns + treeNode.path + "_node");
             return wnode;
         }
         else if (treeNode.frame == "(TIMED_WAITING)") {
-            var twnode = $("<div class='twaitSmoke flameNode'/>");
+            var twnode = $("<div class='smokeBar twaitSmoke flameNode'/>");
             twnode.attr("id", ns + treeNode.path + "_node");
             return twnode;
         }
         else if (treeNode.frame == "(BLOCKED)") {
-            var bnode = $("<div class='blockSmoke flameNode'/>");
+            var bnode = $("<div class='smokeBar blockSmoke flameNode'/>");
             bnode.attr("id", ns + treeNode.path + "_node");
             return bnode;
         }
         else if (treeNode.frame == "(RUNNABLE)") {
-            var rnode = $("<div class='hotSmoke flameNode'/>");
+            var rnode = $("<div class='smokeBar hotSmoke flameNode'/>");
             rnode.attr("id", ns + treeNode.path + "_node");
             return rnode;
         }
         else if (treeNode.frame == "(IO)") {
-            var ionode = $("<div class='ioSmoke flameNode'/>");
+            var ionode = $("<div class='smokeBar ioSmoke flameNode'/>");
             ionode.attr("id", ns + treeNode.path + "_node");
             return ionode;
         }
         else if (treeNode.frame == "(???)") {
-            var tnode = $("<div class='termSmoke flameNode'/>");
+            var tnode = $("<div class='smokeBar termSmoke flameNode'/>");
             tnode.attr("id", ns + treeNode.path + "_node");
             return tnode;
         }
@@ -159,42 +163,55 @@
         }
     }
 
-    function createTreeElement(ns, treeNode, weight, threshold) {
+    function createTreeElement(stack, row, ns, position, treeNode, weight, threshold) {
+        if (row == undefined || row == null || row.length == 0) {
+            row = $("<div class='flameRow'/>");
+            var dummy = $("<div class='flameBox'></div>");
+            dummy.css({
+                visibility: "hidden",
+                position: "static"
+            });
+            row.append(dummy);
+            dummy.append($("<div class='execNode'>X</div>"));
+            stack.prepend(row);
+        }
         if (treeNode.samples < threshold) {
-            var stub = $("<div/>");
-            stub.css({display: "none"});
-            stub.text("small element stub");
-            return stub;
+            // do nothing
         }
         else {
-            var div = $("<div class='flameBox'/>");
-            if (treeNode.path !== undefined) {
-                div.attr("id", ns + treeNode.path + "_box");
+
+            if (treeNode.frame != undefined) {
+                var div = $("<div class='flameBox'/>");
+                div.css({
+                    left: (position + "%"),
+                    width: ("calc(" + weight + "% - 0px)")
+                });
+
+                var finfo = createInfoElement(ns, treeNode);
+                div.append(finfo);
+                row.append(div);
             }
-            div.css({flexBasis: (weight + "%")});
+
             var children = [];
             for(var prop in treeNode) {
-                if (prop.startsWith("f")) {
+                if (prop.startsWith("f") && treeNode[prop].samples != undefined) {
                     children[children.length] = treeNode[prop];
                 }
             }
 
             if (children.length == 1 && children[0].samples == treeNode.samples) {
-                div.append(createTreeElement(ns, children[0], 100, threshold));
+                createTreeElement(stack, row.prev(), ns, position, children[0], weight, threshold);
             }
             else if (children.length > 0) {
+                var cpos = position;
                 children.sort(function(a, b) {a.samples - b.samples});
-                var row = $("<div class='flameRow'/>");
                 for(var i = 0; i < children.length; ++i) {
-                    var cw = 100 * children[i].samples / treeNode.samples;
-                    var node = createTreeElement(ns, children[i], cw, threshold);
-                    row.append(node);
+                    var cw = weight * children[i].samples / treeNode.samples;
+                    createTreeElement(stack, row.prev(), ns, cpos, children[i], cw, threshold);
+                    cpos += cw;
                 }
-                div.append(row);
             }
 
-            var finfo = createInfoElement(ns, treeNode);
-            div.append(finfo);
             return div;
         }
     }
@@ -548,10 +565,13 @@
                 var graphWidth = rootNode.innerWidth();
                 var tree = collectTree(dataSet);
                 var threshold = 4 * totalSamples / graphWidth;
-                var graph = createTreeElement(ns, tree, 100, threshold);
+                var stack = $("<div class='flameStack'/>")
+                var row = $("<div class='flameRow'/>");
+                stack.append(row);
+                createTreeElement(stack, row, ns, 0, tree, 100, threshold);
 
                 rootNode.empty();
-                rootNode.append(graph);
+                rootNode.append(stack);
 
                 if (flameModel.filters.zoom) {
                     debug("show zoom bar");

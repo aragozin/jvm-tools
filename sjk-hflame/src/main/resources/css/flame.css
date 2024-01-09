@@ -14,13 +14,20 @@ div.flameFrame {
 
 div.flameArea {
     display: flex;
-    flex-direction: column-reverse;
-    min-height: 20em;
+    font-size: 11px;
+    font-family: monospace;
+    flex-direction: row;
+    min-height: 30em;
+    align-content: flex-end;
 }
 
 div.flameRoot {
-    font-size: 11px;
-    font-family: monospace;
+    align-self: flex-end;
+    width: 100%;
+}
+
+div.flameStack {
+    width: 100%;
 }
 
 div.flameRoot div.empty {
@@ -33,19 +40,17 @@ div.flameRoot div.empty {
 
 div.flameBox {
     display: flex;
-    flex-flow: row;
-    flex-wrap: wrap;
-    flex-shrink: 1;
-    flex-grow: 0;
-    align-self: flex-end;
+    align-items: flex-end;
+    position: absolute;
+    min-height: 11px;
+    top: 0;
     overflow: hidden;
 }
 
 div.flameRow {
-    display: flex;
-    flex-flow: row;
-    flex-wrap: nowrap;
-    flex-basis: 100%;
+    display: block;
+    width: 100%;
+    transform: scale(1, 1);
     overflow: hidden;
 }
 
@@ -54,9 +59,9 @@ div.execNode {
     border-color: transparent;
     border-width: 2px;
     width: 100%;
-    margin: 0;
+    margin: 0.5px;
     padding: 0px 0px 0px 3px;
-    border-radius: 1px;
+    border-radius: 3px;
     background-color: antiquewhite;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -158,14 +163,18 @@ div.termSmoke:hover {
     background-color: #555;
 }
 
+div.smokeBar {
+    margin-top: 1em;
+}
+
 div.flameHover {
     display: none;
     position: absolute;
-	border:1px solid #333;
-	background-color: antiquewhite;
-	border-radius: 4px;
-	padding: 4px;
-	color: #000;
+  border:1px solid #333;
+  background-color: antiquewhite;
+  border-radius: 4px;
+  padding: 4px;
+  color: #000;
     font-size: 11px;
     font-family: monospace;
     white-space: nowrap;
@@ -253,7 +262,7 @@ div.flameRoot div.zoomFrame {
     border-radius: 1px;
     text-overflow: ellipsis;
     white-space: nowrap;
-    overflow: hidden;    
+    overflow: hidden;
 }
 
 
@@ -276,7 +285,7 @@ div.flameRoot div.zoomBar:hover p.doUnzoom {
 /* State filter */
 
 div.flameStateFilter {
-    position: relative;    
+    position: relative;
 }
 
 div.flameStateFilter div.panel {
@@ -304,7 +313,7 @@ div.flameStateFilter p {
 
 div.flameStateFilter > a {
     color: #44F;
-    cursor: pointer;    
+    cursor: pointer;
 }
 
 div.flameStateFilter > a:hover {
@@ -342,7 +351,7 @@ div.flameThreadFilter p {
 
 div.flameThreadFilter > a {
     color: #44F;
-    cursor: pointer;    
+    cursor: pointer;
 }
 
 div.flameThreadFilter > a:hover {

@@ -40,14 +40,17 @@ public class FlameTemplateProcessorCheck {
         Document doc = loadXml("flame_template.html");
 
         FlameTemplateProcessor ftp = new FlameTemplateProcessor(doc);
-//		ftp.retainDebug(true);
+        //ftp.retainDebug(true);
 
         ftp.setDataSet("fg1", loadDataSet("hz1_dump.sjk"));
+//        ftp.setDataSet("fg1", loadDataSet("blc_jvisualvm.sjk"));
+//        ftp.setDataSet("fg1", loadDataSet("../../../../sjk-stacktrace/src/test/resources/jboss-10k.std"));
+//        ftp.setDataSet("fg1", loadDataSet("../../../../sjk-stacktrace/src/test/resources/jboss-1k.std"));
 
         StringWriter sw = new StringWriter();
         ftp.generate(sw);
 
-        System.out.println(sw);
+//        System.out.println(sw);
 
         OutputStreamWriter fw  = new OutputStreamWriter(new FileOutputStream("target/test.html"), "UTF8");
         fw.append(sw.toString());
