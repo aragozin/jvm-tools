@@ -21,8 +21,7 @@ Download
 ----
 
 Latest prebuild binaries [![Last Version](https://img.shields.io/maven-central/v/org.gridkit.jvmtool/sjk.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.gridkit.jvmtool%22)
-- `wget https://bit.ly/2YNDZfg -O sjk.jar` -> [sjk.jar - all commands without mxdump](https://search.maven.org/remotecontent?filepath=org/gridkit/jvmtool/sjk/0.22/sjk-0.22.jar)
-- `wget https://bit.ly/2H3Uqck -O sjk.jar` -> [sjk-plus.jar - all commands](https://search.maven.org/remotecontent?filepath=org/gridkit/jvmtool/sjk-plus/0.22/sjk-plus-0.22.jar) 
+- `wget https://training.ragozin.info/sjk.jar` -> [sjk.jar](https://search.maven.org/remotecontent?filepath=org/gridkit/jvmtool/sjk-plus/0.22/sjk-plus-0.22.jar) 
 
 Starting sjk
 ----
