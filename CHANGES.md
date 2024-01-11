@@ -1,6 +1,12 @@
 next version
 ----
 
+0.22 - 2024 Jan 11
+
+- Feature: Added `--json` and `--json-array` to `mx --get` command to export MBean data as JSON
+- Feature: Made `-f` argument optional for `mx --get` in JSON mode (all attributes will be exported)
+- Fixed: Perfomance issue preventing HTML flame graphs for deep stack trace (previosuly lead to browser hang)
+
 0.21 - 2023 Apr 19
 ----
 

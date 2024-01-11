@@ -1,6 +1,5 @@
 Swiss Java Knife (SJK)
 =========
-<!-- [![Build Status](https://travis-ci.org/aragozin/jvm-tools.png?branch=master)](https://travis-ci.org/aragozin/jvm-tools) -->
 
 SJK is a command line tool for JVM diagnostic, troubleshooting and profiling.
 
@@ -22,8 +21,8 @@ Download
 ----
 
 Latest prebuild binaries [![Last Version](https://img.shields.io/maven-central/v/org.gridkit.jvmtool/sjk.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.gridkit.jvmtool%22)
-- `wget https://bit.ly/2YNDZfg -O sjk.jar` -> [sjk.jar - all commands without mxdump](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk&v=LATEST)
-- `wget https://bit.ly/2H3Uqck -O sjk.jar` -> [sjk-plus.jar - all commands](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.gridkit.jvmtool&a=sjk-plus&v=LATEST) 
+- `wget https://bit.ly/2YNDZfg -O sjk.jar` -> [sjk.jar - all commands without mxdump](https://search.maven.org/remotecontent?filepath=org/gridkit/jvmtool/sjk/0.22/sjk-0.22.jar)
+- `wget https://bit.ly/2H3Uqck -O sjk.jar` -> [sjk-plus.jar - all commands](https://search.maven.org/remotecontent?filepath=org/gridkit/jvmtool/sjk-plus/0.22/sjk-plus-0.22.jar) 
 
 Starting sjk
 ----
