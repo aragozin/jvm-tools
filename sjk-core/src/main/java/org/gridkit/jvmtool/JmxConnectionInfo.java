@@ -279,14 +279,18 @@ public class JmxConnectionInfo {
 
         @Override
         public Socket createSocket(String host, int port) throws IOException {
+            String origAddr = host + ":" + port;
+            String chost = forceHostAddress ? hostname : host;
+            int cport = forcePort ? this.port : port;
+            String connAddr = chost + ":" + cport;
             if (diagMode) {
-                if (forceHostAddress && !host.equals(hostname)) {
-                    System.out.println("Establishing connection to " + hostname + ":" + port + " (overriden from " + host + ")");
+                if (!origAddr.equals(connAddr)) {
+                    System.out.println("Establishing connection to " + chost + ":" + cport + " (overriden from " + origAddr + ")");
                 } else {
-                    System.out.println("Establishing connection to " + host + ":" + port);
+                    System.out.println("Establishing connection to " + chost + ":" + cport);
                 }
             }
-            return delegate.createSocket(forceHostAddress ? hostname : host, forcePort ? this.port : port);
+            return delegate.createSocket(chost, cport);
         }
 
         @Override
