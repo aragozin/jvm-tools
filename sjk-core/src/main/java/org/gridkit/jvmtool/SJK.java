@@ -18,7 +18,8 @@ public class SJK extends CommandLauncher {
                 "jdk.attach/sun.tools.attach=ALL-UNNAMED",
                 "java.rmi/sun.rmi.server=ALL-UNNAMED",
                 "java.rmi/sun.rmi.transport=ALL-UNNAMED",
-                "java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED"};
+                "java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED",
+                "java.rmi/sun.rmi.registry=ALL-UNNAMED"};
     }
 
     @Override
