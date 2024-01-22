@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ObjID;
@@ -32,6 +33,8 @@ import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.management.remote.rmi.RMIConnection;
+import javax.management.remote.rmi.RMIConnectionImpl_Stub;
 import javax.management.remote.rmi.RMIConnector;
 import javax.management.remote.rmi.RMIServer;
 import javax.management.remote.rmi.RMIServerImpl_Stub;
@@ -234,14 +237,55 @@ public class JmxConnectionInfo {
                             new sun.rmi.transport.tcp.TCPEndpoint(ep.getHost(), ep.getPort(), new EnforcedSocketFactory(hostname, port, ep.getClientSocketFactory()), null),
                             false);
 
-                return new RMIServerImpl_Stub(new sun.rmi.server.UnicastRef2(nlref));
+                return wrapWithSocketFactoryOverride(hostname, port, new RMIServerImpl_Stub(new sun.rmi.server.UnicastRef2(nlref)));
             }
         } catch (Exception e) {
             if (diagMode) {
                 System.out.println("Failed to inject socket factory into RMIServer stub: " + e.toString());
             }
         }
-        return rmiServer;
+        return wrapWithSocketFactoryOverride(hostname, port, rmiServer);
+    }
+
+    @SuppressWarnings("restriction")
+    private RMIConnection overrideClientSocketFactory(String hostname, int port, RMIConnection rmiConn) {
+        try {
+            if (rmiConn instanceof RemoteObject) {
+                RemoteRef ref = ((RemoteObject)rmiConn).getRef();
+                sun.rmi.transport.LiveRef lref = ((sun.rmi.server.UnicastRef)ref).getLiveRef();
+                ObjID oid = lref.getObjID();
+                sun.rmi.transport.tcp.TCPEndpoint ep = (sun.rmi.transport.tcp.TCPEndpoint)(lref.getChannel().getEndpoint());
+
+                sun.rmi.transport.LiveRef nlref = new sun.rmi.transport.LiveRef(oid,
+                        new sun.rmi.transport.tcp.TCPEndpoint(ep.getHost(), ep.getPort(), new EnforcedSocketFactory(hostname, port, ep.getClientSocketFactory()), null),
+                        false);
+
+                return new RMIConnectionImpl_Stub(new sun.rmi.server.UnicastRef2(nlref));
+            }
+        } catch (Exception e) {
+            if (diagMode) {
+                System.out.println("Failed to inject socket factory into RMIServer stub: " + e.toString());
+            }
+        }
+        return rmiConn;
+    }
+
+    private RMIServer wrapWithSocketFactoryOverride(final String hostname, final int port, final RMIServer delegate) {
+
+        return new RMIServer() {
+
+            @Override
+            public RMIConnection newClient(Object credentials) throws IOException {
+                RMIConnection conn = delegate.newClient(credentials);
+                conn = overrideClientSocketFactory(hostname, port, conn);
+                return conn;
+            }
+
+            @Override
+            public String getVersion() throws RemoteException {
+                return delegate.getVersion();
+            }
+        };
     }
 
     private String host(String sockAddr) {
