@@ -1,6 +1,11 @@
 next version
 ----
 
+0.23 - 2024 Jan 24
+
+- Fixed: `--force-address` option for JMX connections
+- Fixed: few more packages for cage break
+
 0.22 - 2024 Jan 11
 
 - Feature: Added `--json` and `--json-array` to `mx --get` command to export MBean data as JSON
